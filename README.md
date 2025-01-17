@@ -35,22 +35,7 @@ LoveYourShelf는 상주 사서 없이 운영되는 스마트 도서관 시스템
 
 
 ## 🔍 시스템 아키텍처
-```mermaid
-flowchart TD
-    subgraph Client
-        A[Web Application] --> B[QR Scanner]
-    end
-    subgraph IoT
-        C[Raspberry Pi] --> D[Camera System]
-        C --> E[LED Control]
-    end
-    subgraph Backend
-        F[Spring Boot API] --> G[(MySQL)]
-        F --> H[(Redis)]
-    end
-    A <--> F
-    C <--> F
-```
+![image](https://github.com/user-attachments/assets/7d501541-1703-426e-a1da-1f4aac49c36d)
 
 ## 🛠 기술 스택
 
@@ -86,24 +71,8 @@ flowchart TD
 
 ## 💫 주요 기능
 
-### 회원 관리
-```mermaid
-graph LR
-    A[회원가입] --> B{계정 유형}
-    B -->|이메일| C[이메일 인증]
-    B -->|SNS| D[OAuth 인증]
-    C --> E[계정 생성]
-    D --> E
-```
+![image](https://github.com/user-attachments/assets/3f54a714-7147-4acd-af4b-0a56bf73196e)
 
-### 도서 관리 프로세스
-```mermaid
-graph TD
-    A[도서 등록] -->|ISBN 스캔| B[도서 정보 입력]
-    B --> C[QR코드 생성]
-    C --> D[위치 배정]
-    D --> E[시스템 등록 완료]
-```
 
 ## 👥 팀원 소개
 
@@ -113,7 +82,7 @@ graph TD
 | 김용명 | Developer | Backend / Frontend |
 | 이동욱 | Developer | Backend / Frontend |
 | 차윤영 | Developer | Backend / Frontend |
-| 배남석석 | EM | Engineering Manager / AI |
+| 배남석 | EM | Engineering Manager / AI |
 
 ## 📈 프로젝트 현황
 
