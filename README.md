@@ -82,7 +82,7 @@ LoveYourShelf는 상주 사서 없이 운영되는 스마트 도서관 시스템
 | 김용명 | Developer | Backend / Frontend |
 | 이동욱 | Developer | Backend / Frontend |
 | 차윤영 | Developer | Backend / Frontend |
-| 배남석 | EM | Embedded / AI |
+| 배남석 | PM | Embedded / AI |
 
 ## 📈 프로젝트 현황
 
