@@ -144,3 +144,6 @@ $RECYCLE.BIN/
 .sass-cache
 tmp/
 temp/
+
+### Etc ###
+HELP.md
