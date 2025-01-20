@@ -2,6 +2,14 @@ spring:
   application:
     name: Bookiki
 
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration  # AWS 메인 설정
+      - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration    # S3 설정
+      - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+      - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
