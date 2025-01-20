@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: Bookiki
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/bokiki?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    username: your_username
+    password: your_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: your_redis_password
+
+  security:
+    jwt:
+      secret: your_jwt_secret_key_which_should_be_very_long_and_secure
+      token:
+        validity: 86400000  # 24??
+
+server:
+  port: 8088
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      force: true
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml  # mapper XML ?? ??
+  type-aliases-package: com.corp.bookiki.domain  # ?? ??? ??? ??
+  configuration:
+    map-underscore-to-camel-case: true  # snake_case? camelCase? ?? ??
+    default-fetch-size: 100
+    default-statement-timeout: 30
+    jdbc-type-for-null: NULL
+
+cloud:
+  aws:
+    credentials:
+      access-key: your_access_key
+      secret-key: your_secret_key
+    region:
+      static: ap-northeast-2
+    s3:
+      bucket: your_bucket_name
+    stack:
+      auto: false
+
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    com.corp: DEBUG
+    # MyBatis SQL ??
+    org.mybatis: TRACE
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+cache:
+  type: redis
+  redis:
+    time-to-live: 3600000
+
+websocket:
+  endpoint: /ws
+  allowed-origins: "*"
