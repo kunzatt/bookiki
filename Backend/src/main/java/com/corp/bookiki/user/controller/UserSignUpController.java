@@ -16,7 +16,7 @@ import com.corp.bookiki.user.service.UserSignUpService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/user/signup")
+@RequestMapping("/user/signup")
 @RequiredArgsConstructor
 public class UserSignUpController {
 
