@@ -5,8 +5,8 @@ spring:
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration  # AWS 메인 설정
-      - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration    # S3 설정
+      - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration
+      - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration
       - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
       - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
 
@@ -27,11 +27,32 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
+# 테스트 프로필 설정 추가
+---
+spring:
+  config:
+    activate:
+      on-profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-      # password: ${REDIS_PASSWORD}
 
   security:
     oauth2:
