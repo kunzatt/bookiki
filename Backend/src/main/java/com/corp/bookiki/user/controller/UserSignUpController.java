@@ -16,7 +16,7 @@ import com.corp.bookiki.user.service.UserSignUpService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/users/email")
+@RequestMapping("/api/user/signup")
 @RequiredArgsConstructor
 public class UserSignUpController {
 
@@ -24,7 +24,7 @@ public class UserSignUpController {
 	private final UserSignUpService userSignUpService;
 
 	// 이메일 회원가입
-	@PostMapping("/signup")
+	@PostMapping("/")
 	public ResponseEntity<String> registerWithEmail(@RequestBody UserSignUpRequest request) {
 		logger.info("Attempting user signup with email: {}", request.getEmail());
 		try {
@@ -38,7 +38,7 @@ public class UserSignUpController {
 	}
 
 	// 이메일 중복 확인
-	@GetMapping("/verify-email")
+	@GetMapping("/email/check")
 	public ResponseEntity<String> checkEmailDuplicate(@RequestParam String email) {
 		logger.info("Checking email duplicate: {}", email);
 		try {
@@ -53,7 +53,7 @@ public class UserSignUpController {
 	}
 
 	// 사번 중복 확인
-	@GetMapping("/verify-company-id")
+	@GetMapping("/company-id/check")
 	public ResponseEntity<String> checkCompanyId(@RequestParam String companyId) {
 		logger.info("Checking company ID duplicate: {}", companyId);
 		try {
