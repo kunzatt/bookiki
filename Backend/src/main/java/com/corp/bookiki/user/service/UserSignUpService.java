@@ -3,10 +3,10 @@ package com.corp.bookiki.user.service;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.UserSignUpRequest;
 import com.corp.bookiki.user.entity.UserEntity;
-import com.corp.bookiki.user.exception.DuplicateCompanyIdException;
-import com.corp.bookiki.user.exception.DuplicateEmailException;
 import com.corp.bookiki.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -42,7 +42,7 @@ public class UserSignUpService {
 	public void checkEmailDuplicate(String email) {
 		// 이미 존재하는 이메일이면 예외 발생
 		if (userRepository.existsByEmail(email)) {
-			throw new DuplicateEmailException("이미 사용 중인 이메일입니다.");
+			throw new UserException(ErrorCode.EMAIL_DUPLICATE);
 		}
 	}
 
@@ -50,7 +50,7 @@ public class UserSignUpService {
 	public void checkEmployeeIdDuplicate(String companyId) {
 		// 이미 존재하는 사번이면 예외 발생
 		if (userRepository.existsByCompanyId(companyId)) {
-			throw new DuplicateCompanyIdException("이미 사용 중인 사번입니다.");
+			throw new UserException(ErrorCode.COMPANY_ID_DUPLICATE);
 		}
 	}
 }
