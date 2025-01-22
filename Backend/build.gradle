@@ -73,6 +73,9 @@ dependencies {
 
     // env 설정
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // H2 데이터베이스
+    testImplementation 'com.h2database:h2'
 }
 
 tasks.named('test') {
