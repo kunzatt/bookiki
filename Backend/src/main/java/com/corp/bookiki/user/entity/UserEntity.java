@@ -76,6 +76,8 @@ public class UserEntity {
 		this.password = password;
 		this.userName = userName;
 		this.companyId = companyId;
+		this.createdAt = LocalDateTime.now();
+		this.updatedAt = LocalDateTime.now();
 		this.activeAt = LocalDateTime.now();
 	}
 }
