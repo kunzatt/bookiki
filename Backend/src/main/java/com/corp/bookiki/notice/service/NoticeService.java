@@ -71,6 +71,13 @@ public class NoticeService {
             if (notice == null) {
                 throw new NoticeException(ErrorCode.NOTICE_NOT_FOUND);
             }
+
+            // 조회수 증가
+            notice.incrementViewCount();
+
+            // 변경된 엔티티 저장
+            noticeRepository.save(notice);
+            
             return notice;
         } catch (Exception ex) {
             log.error("공지사항 조회 실패: {}", ex.getMessage());

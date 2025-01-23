@@ -45,6 +45,10 @@ public class NoticeEntity {
     private NoticeEntity(String title, String content) {
         this.title = title;
         this.content = content;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        this.deleted = false;
+        this.viewCount = 0;
     }
 
     public void updateTitle(String title) {
@@ -57,5 +61,9 @@ public class NoticeEntity {
 
     public void delete() {
         this.deleted = true;
+    }
+
+    public void incrementViewCount() {
+        this.viewCount++;
     }
 }
