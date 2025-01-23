@@ -1,21 +1,22 @@
+# default 프로필
 spring:
+  config:
+    activate:
+      on-profile: default
   application:
     name: Bookiki
-
   autoconfigure:
     exclude:
       - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
-      - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration  # AWS 메인 설정
-      - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration    # S3 설정
+      - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration
+      - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration
       - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
       - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
-
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO:update}
@@ -24,13 +25,8 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
-
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      # password: ${REDIS_PASSWORD}
-
+        jdbc:
+          time_zone: Asia/Seoul
   security:
     oauth2:
       client:
@@ -72,6 +68,21 @@ server:
       charset: UTF-8
       force: true
 
+logging:
+  level:
+    root: ${LOG_LEVEL_ROOT:INFO}
+    org.springframework.web: ${LOG_LEVEL_SPRING_WEB:DEBUG}
+    org.hibernate.SQL: ${LOG_LEVEL_HIBERNATE:DEBUG}
+    com.corp: ${LOG_LEVEL_APP:DEBUG}
+    org.mybatis: ${LOG_LEVEL_MYBATIS:TRACE}
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+
 aws:
   s3:
     bucket: ${AWS_BUCKET_NAME}
@@ -89,14 +100,6 @@ mybatis:
     default-statement-timeout: 30
     jdbc-type-for-null: NULL
 
-logging:
-  level:
-    root: ${LOG_LEVEL_ROOT:INFO}
-    org.springframework.web: ${LOG_LEVEL_SPRING_WEB:DEBUG}
-    org.hibernate.SQL: ${LOG_LEVEL_HIBERNATE:DEBUG}
-    com.corp: ${LOG_LEVEL_APP:DEBUG}
-    org.mybatis: ${LOG_LEVEL_MYBATIS:TRACE}
-
 springdoc:
   api-docs:
     path: /api-docs
@@ -112,3 +115,39 @@ cache:
 websocket:
   endpoint: /ws
   allowed-origins: ${CORS_ALLOWED_ORIGINS:"*"}
+
+api:
+  nl:
+    key: ${NL_API_KEY}
+
+---
+# test 프로필
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+logging:
+  level:
+    com.corp.bookiki: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    org.springframework.test: DEBUG
+    org.springframework.transaction: DEBUG
