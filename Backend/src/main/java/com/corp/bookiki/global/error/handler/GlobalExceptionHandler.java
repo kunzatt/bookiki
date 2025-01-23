@@ -13,6 +13,8 @@ import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.global.error.exception.BusinessException;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -20,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalExceptionHandler {
 
 	// 비즈니스 예외 처리
+	@Tag(name = "Error Responses")
+	@Schema(name = "BusinessException Response")
 	@ExceptionHandler(BusinessException.class)
 	protected ResponseEntity<ErrorResponse> handleBusinessException(BusinessException ex) {
 		ErrorCode errorCode = ex.getErrorCode();
