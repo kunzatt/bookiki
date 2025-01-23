@@ -73,6 +73,9 @@ dependencies {
 
     // env 설정
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // mysql
+    implementation group: 'mysql', name: 'mysql-connector-java', version: '8.0.26'
 }
 
 tasks.named('test') {
