@@ -1,10 +1,15 @@
 package com.corp.bookiki.user.usersignup;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +17,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
@@ -29,7 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 @DisplayName("회원가입 컨트롤러 테스트")
 @Slf4j
 class UserSignUpControllerTest {
+
 	@Autowired
+	private WebApplicationContext context;
+
 	private MockMvc mockMvc;
 
 	@MockBean
@@ -38,93 +48,98 @@ class UserSignUpControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@BeforeEach
+	void setup() {
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
+		log.info("MockMvc 설정이 완료되었습니다.");
+	}
+
 	@Test
-	void registerWithEmail_WithValidRequest_ReturnsOk() throws Exception {
+	@WithMockUser
+	@DisplayName("정상적인 회원가입 요청 시 성공")
+	void registerWithEmail_WhenValidRequest_ReturnsOk() throws Exception {
 		// given
 		UserSignUpRequest request = new UserSignUpRequest();
 		request.setEmail("test@test.com");
 		request.setPassword("password123");
 		request.setUserName("Test User");
 		request.setCompanyId("EMP123");
-		log.info("회원가입 요청 생성: email={}, companyId={}", request.getEmail(), request.getCompanyId());
 
-		String requestJson = objectMapper.writeValueAsString(request);
-		log.debug("요청 JSON 변환: {}", requestJson);
+		log.info("테스트 요청 생성: {}", request);
 
 		// when
 		doNothing().when(userSignUpService).signUp(any(UserSignUpRequest.class));
-
-		log.info("회원가입 API 호출 시작");
-		ResultActions result = mockMvc.perform(post("/user/signup")
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(requestJson));
+		log.info("Mock 서비스 동작 설정 완료");
 
 		// then
-		result.andExpect(status().isOk())
+		mockMvc.perform(post("/user/signup")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isOk())
 			.andExpect(content().string("회원가입이 완료되었습니다."));
-		log.info("회원가입 API 호출 성공");
+
+		log.info("회원가입 테스트 성공적으로 완료");
 	}
 
 	@Test
-	void checkEmailDuplicate_WithNonDuplicateEmail_ReturnsOk() throws Exception {
-		// given
+	@WithMockUser
+	@DisplayName("중복되지 않은 이메일 확인 시 성공")
+	void checkEmailDuplicate_WhenNonDuplicateEmail_ReturnsOk() throws Exception {
+		// given & when
 		String email = "test@test.com";
-		log.info("이메일 중복 확인 요청: {}", email);
-
 		doNothing().when(userSignUpService).checkEmailDuplicate(email);
-		log.info("Mock 서비스 설정 완료");
-
-		// when
-		log.info("이메일 중복 확인 API 호출 시작");
-		ResultActions result = mockMvc.perform(get("/user/signup/email/check")
-			.param("email", email));
+		log.info("이메일 중복 확인 테스트 시작: {}", email);
 
 		// then
-		result.andExpect(status().isOk())
+		mockMvc.perform(get("/user/signup/email/check")
+				.param("email", email))
+			.andExpect(status().isOk())
 			.andExpect(content().string("이메일이 중복 되지 않습니다."));
-		log.info("이메일 중복 확인 API 호출 성공");
+
+		log.info("이메일 중복 확인 테스트 완료");
 	}
 
 	@Test
-	void checkCompanyId_WithNonDuplicateId_ReturnsOk() throws Exception {
+	@WithMockUser
+	@DisplayName("중복되지 않은 사원번호 확인 시 성공")
+	void checkCompanyId_WhenNonDuplicateId_ReturnsOk() throws Exception {
 		// given
 		String companyId = "EMP123";
-		log.info("사원번호 중복 확인 요청: {}", companyId);
-
 		doNothing().when(userSignUpService).checkEmployeeIdDuplicate(companyId);
-		log.info("Mock 서비스 설정 완료");
-
-		// when
-		log.info("사원번호 중복 확인 API 호출 시작");
-		ResultActions result = mockMvc.perform(get("/user/signup/company-id/check")
-			.param("companyId", companyId));
+		log.info("사번 중복 확인 테스트 시작: {}", companyId);
 
 		// then
-		result.andExpect(status().isOk())
+		mockMvc.perform(get("/user/signup/company-id/check")
+				.param("companyId", companyId))
+			.andExpect(status().isOk())
 			.andExpect(content().string("사번이 중복 되지 않습니다."));
-		log.info("사원번호 중복 확인 API 호출 성공");
+
+		log.info("사번 중복 확인 테스트 완료");
 	}
 
 	@Test
-	void registerWithEmail_WithInvalidRequest_ReturnsBadRequest() throws Exception {
+	@WithMockUser
+	@DisplayName("유효하지 않은 회원가입 요청 시 BAD_REQUEST 반환")
+	void registerWithEmail_WhenInvalidRequest_ReturnsBadRequest() throws Exception {
 		// given
 		UserSignUpRequest request = new UserSignUpRequest();
-		log.info("유효하지 않은 회원가입 요청 생성 (이메일 누락)");
+		log.info("유효하지 않은 요청 테스트 시작");
 
-		String requestJson = objectMapper.writeValueAsString(request);
-		log.debug("요청 JSON 변환: {}", requestJson);
-
-		// when
-		doThrow(new UserException(ErrorCode.UNAUTHORIZED))
+		doThrow(new UserException(ErrorCode.INVALID_INPUT_VALUE))
 			.when(userSignUpService).signUp(any(UserSignUpRequest.class));
-
-		log.info("회원가입 API 호출 시작");
-		ResultActions result = mockMvc.perform(post("/user/signup")
-			.contentType(MediaType.APPLICATION_JSON)
-			.content(requestJson));
+		log.info("Mock 서비스에 UserException 발생 설정 완료");
 
 		// then
-		result.andExpect(status().isBadRequest());
-		log.info("예상된 BadRequest 응답 확인");
+		mockMvc.perform(post("/user/signup")
+				.with(csrf())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(request)))
+			.andExpect(status().isBadRequest());
+
+		log.info("유효하지 않은 요청 테스트 완료");
 	}
 }

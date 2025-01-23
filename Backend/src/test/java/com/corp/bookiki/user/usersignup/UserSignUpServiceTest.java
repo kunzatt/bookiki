@@ -6,9 +6,10 @@ import static org.mockito.BDDMockito.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.UserSignUpRequest;
@@ -18,13 +19,13 @@ import com.corp.bookiki.user.service.UserSignUpService;
 
 import lombok.extern.slf4j.Slf4j;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
 @Slf4j
 class UserSignUpServiceTest {
-	@Autowired
+	@InjectMocks
 	private UserSignUpService userSignUpService;
 
-	@MockBean
+	@Mock
 	private UserRepository userRepository;
 
 	@Nested
