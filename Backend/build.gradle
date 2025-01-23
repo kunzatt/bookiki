@@ -48,6 +48,10 @@ dependencies {
     // Dev Tools
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // Test에서 lombok 사용을 위한 의존성 추가
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // WebSocket
@@ -73,8 +77,15 @@ dependencies {
 
     // env 설정
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // H2 데이터베이스
+    testImplementation 'com.h2database:h2'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+    }
 }
