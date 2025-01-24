@@ -51,11 +51,8 @@ public class NoticeEntity {
         this.viewCount = 0;
     }
 
-    public void updateTitle(String title) {
+    public void update(String title, String content) {
         this.title = title;
-    }
-
-    public void updateContent(String content) {
         this.content = content;
     }
 

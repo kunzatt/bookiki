@@ -9,8 +9,8 @@ public interface NoticeRepository extends JpaRepository<NoticeEntity, Integer> {
     // findAll(), findById(), save(), delete()는 JpaRepository에서 기본 제공
 
     // 삭제되지 않은 공지사항만 조회
-    List<NoticeEntity> findByDeletedFalse();
+    List<NoticeEntity> findByDeletedFalseOrderByCreatedAtDesc();
 
-    // 제목으로 검색 (삭제되지 않은 것만)
-    List<NoticeEntity> findByDeletedFalseAndTitleContaining(String title);
+    // 제목, 본문으로 검색 (삭제되지 않은 것만)
+    List<NoticeEntity> findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(String title, String content);
 }
