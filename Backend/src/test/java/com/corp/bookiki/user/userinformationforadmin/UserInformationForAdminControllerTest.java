@@ -22,6 +22,9 @@ import com.corp.bookiki.user.controller.UserInformationForAdminController;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
 import com.corp.bookiki.user.service.UserInformationForAdminService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @WebMvcTest(UserInformationForAdminController.class)
 @Import(SecurityConfig.class)
 class UserInformationForAdminControllerTest {
@@ -35,8 +38,8 @@ class UserInformationForAdminControllerTest {
 	@Test
 	@DisplayName("전체 사용자 조회 API 성공")
 	@WithMockUser(roles = "ADMIN")
-	void getUserDetailsApiSuccess() throws Exception {
-		// given
+	void getUserDetails_WhenValidRequest_ThenSuccess() throws Exception {
+		log.info("전체 사용자 조회 API 테스트 시작");
 		LocalDateTime now = LocalDateTime.now();
 		UserInformationForAdminResponse response = UserInformationForAdminResponse.builder()
 			.id(1)
@@ -50,10 +53,11 @@ class UserInformationForAdminControllerTest {
 			.profileImage("profile.jpg")
 			.provider("BOOKIKI")
 			.build();
+		log.info("테스트용 응답 객체 생성 완료: {}", response);
 
 		when(userInformationForAdminService.getUserDetails()).thenReturn(List.of(response));
+		log.info("Mock 서비스 동작 설정 완료");
 
-		// when & then
 		mockMvc.perform(get("/api/admin/users")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
@@ -62,5 +66,40 @@ class UserInformationForAdminControllerTest {
 			.andExpect(jsonPath("$[0].companyId").value("CORP001"));
 
 		verify(userInformationForAdminService, times(1)).getUserDetails();
+		log.info("전체 사용자 조회 API 테스트 완료");
 	}
+
+	@Test
+	@DisplayName("개별 사용자 조회 API 성공")
+	@WithMockUser(roles = "ADMIN")
+	void getUserDetailsById_WhenValidRequest_ThenSuccess() throws Exception {
+		log.info("개별 사용자 조회 API 테스트 시작");
+		LocalDateTime now = LocalDateTime.now();
+		UserInformationForAdminResponse response = UserInformationForAdminResponse.builder()
+			.id(1)
+			.email("test@example.com")
+			.userName("테스트")
+			.companyId("CORP001")
+			.role("USER")
+			.createdAt(now)
+			.updatedAt(now)
+			.activeAt(now)
+			.profileImage("profile.jpg")
+			.provider("BOOKIKI")
+			.build();
+		log.info("테스트용 응답 객체 생성 완료: {}", response);
+
+		when(userInformationForAdminService.getUserDetailsById(1)).thenReturn(response);
+		log.info("Mock 서비스 동작 설정 완료");
+
+		mockMvc.perform(get("/api/admin/users/1")
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.email").value("test@example.com"))
+			.andExpect(jsonPath("$.userName").value("테스트"));
+
+		verify(userInformationForAdminService, times(1)).getUserDetailsById(1);
+		log.info("개별 사용자 조회 API 테스트 완료");
+	}
+
 }
