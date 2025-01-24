@@ -1,5 +1,7 @@
 package com.corp.bookiki.config;
 
+import com.corp.bookiki.handler.LoginFailureHandler;
+import com.corp.bookiki.handler.LoginSuccessHandler;
 import com.corp.bookiki.jwt.filter.JWTFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -28,6 +30,8 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JWTFilter jwtFilter;
+    private final LoginFailureHandler loginFailureHandler;
+    private final LoginSuccessHandler loginSuccessHandler;
 
     @Value("${frontend.url}")
     private String frontendUrl;

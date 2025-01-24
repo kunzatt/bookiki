@@ -16,6 +16,7 @@ public enum ErrorCode {
 	// Auth & User
 	INVALID_TOKEN(401, "유효하지 않은 토큰입니다"),
 	EXPIRED_TOKEN(401, "만료된 토큰입니다"),
+	REFRESH_TOKEN_NOT_FOUND(401, "리프레시 토큰을 찾을 수 없습니다."),
 	EMAIL_DUPLICATE(400, "이미 존재하는 이메일입니다"),
 	COMPANY_ID_DUPLICATE(400, "이미 존재하는 사번입니다"),
 	USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다"),

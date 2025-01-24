@@ -2,10 +2,13 @@ package com.corp.bookiki.jwt.filter;
 
 import com.corp.bookiki.jwt.service.JWTService;
 import com.corp.bookiki.user.dto.AuthUser;
+import com.corp.bookiki.user.entity.SecurityUser;
 import com.corp.bookiki.util.CookieUtil;
 import com.corp.bookiki.util.JWTUtil;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +36,6 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final JWTService jwtService;
     private final JWTUtil jwtUtil;
-    private final CookieUtil cookieUtil;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     private final List<String> excludedUrls = Arrays.asList(
@@ -74,11 +76,22 @@ public class JWTFilter extends OncePerRequestFilter {
 
     }
 
+    private String extractTokenFromCookies(Cookie[] cookies, String token) {
+        if(cookies == null) return null;
+        for (Cookie cookie : cookies) {
+            if(token.equals(cookie.getName())){
+                return cookie.getValue();
+            }
+        }
+        log.debug("쿠키에 {} 토큰이 없음", token);
+        return null;
+    }
+
     private void processAccessToken(String accessToken, HttpServletResponse response) {
         String userEmail = jwtService.extractUserEmail(accessToken);
 
         if (userEmail == null) return;
-        if (SecurityContextHolder.getContext().getAuthentication() == null) return;
+        if (SecurityContextHolder.getContext().getAuthentication() != null) return;
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
         if (jwtService.isValid(accessToken, userDetails)) {
@@ -95,11 +108,11 @@ public class JWTFilter extends OncePerRequestFilter {
         try {
             String userEmail = jwtService.extractUserEmail(refreshToken);
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
-            if(!(userDetails instanceof CustomUserDetails)){
+            if(!(userDetails instanceof SecurityUser )){
                 throw new AuthenticationException("유효하지 않은 사용자 정보 타입입니다");
             }
 
-            AuthUser user = ((CustomUserDetails) userDetails).getUser();
+            SecurityUser user = ((SecurityUser ) userDetails).getUser();
             Map<String, String> tokens = jwtService.rotateTokens(refreshToken, user);
 
             if (tokens != null) {
