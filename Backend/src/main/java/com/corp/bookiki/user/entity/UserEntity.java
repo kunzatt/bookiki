@@ -69,6 +69,10 @@ public class UserEntity {
 	@Column(length = 255)
 	private String profileImage;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private Provider provider = Provider.BOOKIKI;
+
 	// 빌더 패턴을 사용한 생성자
 	@Builder
 	public UserEntity(String email, String password, String userName, String companyId) {

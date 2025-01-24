@@ -1,0 +1,26 @@
+package com.corp.bookiki.user.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
+import com.corp.bookiki.user.repository.UserRepository;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class UserInformationForAdminService {
+
+	private final UserRepository userRepository;
+
+	@Transactional(readOnly = true)
+	public List<UserInformationForAdminResponse> getUserDetails() {
+		return userRepository.findAll().stream()
+			.map(UserInformationForAdminResponse::from)
+			.collect(Collectors.toList());
+	}
+}
