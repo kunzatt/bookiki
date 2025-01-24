@@ -1,10 +1,11 @@
 package com.corp.bookiki.notice;
 
-
+import com.corp.bookiki.global.config.SecurityConfig;
+import com.corp.bookiki.notice.controller.NoticeController;
 import com.corp.bookiki.notice.dto.NoticeRequest;
 import com.corp.bookiki.notice.dto.NoticeUpdate;
 import com.corp.bookiki.notice.entity.NoticeEntity;
-import com.corp.bookiki.notice.repository.NoticeRepository;
+import com.corp.bookiki.notice.service.NoticeService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,73 +13,67 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(NoticeController.class)
+@MockBean(JpaMetamodelMappingContext.class)
+@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)  // Security filter 비활성화
+@DisplayName("회원가입 컨트롤러 테스트")
 class NoticeControllerTest {
 
     @Autowired
-    protected MockMvc mockMvc;
+    private MockMvc mockMvc;
+
+    @MockBean
+    private NoticeService noticeService;  // NoticeService를 Mock으로 설정
 
     @Autowired
-    protected ObjectMapper objectMapper; // 직렬화, 역직렬화를 위한 클래스
+    private ObjectMapper objectMapper;
 
-    @Autowired
-    private WebApplicationContext context;
-
-    @Autowired
-    NoticeRepository noticeRepository;
-
-    // 테스트 실행 정
+    // 테스트 실행 전 설정
     @BeforeEach
-    public void mockMvcSetup() {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(context)
-                .build();
-        noticeRepository.deleteAll();
+    public void setup() {
+        log.info("Setting up NoticeControllerTest...");
     }
 
     // 공지사항 작성 테스트
-    @DisplayName("공지사항 작성 성공")
     @Test
+    @DisplayName("공지사항 작성 성공")
     public void createNotice() throws Exception {
         // given
-        final String url = "/admin/notices";
-        final String title = "title";
-        final String content = "content";
-        final NoticeRequest noticeRequest = new NoticeRequest(title, content);
-
-        // 객체 JSON으로 직렬화
-        final String requestBody = objectMapper.writeValueAsString(noticeRequest);
+        NoticeRequest request = new NoticeRequest("제목", "내용");
+        given(noticeService.createNotice(any())).willReturn(1);  // Mockito when 대신 BDD 스타일 사용
 
         // when
-        // 설정한 내용을 바탕으로 요청 전송
-        ResultActions result = mockMvc.perform(post(url)
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(requestBody));
+        ResultActions result = mockMvc.perform(
+                post("/admin/notices")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+        );
 
         // then
-        result.andExpect(status().isCreated());
-
-        List<NoticeEntity> createdNotices = noticeRepository.findAll();
-
-        assertThat(createdNotices.size()).isEqualTo(1); // 크기가 1인지
-        assertThat(createdNotices.get(0).getTitle()).isEqualTo(title);
-        assertThat(createdNotices.get(0).getContent()).isEqualTo(content);
-
+        result.andExpect(status().isCreated())
+                .andExpect(jsonPath("$").value(1))
+                .andDo(print());  // 테스트 결과 출력
     }
 
     // 공지사항 목록 조회 테스트
@@ -86,11 +81,15 @@ class NoticeControllerTest {
     @DisplayName("공지사항 목록 조회 및 검색 테스트")
     public void selectAllNoticesTest() throws Exception {
         // given
-        NoticeEntity notice = NoticeEntity.builder()
-                .title("Important Notice")
-                .content("Test Content")
-                .build();
-        noticeRepository.save(notice);
+        List<NoticeEntity> notices = List.of(
+                NoticeEntity.builder()
+                        .title("Important Notice")
+                        .content("Test Content")
+                        .build()
+        );
+
+        given(noticeService.selectAllNotices()).willReturn(notices);
+        given(noticeService.searchNotice("Important")).willReturn(notices);
 
         // when - 전체 조회
         mockMvc.perform(get("/notices"))
@@ -112,13 +111,15 @@ class NoticeControllerTest {
         final String title = "title";
         final String content = "content";
 
-        NoticeEntity selectedNotice = noticeRepository.save(NoticeEntity.builder()
+        NoticeEntity noticeEntity = NoticeEntity.builder()
                 .title(title)
                 .content(content)
-                .build());
+                .build();
+
+        given(noticeService.selectNoticeById(1)).willReturn(noticeEntity);
 
         // when
-        final ResultActions resultActions = mockMvc.perform(get(url, selectedNotice.getId()));
+        final ResultActions resultActions = mockMvc.perform(get(url, 1));
 
         // then
         resultActions
@@ -132,22 +133,17 @@ class NoticeControllerTest {
     public void deleteNotice() throws Exception {
         // given
         final String url = "/admin/notices/{id}";
-        final String title = "title";
-        final String content = "content";
+        final int id = 1;
 
-        NoticeEntity deletedNotice = noticeRepository.save(NoticeEntity.builder()
-                .title(title)
-                .content(content)
-                .build());
+        doNothing().when(noticeService).deleteNotice(id);
 
         // when
-        ResultActions resultActions = mockMvc.perform(delete(url, deletedNotice.getId())
+        ResultActions resultActions = mockMvc.perform(delete(url, id)
                 .contentType(MediaType.APPLICATION_JSON_VALUE));
 
         // then
         resultActions.andExpect(status().isNoContent());
-        NoticeEntity noticeEntity = noticeRepository.findById(deletedNotice.getId()).get();
-        assertThat(noticeEntity.isDeleted()).isTrue();
+        verify(noticeService).deleteNotice(id);
     }
 
     @DisplayName("공지사항 수정 성공")
@@ -155,22 +151,13 @@ class NoticeControllerTest {
     public void updateArticle() throws Exception {
         // given
         final String url = "/admin/notices";
-        final String title = "title";
-        final String content = "content";
-
-        NoticeEntity beforeUpdate = noticeRepository.save(NoticeEntity.builder()
-                .title(title)
-                .content(content)
-                .build());
-
-        final String newTitle = "newTitle";
-        final String newContent = "newContent";
-
         NoticeUpdate update = NoticeUpdate.builder()
-                .id(beforeUpdate.getId())
-                .title(newTitle)
-                .content(newContent)
+                .id(1)
+                .title("newTitle")
+                .content("newContent")
                 .build();
+
+        doNothing().when(noticeService).updateNotice(any(NoticeUpdate.class));
 
         // when
         ResultActions resultActions = mockMvc.perform(put(url)
@@ -179,11 +166,7 @@ class NoticeControllerTest {
 
         // then
         resultActions.andExpect(status().isOk());
-
-        NoticeEntity noticeEntity = noticeRepository.findById(beforeUpdate.getId()).get();
-
-        assertThat(noticeEntity.getTitle()).isEqualTo(newTitle);
-        assertThat(noticeEntity.getContent()).isEqualTo(newContent);
+        verify(noticeService).updateNotice(any(NoticeUpdate.class));
     }
 
 }

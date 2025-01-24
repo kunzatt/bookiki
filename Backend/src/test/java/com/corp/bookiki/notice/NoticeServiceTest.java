@@ -5,13 +5,15 @@ import com.corp.bookiki.notice.dto.NoticeUpdate;
 import com.corp.bookiki.notice.entity.NoticeEntity;
 import com.corp.bookiki.notice.repository.NoticeRepository;
 import com.corp.bookiki.notice.service.NoticeService;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
@@ -23,14 +25,15 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@ExtendWith(MockitoExtension.class)
+@Slf4j
 class NoticeServiceTest {
 
-    @Autowired
-    private NoticeService noticeService;
-
-    @MockBean
+    @Mock
     private NoticeRepository noticeRepository;
+
+    @InjectMocks
+    private NoticeService noticeService; // Mock 주입
 
     @BeforeEach
     void setUp() {
