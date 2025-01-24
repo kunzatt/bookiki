@@ -34,11 +34,11 @@ public class QnaEntity {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(nullable = false)
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private boolean deleted;
@@ -51,8 +51,8 @@ public class QnaEntity {
         this.title = title;
         this.content = content;
         this.authorId = authorId;
-        this.createAt = LocalDateTime.now();
-        this.updateAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         this.deleted = false;
     }
 
