@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,5 +53,30 @@ public class UserInformationForAdminController {
 	public ResponseEntity<List<UserInformationForAdminResponse>> getUserDetails() {
 		log.info("전체 사용자 정보 조회");
 		return ResponseEntity.ok(userInformationForAdminService.getUserDetails());
+	}
+
+	@Operation(summary = "개별 사용자 조회", description = "특정 ID를 가진 사용자의 상세 정보를 조회합니다.")
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "조회 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = UserInformationForAdminResponse.class)
+			)
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "사용자가 존재하지 않음",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+			)
+		)
+	})
+	@GetMapping("/{userId}")
+	public ResponseEntity<UserInformationForAdminResponse> getUserDetailsById(@PathVariable Integer userId) {
+		log.info("사용자 ID {} 상세 정보 조회", userId);
+		return ResponseEntity.ok(userInformationForAdminService.getUserDetailsById(userId));
 	}
 }
