@@ -22,8 +22,10 @@ public class SecurityConfig {
 					"/swagger-ui.html",
 					"/swagger-resources/**",
 					"/webjars/**",
-					"/api-docs/**"
+					"/api-docs/**",
+					"/api/admin/**"
 				).permitAll()
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				.anyRequest().permitAll()
 			)
 			.oauth2Login(oauth2 -> oauth2.disable())
