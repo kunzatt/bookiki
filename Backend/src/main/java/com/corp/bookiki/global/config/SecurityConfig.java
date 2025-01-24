@@ -18,16 +18,13 @@ public class SecurityConfig {
 			.cors(cors -> cors.disable())
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(
-					"/v3/api-docs",
 					"/v3/api-docs/**",
 					"/swagger-ui/**",
-					"/swagger-ui.html",
 					"/swagger-resources/**",
 					"/webjars/**",
 					"/api-docs/**",
-					"/api/admin/**"
+					"/api/admin/**"  // admin 경로 추가
 				).permitAll()
-				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				.anyRequest().permitAll()
 			)
 			.oauth2Login(oauth2 -> oauth2.disable())

@@ -3,7 +3,6 @@ package com.corp.bookiki.user.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/admin/users")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 @Tag(name = "관리자 API", description = "관리자용 사용자 관리 API")
 @Slf4j
 public class UserInformationForAdminController {
@@ -57,7 +55,7 @@ public class UserInformationForAdminController {
 		return ResponseEntity.ok(userInformationForAdminService.getUserDetails());
 	}
 
-	@Operation(summary = "개별 사용자 조회", description = "특정 ID를 가진 사용자의 상세 정보를 조회합니다.")
+	@Operation(summary = "개별 사용자 상세 조회", description = "특정 ID를 가진 사용자의 상세 정보를 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(
 			responseCode = "200",
