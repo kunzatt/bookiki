@@ -1,13 +1,17 @@
 package com.corp.bookiki.bookinformation.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.corp.bookiki.bookinformation.dto.BookInformationResponse;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
@@ -31,15 +35,14 @@ public class BookInformationService {
 
 	private final BookInformationRepository bookInformationRepository;
 
-	// 책 정보 추가
+	// 책 정보를 추가하는 메서드
 	@Transactional
-	public BookInformationResponse addBookInformationByISBN(String isbn) {
-		BookInformationEntity bookInfo = getBookInformationByISBN(isbn);
+	public BookInformationResponse addBookInformationByIsbn(String isbn) {
+		BookInformationEntity bookInfo = getBookInformationByIsbn(isbn);
 
 		if (bookInfo != null) {
 			return BookInformationResponse.from(bookInfo);
 		}
-
 		try {
 			BookInformationEntity newBookInfo = callExternalBookApi(isbn);
 			bookInformationRepository.save(newBookInfo); // 새로운 BookInformation 저장
@@ -49,15 +52,15 @@ public class BookInformationService {
 		}
 	}
 
-	// 외부 API를 이용한 책 정보 가져오기
+	// 외부 API를 이용하여 책 정보 가져오는 메서드
 	private BookInformationEntity callExternalBookApi(String isbn) {
-		String url = new StringBuilder()
-			.append(API_URL)
-			.append("?cert_key=").append(API_NL_KEY)
-			.append("&result_style=json")
-			.append("&page_no=1")
-			.append("&page_size=1")
-			.append("&isbn=").append(isbn)
+		String url = UriComponentsBuilder.fromHttpUrl(API_URL)
+			.queryParam("cert_key", API_NL_KEY)
+			.queryParam("result_style", "json")
+			.queryParam("page_no", 1)
+			.queryParam("page_size", 1)
+			.queryParam("isbn", isbn)
+			.build()
 			.toString();
 
 		try {
@@ -74,30 +77,19 @@ public class BookInformationService {
 
 			JSONObject bookData = jsonResponse.getJSONArray("docs").getJSONObject(0);
 
-			String title = bookData.getString("TITLE");
-			String author = bookData.getString("AUTHOR");
-			String publisher = bookData.optString("PUBLISHER");
-			String image = bookData.optString("TITLE_URL");
-			String description = bookData.optString("BOOK_INTRODUCTION");
-			String category = bookData.optString("DDC");
-
-			publisher = publisher.isEmpty() ? null : publisher;
-			image = image.isEmpty() ? null : image;
-			description = description.isEmpty() ? null : description;
-			category = category.isEmpty() ? null : category;
-
-			String publishDate = bookData.getString("PUBLISH_PREDATE");
-			LocalDateTime publishedAt = LocalDateTime.parse(publishDate + "T00:00:00");
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+			LocalDateTime publishedAt = LocalDate.parse(bookData.getString("PUBLISH_PREDATE"), formatter)
+				.atStartOfDay();
 
 			return BookInformationEntity.builder()
-				.title(title)
-				.author(author)
-				.publisher(publisher)
+				.title(bookData.getString("TITLE"))
+				.author(bookData.getString("AUTHOR"))
+				.publisher(StringUtils.defaultIfEmpty(bookData.optString("PUBLISHER"), null))
 				.isbn(isbn)
 				.publishedAt(publishedAt)
-				.image(image)
-				.description(description)
-				.category(category)
+				.image(StringUtils.defaultIfEmpty(bookData.optString("TITLE_URL"), null))
+				.description(StringUtils.defaultIfEmpty(bookData.optString("BOOK_INTRODUCTION"), null))
+				.category(StringUtils.defaultIfEmpty(bookData.optString("DDC"), null))
 				.build();
 
 		} catch (Exception e) {
@@ -105,8 +97,15 @@ public class BookInformationService {
 		}
 	}
 
-	// 책 정보 가져오기
-	private BookInformationEntity getBookInformationByISBN(String isbn) {
+	// Isbn을 이용하여 책 정보를 가져오는 메서드
+	private BookInformationEntity getBookInformationByIsbn(String isbn) {
 		return bookInformationRepository.findByIsbn(isbn);
+	}
+
+	// BookInformation의 id를 이용하여 책 정보를 가져오는 메서드
+	public BookInformationResponse getBookInformation(int id) {
+		BookInformationEntity bookInfo = bookInformationRepository.findById(id)
+			.orElseThrow(() -> new BookInformationException(ErrorCode.BOOK_INFO_NOT_FOUND));
+		return BookInformationResponse.from(bookInfo);
 	}
 }

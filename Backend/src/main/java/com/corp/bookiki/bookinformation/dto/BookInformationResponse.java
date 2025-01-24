@@ -14,6 +14,9 @@ import lombok.Setter;
 @Schema(description = "책 정보 응답")
 public class BookInformationResponse {
 
+	@Schema(description = "도서 ID", example = "1")
+	private Integer id;
+
 	@Schema(
 		description = "제목",
 		example = "클린 코드",
@@ -62,6 +65,7 @@ public class BookInformationResponse {
 		BookInformationEntity entity
 	) {
 		BookInformationResponse response = new BookInformationResponse();
+		response.setId(entity.getId());
 		response.setTitle(entity.getTitle());
 		response.setAuthor(entity.getAuthor());
 		response.setPublisher(entity.getPublisher());
