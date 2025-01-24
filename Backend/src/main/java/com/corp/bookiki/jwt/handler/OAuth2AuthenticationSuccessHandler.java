@@ -1,4 +1,4 @@
-package com.corp.bookiki.handler;
+package com.corp.bookiki.jwt.handler;
 
 import com.corp.bookiki.jwt.service.JWTService;
 import com.corp.bookiki.user.entity.SecurityUser;

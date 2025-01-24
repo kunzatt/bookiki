@@ -104,12 +104,12 @@ public class JWTService {
     }
 
     // 토큰 만료 여부 확인
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     // 토큰의 만료 시간 추출
-    private Date extractExpiration(String token) {
+    public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 

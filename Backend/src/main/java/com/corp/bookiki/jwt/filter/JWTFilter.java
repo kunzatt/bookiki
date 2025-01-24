@@ -1,7 +1,6 @@
 package com.corp.bookiki.jwt.filter;
 
 import com.corp.bookiki.jwt.service.JWTService;
-import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.SecurityUser;
 import com.corp.bookiki.util.CookieUtil;
 import com.corp.bookiki.util.JWTUtil;
@@ -14,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -36,6 +36,7 @@ public class JWTFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final JWTService jwtService;
     private final JWTUtil jwtUtil;
+    private final CookieUtil cookieUtil;
     private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
     private final List<String> excludedUrls = Arrays.asList(
@@ -55,7 +56,7 @@ public class JWTFilter extends OncePerRequestFilter {
 
         try{
             if(refreshToken != null){
-                if (accessToken == null || isTokenExpired(accessToken)) {
+                if (accessToken == null || jwtService.isTokenExpired(accessToken)) {
                     handleExpiredToken(refreshToken, response);
                     return;
                 }
@@ -109,10 +110,10 @@ public class JWTFilter extends OncePerRequestFilter {
             String userEmail = jwtService.extractUserEmail(refreshToken);
             UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
             if(!(userDetails instanceof SecurityUser )){
-                throw new AuthenticationException("유효하지 않은 사용자 정보 타입입니다");
+                throw new AuthenticationException("유효하지 않은 사용자 정보 타입입니다"){};
             }
 
-            SecurityUser user = ((SecurityUser ) userDetails).getUser();
+            SecurityUser user = (SecurityUser) userDetails;
             Map<String, String> tokens = jwtService.rotateTokens(refreshToken, user);
 
             if (tokens != null) {
@@ -124,13 +125,13 @@ public class JWTFilter extends OncePerRequestFilter {
         catch (Exception ex){
             log.error("토큰 갱신 실패: {}", ex.getMessage());
         }
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED)
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     private void setTokenCookies(Map<String, String> tokens, HttpServletResponse response) {
-        jwtUtil.addCookie(response, ACCESS_TOKEN, tokens.get("accessToken"),
+        cookieUtil.addCookie(response, ACCESS_TOKEN, tokens.get("accessToken"),
                 (int) (jwtService.getAccessTokenExpire() / 1000));
-        jwtUtil.addCookie(response, REFRESH_TOKEN, tokens.get("refreshToken"),
+        cookieUtil.addCookie(response, REFRESH_TOKEN, tokens.get("refreshToken"),
                 (int) (jwtService.getRefreshTokenExpire() / 1000));
     }
 

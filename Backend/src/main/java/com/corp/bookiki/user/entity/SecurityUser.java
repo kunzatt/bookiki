@@ -2,6 +2,7 @@ package com.corp.bookiki.user.entity;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,6 +18,7 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
+@Builder
 public class SecurityUser implements UserDetails, OAuth2User {
 
     @Id
@@ -29,6 +31,7 @@ public class SecurityUser implements UserDetails, OAuth2User {
     private String password;
 
     @Column(name = "user_name")
+    @Getter
     private String userName;
 
     @Enumerated(EnumType.STRING)
@@ -41,7 +44,7 @@ public class SecurityUser implements UserDetails, OAuth2User {
 
     @Override
     public String getPassword() {
-        return "";
+        return password;
     }
 
     @Override
@@ -68,15 +71,28 @@ public class SecurityUser implements UserDetails, OAuth2User {
     public boolean isEnabled() {
         return true;
     }
+
+    @Transient
     private Map<String, Object> attributes;
 
     @Override
     public Map<String, Object> getAttributes() {
+
         return attributes;
     }
 
     @Override
     public String getName() {
         return email;
+    }
+
+    @Builder
+    public SecurityUser(int id, String email, String password, String userName, Role role, Map<String, Object> attributes) {
+        this.id = id;
+        this.email = email;
+        this.password = password;
+        this.userName = userName;
+        this.role = role;
+        this.attributes = attributes;
     }
 }

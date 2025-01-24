@@ -1,4 +1,4 @@
-package com.corp.bookiki.config;
+package com.corp.bookiki.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

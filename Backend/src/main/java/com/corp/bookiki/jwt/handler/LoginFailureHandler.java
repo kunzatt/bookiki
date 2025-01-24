@@ -1,4 +1,4 @@
-package com.corp.bookiki.handler;
+package com.corp.bookiki.jwt.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
