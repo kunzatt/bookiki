@@ -2,6 +2,9 @@ package com.corp.bookiki.user;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.List;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -61,5 +64,35 @@ class UserRepositoryTest {
 		// then
 		assertThat(exists).isTrue();
 		log.info("사원번호 존재 여부 테스트 성공");
+	}
+
+	@Test
+	@DisplayName("모든 사용자 조회 - 여러 사용자 존재")
+	void findAll_WhenUsersExist_ThenReturnList() {
+		// given: 여러 사용자 생성 및 저장
+		UserEntity user1 = createTestUser("user1@example.com", "CORP001");
+		UserEntity user2 = createTestUser("user2@example.com", "CORP002");
+
+		userRepository.save(user1);
+		userRepository.save(user2);
+
+		// when: 모든 사용자 조회
+		List<UserEntity> users = userRepository.findAll();
+
+		// then: 저장된 사용자 수와 이메일 검증
+		assertThat(users)
+			.hasSize(2)
+			.extracting(UserEntity::getEmail)
+			.containsExactly("user1@example.com", "user2@example.com");
+	}
+
+	// 테스트 사용자 생성을 위한 헬퍼 메서드
+	private UserEntity createTestUser(String email, String companyId) {
+		return UserEntity.builder()
+			.email(email)
+			.password("testPassword")
+			.userName("테스트 사용자")
+			.companyId(companyId)
+			.build();
 	}
 }

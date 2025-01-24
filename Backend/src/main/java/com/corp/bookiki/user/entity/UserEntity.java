@@ -73,15 +73,29 @@ public class UserEntity {
 	@Column(nullable = false)
 	private Provider provider = Provider.BOOKIKI;
 
-	// 빌더 패턴을 사용한 생성자
+	// @Builder
+	// public UserEntity(String email, String password, String userName, String companyId) {
+	// 	this.email = email;
+	// 	this.password = password;
+	// 	this.userName = userName;
+	// 	this.companyId = companyId;
+	// 	this.createdAt = LocalDateTime.now();
+	// 	this.updatedAt = LocalDateTime.now();
+	// 	this.activeAt = LocalDateTime.now();
+	// }
+
 	@Builder
-	public UserEntity(String email, String password, String userName, String companyId) {
+	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage) {
+		this.id = id;
 		this.email = email;
 		this.password = password;
 		this.userName = userName;
 		this.companyId = companyId;
-		this.createdAt = LocalDateTime.now();
-		this.updatedAt = LocalDateTime.now();
-		this.activeAt = LocalDateTime.now();
+		this.role = role;
+		this.provider = provider;
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
+		this.activeAt = activeAt;
+		this.profileImage = profileImage;
 	}
 }
