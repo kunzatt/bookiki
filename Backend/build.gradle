@@ -86,6 +86,9 @@ dependencies {
 
     // H2 데이터베이스
     testImplementation 'com.h2database:h2'
+
+    // json
+    implementation 'org.json:json:20231013'
 }
 
 tasks.named('test') {
