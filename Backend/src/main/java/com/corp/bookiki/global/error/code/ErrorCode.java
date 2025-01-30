@@ -26,7 +26,7 @@ public enum ErrorCode {
 	// Book
 	BOOK_INFO_NOT_FOUND(404, "도서 정보를 찾을 수 없습니다"),
 	BOOK_ITEM_NOT_FOUND(404, "도서 아이템을 찾을 수 없습니다"),
-	INVALID_ISBN(400, "잘못된 ISBN입니다"),
+	INVALID_ISBN(400, "잘못된 ISBN 입니다"),
 	INVALID_BOOK_STATUS(400, "잘못된 도서 상태입니다"),
 	BOOK_ALREADY_BORROWED(400, "이미 대출 중인 도서입니다"),
 	BOOK_NOT_AVAILABLE(400, "현재 대출 불가능한 도서입니다"),
@@ -63,7 +63,10 @@ public enum ErrorCode {
 
 	// Chat
 	CHAT_NOT_FOUND(404, "채팅을 찾을 수 없습니다"),
-	INVALID_CHAT_CONTENT(400, "잘못된 채팅 내용입니다");
+	INVALID_CHAT_CONTENT(400, "잘못된 채팅 내용입니다"),
+
+	// 외부 API
+	EXTERNAL_API_ERROR(500, "외부 API 호출 중 오류가 발생했습니다");
 
 	private final int status;
 	private final String message;
