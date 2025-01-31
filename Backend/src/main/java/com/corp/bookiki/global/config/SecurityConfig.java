@@ -6,12 +6,14 @@ import com.corp.bookiki.jwt.handler.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -22,12 +24,20 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
-import java.util.List;
+import com.corp.bookiki.jwt.filter.JWTFilter;
+import com.corp.bookiki.jwt.handler.LoginFailureHandler;
+import com.corp.bookiki.jwt.handler.LoginSuccessHandler;
+import com.corp.bookiki.jwt.handler.OAuth2AuthenticationFailureHandler;
+import com.corp.bookiki.jwt.handler.OAuth2AuthenticationSuccessHandler;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 @Slf4j
 public class SecurityConfig {
@@ -44,7 +54,7 @@ public class SecurityConfig {
 	private String frontendUrl;
 
 	@Bean
-	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		log.info("보안 필터 체인 구성 시작");
 		http
 				.csrf((auth)->{
@@ -141,7 +151,6 @@ public class SecurityConfig {
 					log.debug("CORS 설정 완료");
 				})
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
 		log.info("보안 필터 체인 구성 완료");
 		return http.build();
 	}
