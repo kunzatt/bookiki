@@ -16,6 +16,7 @@ public enum ErrorCode {
 	// Auth & User
 	INVALID_TOKEN(401, "유효하지 않은 토큰입니다"),
 	EXPIRED_TOKEN(401, "만료된 토큰입니다"),
+	REFRESH_TOKEN_NOT_FOUND(401, "리프레시 토큰을 찾을 수 없습니다."),
 	EMAIL_DUPLICATE(400, "이미 존재하는 이메일입니다"),
 	COMPANY_ID_DUPLICATE(400, "이미 존재하는 사번입니다"),
 	USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다"),
@@ -26,7 +27,7 @@ public enum ErrorCode {
 	// Book
 	BOOK_INFO_NOT_FOUND(404, "도서 정보를 찾을 수 없습니다"),
 	BOOK_ITEM_NOT_FOUND(404, "도서 아이템을 찾을 수 없습니다"),
-	INVALID_ISBN(400, "잘못된 ISBN입니다"),
+	INVALID_ISBN(400, "잘못된 ISBN 입니다"),
 	INVALID_BOOK_STATUS(400, "잘못된 도서 상태입니다"),
 	BOOK_ALREADY_BORROWED(400, "이미 대출 중인 도서입니다"),
 	BOOK_NOT_AVAILABLE(400, "현재 대출 불가능한 도서입니다"),
@@ -63,7 +64,10 @@ public enum ErrorCode {
 
 	// Chat
 	CHAT_NOT_FOUND(404, "채팅을 찾을 수 없습니다"),
-	INVALID_CHAT_CONTENT(400, "잘못된 채팅 내용입니다");
+	INVALID_CHAT_CONTENT(400, "잘못된 채팅 내용입니다"),
+
+	// 외부 API
+	EXTERNAL_API_ERROR(500, "외부 API 호출 중 오류가 발생했습니다");
 
 	private final int status;
 	private final String message;
