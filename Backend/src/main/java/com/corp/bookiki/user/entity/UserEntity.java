@@ -1,31 +1,29 @@
 package com.corp.bookiki.user.entity;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 @Entity
 @Table(name = "users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
-public class UserEntity {
+public class UserEntity implements OAuth2User, UserDetails {
 	// 자동 증가하는 기본 키
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -69,23 +67,17 @@ public class UserEntity {
 	@Column(length = 255)
 	private String profileImage;
 
+	// 이메일 인증 여부
+	@Column(nullable = false)
+	private boolean emailVerified = false;
+
+	//OAuth provider
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Provider provider = Provider.BOOKIKI;
 
 	@Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
 	private Boolean deleted = false;
-
-	// @Builder
-	// public UserEntity(String email, String password, String userName, String companyId) {
-	// 	this.email = email;
-	// 	this.password = password;
-	// 	this.userName = userName;
-	// 	this.companyId = companyId;
-	// 	this.createdAt = LocalDateTime.now();
-	// 	this.updatedAt = LocalDateTime.now();
-	// 	this.activeAt = LocalDateTime.now();
-	// }
 
 	@Builder
 	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage, Boolean deleted) {
@@ -101,6 +93,68 @@ public class UserEntity {
 		this.activeAt = activeAt;
 		this.profileImage = profileImage;
 		this.deleted = false;
+	}
+
+	// 이메일 인증 완료 처리
+	public void verifyEmail() {
+		this.emailVerified = true;
+	}
+
+	// 비밀번호 변경
+	public void updatePassword(String newPassword) {
+		this.password = newPassword;
+	}
+
+	// OAuth2 정보 업데이트
+	public void updateOAuth2Info(Provider provider, String providerId) {
+		this.provider = provider;
+		this.providerId = providerId;
+	}
+
+	@Transient  // DB에 저장되지 않음
+	private Map<String, Object> attributes;
+
+	public Map<String, Object> getAttributes() {
+		return attributes;
+	}
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
+	}
+
+	@Override
+	public String getName() {
+		return this.email;
+	}
+
+	@Override
+	public String getUsername() {
+		return this.email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+	public void setAttributes(Map<String, Object> attributes) {
+		this.attributes = attributes;
 	}
 
 	public void updateActiveAt(LocalDateTime activeAt) {
