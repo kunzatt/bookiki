@@ -10,8 +10,8 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
-@Schema(description = "문의사항 응답")
-public class QnaResponse {
+@Schema(description = "문의사항 상세 응답")
+public class QnaDetailResponse {
     @Schema(description = "QnA ID", example = "1")
     private int id;
 
@@ -24,8 +24,9 @@ public class QnaResponse {
     @Schema(description = "작성자 ID", example = "1")
     private int authorId;
 
-//    @Schema(description = "작성자 이름", example = "홍길동")
-//    private String authorName;
+    // entity에는 없지만, 함께 사용해야할 column
+    @Schema(description = "작성자 이름", example = "홍길동")
+    private String authorName;
 
     @Schema(description = "생성일시", example = "2024-01-24T10:00:00")
     private LocalDateTime createdAt;
@@ -36,12 +37,12 @@ public class QnaResponse {
     @Schema(description = "댓글 목록")
     private List<QnaCommentResponse> comments;
 
-    public QnaResponse(QnaEntity qna, String authorName, List<QnaCommentResponse> comments) {
+    public QnaDetailResponse(QnaEntity qna, String authorName, List<QnaCommentResponse> comments) {
         this.id = qna.getId();
         this.title = qna.getTitle();
         this.content = qna.getContent();
         this.authorId = qna.getAuthorId();
-//        this.authorName = authorName;
+        this.authorName = authorName;
         this.createdAt = qna.getCreatedAt();
         this.updatedAt = qna.getUpdatedAt();
         this.comments = comments;

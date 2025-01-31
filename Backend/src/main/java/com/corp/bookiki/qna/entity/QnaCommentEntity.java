@@ -47,12 +47,8 @@ public class QnaCommentEntity {
     @JoinColumn(name = "qna_id", insertable = false, updatable = false)
     private QnaEntity qna;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id", insertable = false, updatable = false)
-    private QnaCommentEntity parent;
-
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<QnaCommentEntity> replies = new ArrayList<>();
+    private List<QnaCommentEntity> comments = new ArrayList<>();
 
     @Builder
     private QnaCommentEntity(int qnaId, String content, int authorId) {

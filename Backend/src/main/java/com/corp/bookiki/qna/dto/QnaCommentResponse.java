@@ -23,21 +23,17 @@ public class QnaCommentResponse {
     @Schema(description = "작성자 ID", example = "1")
     private int authorId;
 
-//    @Schema(description = "작성자 이름", example = "홍길동")
-//    private String authorName;
-
     @Schema(description = "생성일시", example = "2024-01-24T10:00:00")
     private LocalDateTime createdAt;
 
     @Schema(description = "수정일시", example = "2024-01-24T10:00:00")
     private LocalDateTime updatedAt;
 
-    public QnaCommentResponse(QnaCommentEntity comment, String authorName) {
+    public QnaCommentResponse(QnaCommentEntity comment) {
         this.id = comment.getId();
         this.qnaId = comment.getQnaId();
         this.content = comment.getContent();
         this.authorId = comment.getAuthorId();
-//        this.authorName = authorName;
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();
     }
