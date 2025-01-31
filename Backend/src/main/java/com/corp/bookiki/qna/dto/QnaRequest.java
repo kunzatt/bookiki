@@ -14,6 +14,10 @@ public class QnaRequest {
     @NotBlank(message = "제목은 필수 입력값입니다.")
     private String title;
 
+    @Schema(description = "문의사항 유형", example = "도서관 이용", required = true)
+    @NotBlank(message = "문의사항 유형은 필수 입력값입니다.")
+    private String qnaType;
+
     @Schema(description = "내용", example = "도서관 이용 시간이 어떻게 되나요?", required = true)
     @NotBlank(message = "내용은 필수 입력값입니다.")
     private String content;
@@ -21,6 +25,7 @@ public class QnaRequest {
     public QnaEntity toEntity(int authorId) {
         return QnaEntity.builder()
                 .title(title)
+                .qnaType(qnaType)
                 .content(content)
                 .authorId(authorId)
                 .build();

@@ -12,9 +12,13 @@ public class QnaUpdate {
     @Schema(description = "문의사항 ID", example = "1", required = true)
     private int id;
 
-    @Schema(description = "제목", example = "도서관 이용 문의 (수정)", required = true)
+    @Schema(description = "제목", example = "JPA 도서 신청 (수정)", required = true)
     @NotBlank(message = "제목은 필수 입력값입니다.")
     private String title;
+
+    @Schema(description = "유형", example = "희망도서 신청", required = true)
+    @NotBlank(message = "유형은 필수 입력값입니다.")
+    private String qnaType;
 
     @Schema(description = "내용", example = "수정된 문의 내용입니다.", required = true)
     @NotBlank(message = "내용은 필수 입력값입니다.")

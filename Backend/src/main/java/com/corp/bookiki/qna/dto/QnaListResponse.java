@@ -17,6 +17,9 @@ public class QnaListResponse {
     @Schema(description = "제목", example = "도서관 이용 문의")
     private String title;
 
+    @Schema(description = "문의사항 유형", example = "도서관 이용")
+    private String qnaType;
+
     @Schema(description = "작성자 이름", example = "테스트계정")
     private String authorName;
 
@@ -26,6 +29,7 @@ public class QnaListResponse {
     public QnaListResponse(QnaEntity qna) {
         this.id = qna.getId();
         this.title = qna.getTitle();
+        this.qnaType = qna.getQnaType();
         this.authorName = "박성문"; // 임시 테스트용 작성자 이름
         this.createdAt = qna.getCreatedAt();
     }

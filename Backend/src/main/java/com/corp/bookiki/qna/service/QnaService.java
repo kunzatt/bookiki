@@ -2,46 +2,81 @@ package com.corp.bookiki.qna.service;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaException;
+import com.corp.bookiki.qna.QnaTestConstants;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaDetailResponse;
 import com.corp.bookiki.qna.dto.QnaRequest;
 import com.corp.bookiki.qna.dto.QnaUpdate;
+import com.corp.bookiki.qna.entity.QnaCommentEntity;
 import com.corp.bookiki.qna.entity.QnaEntity;
+import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import com.corp.bookiki.qna.repository.QnaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class QnaService {
-    // 개발용 임시 상수
-    private static final int TEST_AUTHOR_ID = 1;
-    private static final String TEST_AUTHOR_NAME = "박성문";
 
     private final QnaRepository qnaRepository;
+    private final QnaCommentRepository qnaCommentRepository;
     private final QnaCommentService qnaCommentService; // 문의사항 상제 조회에서 댓글 목록을 불러오기 위함
 
     // 문의사항 등록
     @Transactional
     public int creatQna(QnaRequest request, int authorId) {
         // user 관련 서비스 완성 후 수정
-        QnaEntity qna = request.toEntity(TEST_AUTHOR_ID);
+        QnaEntity qna = request.toEntity(authorId);
         qnaRepository.save(qna);
         return qna.getId();
     }
 
-    // 문의사항 전체 조회 (정렬, 검색 포함)
+    // 문의사항 조회
     @Transactional(readOnly = true)
-    public List<QnaEntity> selectAllQnas(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return qnaRepository.findByDeletedFalseOrderByCreatedAtDesc();
+    public List<QnaEntity> selectQnas(String keyword, String qnaType, Boolean answered) {
+        // 1. 기본 목록 가져오기
+        List<QnaEntity> filteredQnas = qnaRepository.findByDeletedFalseOrderByCreatedAtDesc();
+
+        // 2. 답변 유무로 필터링
+        if (answered != null) {
+            List<QnaEntity> answerFilteredQnas = new ArrayList<>();
+            for (QnaEntity qnaEntity : filteredQnas) {
+                if (answered == checkHasComment(qnaEntity)) {
+                    answerFilteredQnas.add(qnaEntity);
+                }
+            }
+            filteredQnas = answerFilteredQnas;
         }
-        return qnaRepository.findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(keyword, keyword);
+
+        // 3. 문의사항 유형으로 필터링
+        if (qnaType != null && !qnaType.isBlank()) {
+            List<QnaEntity> typeFilteredQnas = new ArrayList<>();
+            for (QnaEntity qnaEntity : filteredQnas) {
+                if (qnaEntity.getQnaType().equals(qnaType)) {
+                    typeFilteredQnas.add(qnaEntity);
+                }
+            }
+            filteredQnas = typeFilteredQnas;
+        }
+
+        // 4. 키워드로 검색
+        if (keyword != null && !keyword.isBlank()) {
+            List<QnaEntity> keywordFilteredQnas = new ArrayList<>();
+            for (QnaEntity qnaEntity : filteredQnas) {
+                if (qnaEntity.getTitle().contains(keyword) || qnaEntity.getContent().contains(keyword)) {
+                    keywordFilteredQnas.add(qnaEntity);
+                }
+            }
+            filteredQnas = keywordFilteredQnas;
+        }
+
+        return filteredQnas;
     }
 
     // 문의사항 1개 조회
@@ -58,8 +93,8 @@ public class QnaService {
     @Transactional(readOnly = true)
     public QnaDetailResponse selectQnaByIdWithComment(int id) {
         QnaEntity qna = selectQnaById(id);
-        List<QnaCommentResponse> comments = qnaCommentService.selectCommentsByQnaId(id);
-        return new QnaDetailResponse(qna, TEST_AUTHOR_NAME, comments);
+        List<QnaCommentResponse> comments = qnaCommentService.selectQnaCommentsByQnaId(id);
+        return new QnaDetailResponse(qna, QnaTestConstants.TEST_USER_NAME, comments);
     }
 
     // 문의사항 삭제
@@ -73,6 +108,12 @@ public class QnaService {
     @Transactional
     public void updateQna(QnaUpdate update) {
         QnaEntity qna = selectQnaById(update.getId());
-        qna.update(update.getTitle(), update.getContent());
+        qna.update(update.getTitle(), update.getQnaType(), update.getContent());
+    }
+
+    // 문의사항 답변 여부 판별
+    public boolean checkHasComment(QnaEntity qna) {
+        List<QnaCommentEntity> comments = qnaCommentRepository.findByQnaIdAndDeletedFalseOrderByCreatedAtAsc(qna.getId());
+        return !comments.isEmpty();
     }
 }

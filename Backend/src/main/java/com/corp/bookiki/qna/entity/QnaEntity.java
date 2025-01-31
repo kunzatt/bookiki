@@ -26,6 +26,9 @@ public class QnaEntity {
     @Column(nullable = false)
     private String title;
 
+    @Column(nullable = false)
+    private String qnaType;
+
     @Column
     private String content;
 
@@ -47,8 +50,9 @@ public class QnaEntity {
     private List<QnaCommentEntity> comments = new ArrayList<>();
 
     @Builder
-    private QnaEntity(String title, String content, int authorId) {
+    private QnaEntity(String title, String qnaType, String content, int authorId) {
         this.title = title;
+        this.qnaType = qnaType;
         this.content = content;
         this.authorId = authorId;
         this.createdAt = LocalDateTime.now();
@@ -56,8 +60,9 @@ public class QnaEntity {
         this.deleted = false;
     }
 
-    public void update(String title, String content) {
+    public void update(String title, String qnaType, String content) {
         this.title = title;
+        this.qnaType = qnaType;
         this.content = content;
     }
 

@@ -18,6 +18,9 @@ public class QnaDetailResponse {
     @Schema(description = "제목", example = "도서관 이용 문의")
     private String title;
 
+    @Schema(description = "문의사항 유형", example = "도서관 이용")
+    private String qnaType;
+
     @Schema(description = "내용", example = "도서관 이용 시간이 어떻게 되나요?")
     private String content;
 
@@ -40,6 +43,7 @@ public class QnaDetailResponse {
     public QnaDetailResponse(QnaEntity qna, String authorName, List<QnaCommentResponse> comments) {
         this.id = qna.getId();
         this.title = qna.getTitle();
+        this.qnaType = qna.getQnaType();
         this.content = qna.getContent();
         this.authorId = qna.getAuthorId();
         this.authorName = authorName;
