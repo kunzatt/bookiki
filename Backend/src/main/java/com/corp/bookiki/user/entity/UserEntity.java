@@ -1,6 +1,5 @@
 package com.corp.bookiki.user.entity;
 
-import com.corp.bookiki.auth.entity.AuthProvider;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -74,20 +73,26 @@ public class UserEntity implements OAuth2User, UserDetails {
 
 	//OAuth provider
 	@Enumerated(EnumType.STRING)
-	private AuthProvider provider = AuthProvider.LOCAL;
+	@Column(nullable = false)
+	private Provider provider = Provider.BOOKIKI;
 
-	private String providerId;
+	@Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+	private Boolean deleted = false;
 
-	// 빌더 패턴을 사용한 생성자
 	@Builder
-	public UserEntity(String email, String password, String userName, String companyId,
-					  AuthProvider provider, String providerId) {
+	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage, Boolean deleted) {
+		this.id = id;
 		this.email = email;
 		this.password = password;
 		this.userName = userName;
 		this.companyId = companyId;
+		this.role = role;
 		this.provider = provider;
-		this.providerId = providerId;
+		this.createdAt = createdAt;
+		this.updatedAt = updatedAt;
+		this.activeAt = activeAt;
+		this.profileImage = profileImage;
+		this.deleted = false;
 	}
 
 	// 이메일 인증 완료 처리
@@ -101,7 +106,7 @@ public class UserEntity implements OAuth2User, UserDetails {
 	}
 
 	// OAuth2 정보 업데이트
-	public void updateOAuth2Info(AuthProvider provider, String providerId) {
+	public void updateOAuth2Info(Provider provider, String providerId) {
 		this.provider = provider;
 		this.providerId = providerId;
 	}
@@ -150,5 +155,13 @@ public class UserEntity implements OAuth2User, UserDetails {
 
 	public void setAttributes(Map<String, Object> attributes) {
 		this.attributes = attributes;
+	}
+
+	public void updateActiveAt(LocalDateTime activeAt) {
+		this.activeAt = activeAt;
+	}
+
+	public void delete() {
+		this.deleted = true;
 	}
 }
