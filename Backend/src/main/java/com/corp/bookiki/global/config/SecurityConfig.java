@@ -41,7 +41,7 @@ public class SecurityConfig {
 	private final CustomOAuth2UserService customOAuth2UserService;  // 추가
 	private final CustomLogoutHandler logoutHandler;  // 추가
 
-	@Value("${frontend.url}")
+	@Value("$FRONTEND_URL}")
 	private String frontendUrl;
 
 	@Bean

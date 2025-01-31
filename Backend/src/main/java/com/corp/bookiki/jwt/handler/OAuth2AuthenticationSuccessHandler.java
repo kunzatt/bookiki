@@ -29,7 +29,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
     private final JWTService jwtService;
     private final CookieUtil cookieUtil;
 
-    @Value("${frontend.url}")
+    @Value("${FRONTEND_URL}")
     private String frontendUrl;
 
     @Override

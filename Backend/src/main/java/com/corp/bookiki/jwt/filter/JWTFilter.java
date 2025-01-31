@@ -2,7 +2,7 @@ package com.corp.bookiki.jwt.filter;
 
 import com.corp.bookiki.jwt.JwtTokenProvider;
 import com.corp.bookiki.jwt.service.JWTService;
-import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.adapter.SecurityUserAdapter;
 import com.corp.bookiki.util.CookieUtil;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
@@ -102,9 +103,16 @@ public class JWTFilter extends OncePerRequestFilter {
     private void handleExpiredAccessToken(String refreshToken, HttpServletResponse response) {
         try {
             String userEmail = jwtService.extractUserEmail(refreshToken);
-            UserEntity userEntity = (UserEntity) userDetailsService.loadUserByUsername(userEmail);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-            Map<String, String> tokens = jwtService.rotateTokens(refreshToken, userEntity);
+            // UserDetails를 SecurityUserAdapter로 캐스팅
+            if (!(userDetails instanceof SecurityUserAdapter)) {
+                throw new AuthenticationException("Invalid user type") {};
+            }
+
+            SecurityUserAdapter securityUser = (SecurityUserAdapter) userDetails;
+
+            Map<String, String> tokens = jwtService.rotateTokens(refreshToken, securityUser);
             if (tokens != null) {
                 setTokenCookies(tokens, response);
                 processAccessToken(tokens.get("accessToken"));
