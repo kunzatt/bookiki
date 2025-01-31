@@ -11,4 +11,5 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
 	// 사번 존재 여부 확인 메서드
 	boolean existsByCompanyId(String companyId);
+
 }

@@ -7,11 +7,9 @@ spring:
     name: Bookiki
   autoconfigure:
     exclude:
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
       - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration
       - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration
       - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
-      - org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}

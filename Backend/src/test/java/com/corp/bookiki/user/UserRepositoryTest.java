@@ -62,4 +62,15 @@ class UserRepositoryTest {
 		assertThat(exists).isTrue();
 		log.info("사원번호 존재 여부 테스트 성공");
 	}
+
+	// 테스트 사용자 생성을 위한 헬퍼 메서드
+	private UserEntity createTestUser(String email, String companyId) {
+		return UserEntity.builder()
+			.email(email)
+			.password("testPassword")
+			.userName("테스트 사용자")
+			.companyId(companyId)
+			.build();
+	}
+
 }
