@@ -8,7 +8,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
+import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
+import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -33,4 +35,14 @@ public class UserInformationForAdminService {
 				.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND))
 		);
 	}
+
+	@Transactional
+	public UserInformationForAdminResponse updateUserActiveAt(Integer id, UserInformationForAdminRequest request) {
+		UserEntity user = userRepository.findById(id)
+			.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+
+		user.updateActiveAt(request.getActiveAt());
+		return UserInformationForAdminResponse.from(user);
+	}
+
 }

@@ -5,10 +5,13 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.corp.bookiki.global.error.dto.ErrorResponse;
+import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
 import com.corp.bookiki.user.service.UserInformationForAdminService;
 
@@ -79,4 +82,33 @@ public class UserInformationForAdminController {
 		log.info("사용자 ID {} 상세 정보 조회", userId);
 		return ResponseEntity.ok(userInformationForAdminService.getUserDetailsById(userId));
 	}
+
+	@Operation(summary = "사용자 활성 시간 수정", description = "특정 ID를 가진 사용자의 최종 활동 시간을 지정된 시간으로 수정합니다.")
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "수정 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = UserInformationForAdminResponse.class)
+			)
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "사용자가 존재하지 않음",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+			)
+		)
+	})
+	@PutMapping("/{userId}/active")
+	public ResponseEntity<UserInformationForAdminResponse> updateUserActiveAt(
+		@PathVariable Integer userId,
+		@RequestBody UserInformationForAdminRequest request
+	) {
+		log.info("사용자 ID {} 활성 시간을 {}로 수정", userId, request.getActiveAt());
+		return ResponseEntity.ok(userInformationForAdminService.updateUserActiveAt(userId, request));
+	}
+
 }

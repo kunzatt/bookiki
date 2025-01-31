@@ -98,4 +98,8 @@ public class UserEntity {
 		this.activeAt = activeAt;
 		this.profileImage = profileImage;
 	}
+
+	public void updateActiveAt(LocalDateTime activeAt) {
+		this.activeAt = activeAt;
+	}
 }
