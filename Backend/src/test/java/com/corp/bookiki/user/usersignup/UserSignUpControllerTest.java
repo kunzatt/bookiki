@@ -60,7 +60,7 @@ class UserSignUpControllerTest {
 	@Test
 	@WithMockUser
 	@DisplayName("정상적인 회원가입 요청 시 성공")
-	void registerWithEmail_WhenValidRequest_ReturnsOk() throws Exception {
+	void registerWithEmail_WhenValidRequest_ThenReturnsOk() throws Exception {
 		// given
 		UserSignUpRequest request = new UserSignUpRequest();
 		request.setEmail("test@test.com");
@@ -88,7 +88,7 @@ class UserSignUpControllerTest {
 	@Test
 	@WithMockUser
 	@DisplayName("중복되지 않은 이메일 확인 시 성공")
-	void checkEmailDuplicate_WhenNonDuplicateEmail_ReturnsOk() throws Exception {
+	void checkEmailDuplicate_WhenNonDuplicateEmail_ThenReturnsOk() throws Exception {
 		// given & when
 		String email = "test@test.com";
 		doNothing().when(userSignUpService).checkEmailDuplicate(email);
@@ -124,7 +124,7 @@ class UserSignUpControllerTest {
 	@Test
 	@WithMockUser
 	@DisplayName("유효하지 않은 회원가입 요청 시 BAD_REQUEST 반환")
-	void registerWithEmail_WhenInvalidRequest_ReturnsBadRequest() throws Exception {
+	void registerWithEmail_WhenInvalidRequest_ThenReturnsBadRequest() throws Exception {
 		// given
 		UserSignUpRequest request = new UserSignUpRequest();
 		log.info("유효하지 않은 요청 테스트 시작");
