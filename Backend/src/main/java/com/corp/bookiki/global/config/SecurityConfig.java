@@ -6,7 +6,6 @@ import com.corp.bookiki.jwt.handler.*;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,16 +23,8 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import com.corp.bookiki.jwt.filter.JWTFilter;
-import com.corp.bookiki.jwt.handler.LoginFailureHandler;
-import com.corp.bookiki.jwt.handler.LoginSuccessHandler;
-import com.corp.bookiki.jwt.handler.OAuth2AuthenticationFailureHandler;
-import com.corp.bookiki.jwt.handler.OAuth2AuthenticationSuccessHandler;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
