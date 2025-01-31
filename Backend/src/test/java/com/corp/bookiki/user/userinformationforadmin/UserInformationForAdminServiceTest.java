@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
+import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
 import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.Role;
@@ -108,5 +109,70 @@ class UserInformationForAdminServiceTest {
 			.isInstanceOf(UserException.class)
 			.hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
 		log.info("존재하지 않는 사용자 조회 테스트 완료");
+	}
+
+	@Test
+	@DisplayName("사용자 활성 시간 수정 성공")
+	void updateUserActiveAt_WhenValidRequest_ThenSuccess() {
+		log.info("사용자 활성 시간 수정 테스트 시작");
+		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime newActiveAt = now.plusHours(1);
+
+		UserEntity user = UserEntity.builder()
+			.id(1)
+			.email("test@example.com")
+			.userName("테스트")
+			.companyId("CORP001")
+			.role(Role.USER)
+			.provider(Provider.BOOKIKI)
+			.createdAt(now)
+			.updatedAt(now)
+			.activeAt(now)
+			.profileImage("profile.jpg")
+			.build();
+		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
+
+		when(userRepository.findById(1)).thenReturn(Optional.of(user));
+		log.info("Mock 레포지토리 동작 설정 완료");
+
+		UserInformationForAdminRequest request = new UserInformationForAdminRequest();
+		request.setActiveAt(newActiveAt);
+
+		UserInformationForAdminResponse result = userInformationForAdminService.updateUserActiveAt(1, request);
+
+		assertThat(result.getActiveAt()).isEqualTo(newActiveAt);
+		verify(userRepository, times(1)).findById(1);
+		log.info("사용자 활성 시간 수정 테스트 완료");
+	}
+
+	@Test
+	@DisplayName("사용자 삭제(상태 변경) 성공")
+	void deleteUser_WhenValidRequest_ThenSuccess() {
+		log.info("사용자 삭제 테스트 시작");
+		LocalDateTime now = LocalDateTime.now();
+
+		UserEntity user = UserEntity.builder()
+			.id(1)
+			.email("test@example.com")
+			.userName("테스트")
+			.companyId("CORP001")
+			.role(Role.USER)
+			.provider(Provider.BOOKIKI)
+			.createdAt(now)
+			.updatedAt(now)
+			.activeAt(now)
+			.profileImage("profile.jpg")
+			.deleted(false)
+			.build();
+		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
+
+		when(userRepository.findById(1)).thenReturn(Optional.of(user));
+		log.info("Mock 레포지토리 동작 설정 완료");
+
+		UserInformationForAdminResponse result = userInformationForAdminService.deleteUser(1);
+
+		assertThat(result.getId()).isEqualTo(1);
+		verify(userRepository, times(1)).findById(1);
+		log.info("사용자 삭제 테스트 완료");
 	}
 }

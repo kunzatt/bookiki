@@ -103,13 +103,13 @@ public class UserInformationForAdminController {
 			)
 		)
 	})
-	@PutMapping("/{userId}/active")
+	@PutMapping("/{userId}")
 	public ResponseEntity<UserInformationForAdminResponse> updateUserActiveAt(
 		@PathVariable Integer userId,
 		@RequestBody UserInformationForAdminRequest request
 	) {
 		log.info("사용자 ID {} 활성 시간을 {}로 수정", userId, request.getActiveAt());
-		return ResponseEntity.ok(userInformationForAdminService.updateUserActiveAt(userId, request));
+		return ResponseEntity.ok(userInformationForAdminService.updateUserActiveAt(userId, request)); // 이렇게 수정
 	}
 
 	@Operation(summary = "사용자 삭제", description = "특정 ID를 가진 사용자를 소프트 삭제 처리합니다.")
