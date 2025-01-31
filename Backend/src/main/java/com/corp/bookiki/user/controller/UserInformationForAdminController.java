@@ -3,6 +3,7 @@ package com.corp.bookiki.user.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -109,6 +110,27 @@ public class UserInformationForAdminController {
 	) {
 		log.info("사용자 ID {} 활성 시간을 {}로 수정", userId, request.getActiveAt());
 		return ResponseEntity.ok(userInformationForAdminService.updateUserActiveAt(userId, request));
+	}
+
+	@Operation(summary = "사용자 삭제", description = "특정 ID를 가진 사용자를 소프트 삭제 처리합니다.")
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "204",
+			description = "삭제 성공"
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "사용자가 존재하지 않음",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+			)
+		)
+	})
+	@DeleteMapping("/{userId}")
+	public ResponseEntity<UserInformationForAdminResponse> deleteUser(@PathVariable Integer userId) {
+		UserInformationForAdminResponse response = userInformationForAdminService.deleteUser(userId);
+		return ResponseEntity.ok(response);
 	}
 
 }

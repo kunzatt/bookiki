@@ -73,6 +73,9 @@ public class UserEntity {
 	@Column(nullable = false)
 	private Provider provider = Provider.BOOKIKI;
 
+	@Column(nullable = false, columnDefinition = "TINTYINT(1) DEFAULT 0")
+	private Boolean deleted = false;
+
 	// @Builder
 	// public UserEntity(String email, String password, String userName, String companyId) {
 	// 	this.email = email;
@@ -85,7 +88,7 @@ public class UserEntity {
 	// }
 
 	@Builder
-	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage) {
+	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage, Boolean deleted) {
 		this.id = id;
 		this.email = email;
 		this.password = password;
@@ -97,9 +100,14 @@ public class UserEntity {
 		this.updatedAt = updatedAt;
 		this.activeAt = activeAt;
 		this.profileImage = profileImage;
+		this.deleted = false;
 	}
 
 	public void updateActiveAt(LocalDateTime activeAt) {
 		this.activeAt = activeAt;
+	}
+
+	public void delete() {
+		this.deleted = true;
 	}
 }

@@ -45,4 +45,13 @@ public class UserInformationForAdminService {
 		return UserInformationForAdminResponse.from(user);
 	}
 
+	@Transactional
+	public UserInformationForAdminResponse deleteUser(Integer id) {
+		UserEntity user = userRepository.findById(id)
+			.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+
+		user.delete();
+		return UserInformationForAdminResponse.from(user);
+	}
+
 }
