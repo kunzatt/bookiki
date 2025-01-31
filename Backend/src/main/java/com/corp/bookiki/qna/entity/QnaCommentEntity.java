@@ -10,8 +10,6 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "qna_comments")
@@ -46,9 +44,6 @@ public class QnaCommentEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "qna_id", insertable = false, updatable = false)
     private QnaEntity qna;
-
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private List<QnaCommentEntity> comments = new ArrayList<>();
 
     @Builder
     private QnaCommentEntity(int qnaId, String content, int authorId) {

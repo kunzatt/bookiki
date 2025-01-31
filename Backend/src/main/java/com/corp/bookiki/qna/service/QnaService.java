@@ -26,11 +26,10 @@ public class QnaService {
 
     private final QnaRepository qnaRepository;
     private final QnaCommentRepository qnaCommentRepository;
-    private final QnaCommentService qnaCommentService; // 문의사항 상제 조회에서 댓글 목록을 불러오기 위함
 
     // 문의사항 등록
     @Transactional
-    public int creatQna(QnaRequest request, int authorId) {
+    public int createQna(QnaRequest request, int authorId) {
         // user 관련 서비스 완성 후 수정
         QnaEntity qna = request.toEntity(authorId);
         qnaRepository.save(qna);
@@ -93,8 +92,12 @@ public class QnaService {
     @Transactional(readOnly = true)
     public QnaDetailResponse selectQnaByIdWithComment(int id) {
         QnaEntity qna = selectQnaById(id);
-        List<QnaCommentResponse> comments = qnaCommentService.selectQnaCommentsByQnaId(id);
-        return new QnaDetailResponse(qna, QnaTestConstants.TEST_USER_NAME, comments);
+        List<QnaCommentEntity> comments = qnaCommentRepository.findByQnaIdAndDeletedFalseOrderByCreatedAtAsc(id);
+        List<QnaCommentResponse> responses = new ArrayList<>();
+        for (QnaCommentEntity comment : comments) {
+            responses.add(new QnaCommentResponse(comment));
+        }
+        return new QnaDetailResponse(qna, QnaTestConstants.TEST_USER_NAME, responses);
     }
 
     // 문의사항 삭제

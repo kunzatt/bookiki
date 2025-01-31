@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -60,17 +61,27 @@ class QnaServiceTest {
         ReflectionTestUtils.setField(request, "qnaType", "GENERAL");
         ReflectionTestUtils.setField(request, "content", "Test Content");
 
-        QnaEntity entity = request.toEntity(1);
-        ReflectionTestUtils.setField(entity, "id", 1);
+        // Capture the entity that will be saved
+        ArgumentCaptor<QnaEntity> entityCaptor = ArgumentCaptor.forClass(QnaEntity.class);
 
-        when(qnaRepository.save(any(QnaEntity.class))).thenReturn(entity);
+        // Setup the mock to return the captured entity with ID set
+        when(qnaRepository.save(any(QnaEntity.class))).thenAnswer(invocation -> {
+            QnaEntity savedEntity = invocation.getArgument(0);
+            ReflectionTestUtils.setField(savedEntity, "id", 1);
+            return savedEntity;
+        });
 
         // when
-        int qnaId = qnaService.creatQna(request, 1);
+        int qnaId = qnaService.createQna(request, 1);
 
         // then
-        verify(qnaRepository, times(1)).save(any(QnaEntity.class));
-        assertThat(qnaId).isEqualTo(entity.getId());
+        verify(qnaRepository).save(entityCaptor.capture());
+        QnaEntity capturedEntity = entityCaptor.getValue();
+
+        assertThat(qnaId).isEqualTo(1);
+        assertThat(capturedEntity.getTitle()).isEqualTo("Test Title");
+        assertThat(capturedEntity.getQnaType()).isEqualTo("GENERAL");
+        assertThat(capturedEntity.getContent()).isEqualTo("Test Content");
     }
 
     @Test

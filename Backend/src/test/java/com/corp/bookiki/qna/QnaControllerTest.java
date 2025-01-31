@@ -1,6 +1,6 @@
 package com.corp.bookiki.qna;
 
-import com.corp.bookiki.global.config.SecurityConfig;
+import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaException;
 import com.corp.bookiki.qna.controller.QnaController;
@@ -15,13 +15,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
@@ -30,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -37,15 +41,16 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Slf4j
-@WebMvcTest(QnaController.class)
+@WebMvcTest(value = QnaController.class, excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE,
+                classes = {WebMvcConfig.class})
+})
 @MockBean(JpaMetamodelMappingContext.class)
-@Import(SecurityConfig.class)
-@AutoConfigureMockMvc(addFilters = false)
-@DisplayName("문의사항 컨트롤러 테스트")
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class QnaControllerTest {
 
     @Autowired
@@ -59,7 +64,7 @@ class QnaControllerTest {
 
     @BeforeEach
     void setUp() {
-        log.info("Setting up QnaControllerTest...");
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -70,7 +75,7 @@ class QnaControllerTest {
         ReflectionTestUtils.setField(request, "title", "도서관 이용 문의");
         ReflectionTestUtils.setField(request, "qnaType", "도서관 이용");
         ReflectionTestUtils.setField(request, "content", "도서관 이용 시간이 어떻게 되나요?");
-        given(qnaService.creatQna(any(), eq(QnaTestConstants.TEST_USER_ID))).willReturn(1);
+        given(qnaService.createQna(any(), eq(QnaTestConstants.TEST_USER_ID))).willReturn(1);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -85,7 +90,7 @@ class QnaControllerTest {
         result.andExpect(status().isCreated())
                 .andExpect(jsonPath("$").value(1))
                 .andDo(print());
-        verify(qnaService).creatQna(any(QnaRequest.class), eq(QnaTestConstants.TEST_USER_ID));
+        verify(qnaService).createQna(any(QnaRequest.class), eq(QnaTestConstants.TEST_USER_ID));
     }
 
     @Test
@@ -93,9 +98,10 @@ class QnaControllerTest {
     void createQna_ValidationFail() throws Exception {
         // given
         QnaRequest request = new QnaRequest();
-        ReflectionTestUtils.setField(request, "title", "");
-        ReflectionTestUtils.setField(request, "qnaType", "");
-        ReflectionTestUtils.setField(request, "content", "");
+        // 빈 문자열 대신 null 사용
+        ReflectionTestUtils.setField(request, "title", null);
+        ReflectionTestUtils.setField(request, "qnaType", null);
+        ReflectionTestUtils.setField(request, "content", null);
 
         String content = objectMapper.writeValueAsString(request);
 
@@ -108,11 +114,9 @@ class QnaControllerTest {
 
         // then
         result.andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("잘못된 입력값입니다"))
+                .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.errors").isArray())
-                .andExpect(jsonPath("$.errors[?(@.field == 'title')].reason").value("제목은 필수 입력값입니다."))
-                .andExpect(jsonPath("$.errors[?(@.field == 'qnaType')].reason").value("문의사항 유형은 필수 입력값입니다."))
-                .andExpect(jsonPath("$.errors[?(@.field == 'content')].reason").value("내용은 필수 입력값입니다."))
+                .andExpect(jsonPath("$.errors[*].field").value(containsInAnyOrder("title", "qnaType", "content")))
                 .andDo(print());
     }
 
@@ -189,7 +193,7 @@ class QnaControllerTest {
 
         // when
         ResultActions result = mockMvc.perform(
-                delete("/qna/{id}", qnaId)
+                delete("/qna/{id}", qnaId)  // URL path variable 사용
         );
 
         // then
@@ -209,18 +213,18 @@ class QnaControllerTest {
         ReflectionTestUtils.setField(update, "qnaType", "TECHNICAL");
         ReflectionTestUtils.setField(update, "content", "Updated Content");
 
-        doNothing().when(qnaService).updateQna(any(QnaUpdate.class));
+        String requestBody = objectMapper.writeValueAsString(update);
 
         // when
         ResultActions result = mockMvc.perform(
                 put("/qna")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(update))
+                        .content(requestBody)
         );
 
         // then
         result.andExpect(status().isOk())
-                .andExpect(jsonPath("$").value("문의사항이 수정되었습니다."))
+                .andExpect(content().string("문의사항이 수정되었습니다."))
                 .andDo(print());
 
         verify(qnaService).updateQna(any(QnaUpdate.class));

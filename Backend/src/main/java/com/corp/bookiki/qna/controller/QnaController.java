@@ -80,7 +80,7 @@ public class QnaController {
             content = @Content(schema = @Schema(implementation = QnaRequest.class))
     ) @Valid @RequestBody QnaRequest request) {
         log.info("문의사항 등록: {}", request.getTitle());
-        int qnaId = qnaService.creatQna(request, QnaTestConstants.TEST_USER_ID);
+        int qnaId = qnaService.createQna(request, QnaTestConstants.TEST_USER_ID);
 
         // 등록된 문의사항의 id 반환
         return ResponseEntity.status(HttpStatus.CREATED).body(qnaId);
