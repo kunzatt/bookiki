@@ -88,6 +88,10 @@ public class SecurityUserAdapter implements UserDetails, OAuth2User {
         return attributes;
     }
 
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
+    }
+
     @Override
     public String getName() {
         return user.getEmail();

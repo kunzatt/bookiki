@@ -1,5 +1,6 @@
 package com.corp.bookiki.auth.service;
 
+import com.corp.bookiki.user.adapter.SecurityUserAdapter;
 import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
@@ -48,7 +49,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String email = extractEmail(attributes);
 
         try {
-            UserEntity existingUser = (UserEntity) userDetailsService.loadUserByUsername(email);
+            SecurityUserAdapter existingUser = (SecurityUserAdapter) userDetailsService.loadUserByUsername(email);
             existingUser.setAttributes(attributes);  // OAuth2 속성 업데이트
             return existingUser;
         } catch (UsernameNotFoundException e) {
@@ -68,15 +69,17 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return email;
     }
 
-    private OAuth2User createNewOAuth2User(String email, Map<String, Object> attributes, String registrationId) {
+    private SecurityUserAdapter createNewOAuth2User(String email, Map<String, Object> attributes, String registrationId) {
         UserEntity newUser = UserEntity.builder()
                 .email(email)
                 .provider(Provider.valueOf(registrationId.toUpperCase()))
                 .build();
 
-        newUser.setAttributes(attributes);  // OAuth2 속성 설정
+        UserEntity savedUser = userRepository.save(newUser);
+        SecurityUserAdapter securityUser = new SecurityUserAdapter(savedUser);
+        securityUser.setAttributes(attributes);  // OAuth2 속성 설정
         attributes.put("isNewUser", true);  // 신규 사용자 표시
 
-        return userRepository.save(newUser);
+        return securityUser;
     }
 }
