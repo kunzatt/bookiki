@@ -2,6 +2,7 @@ package com.corp.bookiki.global.error.code;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -19,10 +20,21 @@ public enum ErrorCode {
 	REFRESH_TOKEN_NOT_FOUND(401, "리프레시 토큰을 찾을 수 없습니다."),
 	EMAIL_DUPLICATE(400, "이미 존재하는 이메일입니다"),
 	COMPANY_ID_DUPLICATE(400, "이미 존재하는 사번입니다"),
-	USER_NOT_FOUND(404, "사용자를 찾을 수 없습니다"),
 	INVALID_PASSWORD(400, "잘못된 비밀번호입니다"),
 	INVALID_ROLE_TYPE(400, "잘못된 권한 타입입니다"),
 	INVALID_PROFILE_IMAGE(400, "잘못된 프로필 이미지 형식입니다"),
+	LOGIN_BAD_CREDENTIALS(HttpStatus.UNAUTHORIZED.value(), "이메일 또는 비밀번호가 일치하지 않습니다."),
+	LOGIN_FAILED(HttpStatus.UNAUTHORIZED.value(), "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."),
+	// 사용자 관련 에러
+	USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다."),
+	USER_SEARCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "사용자 정보 조회 중 오류가 발생했습니다."),
+
+	// OAuth2 관련 에러 코드들
+	OAUTH2_INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 OAuth2 토큰입니다."),
+	OAUTH2_INVALID_REQUEST(HttpStatus.BAD_REQUEST.value(), "잘못된 OAuth2 요청입니다."),
+	OAUTH2_UNAUTHORIZED_CLIENT(HttpStatus.UNAUTHORIZED.value(), "승인되지 않은 OAuth2 클라이언트입니다."),
+	OAUTH2_ACCESS_DENIED(HttpStatus.FORBIDDEN.value(), "OAuth2 접근이 거부되었습니다."),
+	OAUTH2_PROCESSING_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "OAuth2 처리 중 오류가 발생했습니다."),
 
 	// Book
 	BOOK_INFO_NOT_FOUND(404, "도서 정보를 찾을 수 없습니다"),

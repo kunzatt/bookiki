@@ -1,24 +1,15 @@
 package com.corp.bookiki.user.entity;
 
-import java.time.LocalDateTime;
-
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -69,23 +60,13 @@ public class UserEntity {
 	@Column(length = 255)
 	private String profileImage;
 
+	//OAuth provider
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private Provider provider = Provider.BOOKIKI;
 
 	@Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
 	private Boolean deleted = false;
-
-	// @Builder
-	// public UserEntity(String email, String password, String userName, String companyId) {
-	// 	this.email = email;
-	// 	this.password = password;
-	// 	this.userName = userName;
-	// 	this.companyId = companyId;
-	// 	this.createdAt = LocalDateTime.now();
-	// 	this.updatedAt = LocalDateTime.now();
-	// 	this.activeAt = LocalDateTime.now();
-	// }
 
 	@Builder
 	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage, Boolean deleted) {
@@ -101,6 +82,11 @@ public class UserEntity {
 		this.activeAt = activeAt;
 		this.profileImage = profileImage;
 		this.deleted = false;
+	}
+
+	// 비밀번호 변경
+	public void updatePassword(String newPassword) {
+		this.password = newPassword;
 	}
 
 	public void updateActiveAt(LocalDateTime activeAt) {

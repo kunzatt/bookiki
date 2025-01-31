@@ -1,16 +1,14 @@
 package com.corp.bookiki.user;
 
-import static org.assertj.core.api.Assertions.*;
-
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.corp.bookiki.user.entity.UserEntity;
-import com.corp.bookiki.user.repository.UserRepository;
-
-import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @DataJpaTest
