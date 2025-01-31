@@ -1,6 +1,6 @@
 package com.corp.bookiki.auth.service;
 
-import com.corp.bookiki.auth.entity.AuthProvider;
+import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -71,7 +71,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     private OAuth2User createNewOAuth2User(String email, Map<String, Object> attributes, String registrationId) {
         UserEntity newUser = UserEntity.builder()
                 .email(email)
-                .provider(AuthProvider.valueOf(registrationId.toUpperCase()))
+                .provider(Provider.valueOf(registrationId.toUpperCase()))
                 .build();
 
         newUser.setAttributes(attributes);  // OAuth2 속성 설정

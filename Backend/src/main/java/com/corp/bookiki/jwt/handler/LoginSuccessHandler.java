@@ -2,7 +2,7 @@ package com.corp.bookiki.jwt.handler;
 
 
 import com.corp.bookiki.jwt.service.JWTService;
-import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.adapter.SecurityUserAdapter;
 import com.corp.bookiki.util.CookieUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,7 +39,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     ) throws IOException {
         log.debug("로그인 성공 핸들러 실행");
 
-        UserEntity user = (UserEntity) authentication.getPrincipal();
+        SecurityUserAdapter user = (SecurityUserAdapter) authentication.getPrincipal();
         log.info("사용자 '{}' 로그인 성공", user.getEmail());
 
         try {

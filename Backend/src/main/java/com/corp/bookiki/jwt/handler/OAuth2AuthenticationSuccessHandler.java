@@ -1,7 +1,7 @@
 package com.corp.bookiki.jwt.handler;
 
 import com.corp.bookiki.jwt.service.JWTService;
-import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.adapter.SecurityUserAdapter;
 import com.corp.bookiki.util.CookieUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,7 +41,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         log.debug("OAuth2 인증 성공 핸들러 시작");
 
         try {
-            UserEntity user = (UserEntity) authentication.getPrincipal();
+            SecurityUserAdapter user = (SecurityUserAdapter) authentication.getPrincipal();
             log.debug("인증된 사용자 정보: {}", user.getEmail());
 
             // 신규 사용자 처리
@@ -59,12 +59,12 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         }
     }
 
-    private boolean isNewUser(UserEntity user) {
+    private boolean isNewUser(SecurityUserAdapter user) {
         return user.getAttributes() != null &&
                 Boolean.TRUE.equals(user.getAttributes().get("isNewUser"));
     }
 
-    private void handleNewUser(HttpServletResponse response, UserEntity user) throws IOException {
+    private void handleNewUser(HttpServletResponse response, SecurityUserAdapter user) throws IOException {
         log.info("신규 사용자 감지: {}", user.getEmail());
 
         String temporaryToken = jwtService.generateTemporaryToken(user.getEmail());
@@ -78,7 +78,7 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
         response.sendRedirect(frontendUrl + ADDITIONAL_INFO_PATH);
     }
 
-    private void handleExistingUser(HttpServletResponse response, UserEntity user) throws IOException {
+    private void handleExistingUser(HttpServletResponse response, SecurityUserAdapter user) throws IOException {
         log.info("기존 사용자 로그인 처리: {}", user.getEmail());
 
         String accessToken = jwtService.generateAccessToken(user);

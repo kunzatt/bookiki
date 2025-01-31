@@ -3,6 +3,7 @@ package com.corp.bookiki.jwt.service;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BusinessException;
 import com.corp.bookiki.jwt.JwtTokenProvider;
+import com.corp.bookiki.user.adapter.SecurityUserAdapter;
 import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -40,16 +41,35 @@ public class JWTService {
     private static final String REFRESH_TOKEN_PREFIX = "RT:";
 
     // Access Token 생성
-    public String generateAccessToken(UserEntity user) {
-        Authentication auth = createAuthentication(user);
+    public String generateAccessToken(Object principal) {
+        Authentication auth;
+        if (principal instanceof SecurityUserAdapter) {
+            auth = createAuthentication((SecurityUserAdapter) principal);
+        } else if (principal instanceof UserEntity) {
+            auth = createAuthentication(new SecurityUserAdapter((UserEntity) principal));
+        } else {
+            throw new IllegalArgumentException("Unsupported principal type");
+        }
         return tokenProvider.createAccessToken(auth);
     }
 
     // Refresh Token 생성 및 Redis 저장
-    public String generateRefreshToken(UserEntity user) {
-        Authentication auth = createAuthentication(user);
+    public String generateRefreshToken(Object principal) {
+        String email;
+        if (principal instanceof SecurityUserAdapter) {
+            email = ((SecurityUserAdapter) principal).getEmail();
+        } else if (principal instanceof UserEntity) {
+            email = ((UserEntity) principal).getEmail();
+        } else {
+            throw new IllegalArgumentException("Unsupported principal type");
+        }
+
+        Authentication auth = createAuthentication(new SecurityUserAdapter(
+                principal instanceof UserEntity ? (UserEntity) principal
+                        : ((SecurityUserAdapter) principal).getUser()
+        ));
         String refreshToken = tokenProvider.generateToken(auth, refreshTokenExpiration);
-        saveRefreshToken(user.getEmail(), refreshToken);
+        saveRefreshToken(email, refreshToken);
         return refreshToken;
     }
 
@@ -60,7 +80,7 @@ public class JWTService {
     }
 
     // Authentication 객체 생성 헬퍼 메서드
-    private Authentication createAuthentication(UserEntity user) {
+    private Authentication createAuthentication(SecurityUserAdapter user) {
         return new UsernamePasswordAuthenticationToken(
                 user.getEmail(),
                 null,
@@ -87,7 +107,7 @@ public class JWTService {
     }
 
     // Refresh Token 검증
-    public boolean isValidRefreshToken(String token, UserEntity user) {
+    public boolean isValidRefreshToken(String token, SecurityUserAdapter user) {
         try {
             if (!isValid(token, createUserDetails(user))) {
                 return false;
@@ -109,11 +129,26 @@ public class JWTService {
     }
 
     // UserDetails 생성 헬퍼 메서드
-    private UserDetails createUserDetails(UserEntity user) {
+    private UserDetails createUserDetails(Object principal) {
+        String email;
+        Role role;
+
+        if (principal instanceof SecurityUserAdapter) {
+            SecurityUserAdapter adapter = (SecurityUserAdapter) principal;
+            email = adapter.getEmail();
+            role = adapter.getRole();
+        } else if (principal instanceof UserEntity) {
+            UserEntity user = (UserEntity) principal;
+            email = user.getEmail();
+            role = user.getRole();
+        } else {
+            throw new IllegalArgumentException("Unsupported principal type");
+        }
+
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
+                .username(email)
                 .password("")
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())))
+                .authorities(List.of(new SimpleGrantedAuthority("ROLE_" + role.name())))
                 .build();
     }
 
@@ -132,7 +167,7 @@ public class JWTService {
     }
 
     // 토큰 갱신(RTR)
-    public Map<String, String> rotateTokens(String oldRefreshToken, UserEntity user) {
+    public Map<String, String> rotateTokens(String oldRefreshToken, SecurityUserAdapter user) {
         try {
             if (!isValidRefreshToken(oldRefreshToken, user)) {
                 throw new BusinessException(ErrorCode.INVALID_TOKEN, "유효하지 않은 리프레시 토큰입니다.");
