@@ -15,13 +15,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.corp.bookiki.global.config.SecurityConfig;
-import com.corp.bookiki.jwt.JwtTokenProvider;
-import com.corp.bookiki.jwt.service.JWTService;
+import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.user.controller.UserInformationForAdminController;
 import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
@@ -33,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @WebMvcTest(UserInformationForAdminController.class)
-@Import({SecurityConfig.class, CookieUtil.class})
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
 @AutoConfigureMockMvc(addFilters = false)
 class UserInformationForAdminControllerTest {
 
@@ -45,15 +43,6 @@ class UserInformationForAdminControllerTest {
 
 	@Autowired
 	private ObjectMapper objectMapper;
-
-	@MockBean
-	private JWTService jwtService;
-
-	@MockBean
-	private UserDetailsService userDetailsService;
-
-	@MockBean
-	private JwtTokenProvider jwtTokenProvider;
 
 	private UserInformationForAdminResponse createTestResponse(LocalDateTime now) {
 		return UserInformationForAdminResponse.builder()
