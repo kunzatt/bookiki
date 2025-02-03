@@ -96,6 +96,9 @@ dependencies {
 
     // json
     implementation 'org.json:json:20231013'
+
+    // pagehelper
+    implementation 'com.github.pagehelper:pagehelper-spring-boot-starter:2.1.0'
 }
 
 tasks.named('test') {
