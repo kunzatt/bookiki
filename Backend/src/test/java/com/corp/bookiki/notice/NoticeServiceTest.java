@@ -123,7 +123,7 @@ class NoticeServiceTest {
         assertThat(result.getViewCount()).isEqualTo(1); // viewCount 증가 확인
     }
 
-    @DisplayName("공지사항 삭제 테스트")
+    @DisplayName("공지사항 삭제 테스트 - 정상 삭제")
     @Test
     void deleteNotice() {
         // given
@@ -144,7 +144,7 @@ class NoticeServiceTest {
         assertThat(entity.isDeleted()).isTrue();
     }
 
-    @DisplayName("공지사항 수정 테스트")
+    @DisplayName("공지사항 수정 테스트 - 정상 수정")
     @Test
     void updateNotice() {
         // given

@@ -83,15 +83,31 @@ public class NoticeService {
     // 공지사항 삭제
     @Transactional
     public void deleteNotice(int id) {
-        NoticeEntity notice = selectNoticeById(id);
-        notice.delete();
+        try {
+            NoticeEntity notice = selectNoticeById(id);
+            notice.delete();
+        } catch (EntityNotFoundException e) {
+            log.error("공지사항 삭제 실패 - 존재하지 않는 ID: {}", id, e);
+            throw new NoticeException(ErrorCode.NOTICE_NOT_FOUND);
+        } catch (Exception e) {
+            log.error("공지사항 삭제 중 알 수 없는 오류 발생: {}", e.getMessage(), e);
+            throw new NoticeException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // 공지사항 수정
     @Transactional
     public void updateNotice(NoticeUpdate update) {
-        NoticeEntity notice = selectNoticeById(update.getId());
-        notice.update(update.getTitle(), update.getContent());
+        try {
+            NoticeEntity notice = selectNoticeById(update.getId());
+            notice.update(update.getTitle(), update.getContent());
+        } catch (EntityNotFoundException e) {
+            log.error("공지사항 수정 실패 - 존재하지 않는 ID: {}", update.getId(), e);
+            throw new NoticeException(ErrorCode.NOTICE_NOT_FOUND);
+        } catch (Exception e) {
+            log.error("공지사항 수정 중 알 수 없는 오류 발생: {}", e.getMessage(), e);
+            throw new NoticeException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
     // 제목이나 본문이 빈칸이면 유효하지 않은 값
