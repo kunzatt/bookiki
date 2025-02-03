@@ -39,14 +39,13 @@ public class ShelfService {
     // 책장 정보 저장
     @Transactional
     public int createShelf(ShelfCreateRequest request) {
+        if (request.getShelfNumber() <= 0) {
+            throw new ShelfException(ErrorCode.INVALID_SHELF_NUMBER);
+        }
+        if (request.getLineNumber() <= 0) {
+            throw new ShelfException(ErrorCode.INVALID_LINE_NUMBER);
+        }
         try{
-            if (request.getShelfNumber() <= 0) {
-                throw new ShelfException(ErrorCode.INVALID_SHELF_NUMBER);
-            }
-            if (request.getLineNumber() <= 0) {
-                throw new ShelfException(ErrorCode.INVALID_LINE_NUMBER);
-            }
-
             ShelfEntity shelfEntity = shelfRepository.save(request.toEntity());
             return shelfEntity.getId();
         } catch (Exception ex) {

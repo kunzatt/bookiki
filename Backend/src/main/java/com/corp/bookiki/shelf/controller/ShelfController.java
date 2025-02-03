@@ -1,10 +1,12 @@
 package com.corp.bookiki.shelf.controller;
 
+import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.shelf.dto.ShelfCreateRequest;
 import com.corp.bookiki.shelf.dto.ShelfResponse;
 import com.corp.bookiki.shelf.dto.ShelfUpdateRequest;
 import com.corp.bookiki.shelf.service.ShelfService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -50,7 +52,18 @@ public class ShelfController {
     @ApiResponse(
             responseCode = "500",
             description = "서버 오류가 발생했습니다",
-            content = @Content
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                                "timestamp": "2024-01-23T10:00:00",
+                                "status": 500,
+                                "message": "서버 오류가 발생했습니다",
+                                "errors": []
+                            }
+                            """)
+            )
     )
     public ResponseEntity<?> selectAllShelf(){
         List<ShelfResponse> list = shelfService.selectAllShelf();
@@ -74,10 +87,19 @@ public class ShelfController {
             description = "잘못된 입력값",
             content = @Content(
                     mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(value = """
                             {
+                                "timestamp": "2024-01-23T10:00:00",
                                 "status": 400,
-                                "message": "잘못된 책장 번호입니다"
+                                "message": "잘못된 책장 번호입니다",
+                                "errors": [
+                                    {
+                                        "field": "shelfNumber",
+                                        "value": "0",
+                                        "reason": "책장 번호는 필수 입력값입니다."
+                                    }
+                                ]
                             }
                             """)
             )
@@ -85,10 +107,31 @@ public class ShelfController {
     @ApiResponse(
             responseCode = "500",
             description = "서버 오류가 발생했습니다",
-            content = @Content
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                                "timestamp": "2024-01-23T10:00:00",
+                                "status": 500,
+                                "message": "서버 오류가 발생했습니다",
+                                "errors": []
+                            }
+                            """)
+            )
     )
-    public ResponseEntity<?> createShelf (@RequestBody ShelfCreateRequest request){
+    public ResponseEntity<?> createShelf (
+            @Parameter(
+                    description = "책장 생성 정보",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ShelfCreateRequest.class)
+                    )
+            )
+            @RequestBody ShelfCreateRequest request){
         log.info("책장 정보 등록: {}, {}, 카테고리: {}", request.getShelfNumber(), request.getLineNumber(), request.getCategory());
+//        log.info("유저 - {}, {}, {}",user.getId(), user.getEmail(), user.getRole());
         int shelfId = shelfService.createShelf(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(shelfId);
     }
@@ -105,10 +148,19 @@ public class ShelfController {
             description = "잘못된 입력값",
             content = @Content(
                     mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
                     examples = @ExampleObject(value = """
                             {
+                                "timestamp": "2024-01-23T10:00:00",
                                 "status": 400,
-                                "message": "잘못된 책장 번호입니다"
+                                "message": "잘못된 입력값",
+                                "errors": [
+                                    {
+                                        "field": "lineNumber",
+                                        "value": "0",
+                                        "reason": "잘못된 행 번호입니다"
+                                    }
+                                ]
                             }
                             """)
             )
@@ -116,20 +168,51 @@ public class ShelfController {
     @ApiResponse(
             responseCode = "404",
             description = "책장을 찾을 수 없습니다",
-            content = @Content
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                                "timestamp": "2024-01-23T10:00:00",
+                                "status": 404,
+                                "message": "책장을 찾을 수 없습니다",
+                                "errors": []
+                            }
+                            """)
+            )
     )
     @ApiResponse(
             responseCode = "500",
             description = "서버 오류가 발생했습니다",
-            content = @Content
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                                "timestamp": "2024-01-23T10:00:00",
+                                "status": 500,
+                                "message": "서버 오류가 발생했습니다",
+                                "errors": []
+                            }
+                            """)
+            )
     )
-    public ResponseEntity<?> updateShelf (@RequestBody ShelfUpdateRequest request){
+    public ResponseEntity<?> updateShelf (
+            @Parameter(
+                    description = "책장 수정 정보",
+                    required = true,
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ShelfUpdateRequest.class)
+                    )
+            )
+            @RequestBody ShelfUpdateRequest request){
         log.info("책장 정보 수정: {}, {}, 카테고리: {}", request.getShelfNumber(), request.getLineNumber(), request.getCategory());
         shelfService.updateShelf(request);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
-    @DeleteMapping("/id")
+    @DeleteMapping("/{id}")
     @Operation(summary = "책장 삭제", description = "지정된 책장을 삭제합니다.")
     @ApiResponse(
             responseCode = "204",
@@ -139,14 +222,42 @@ public class ShelfController {
     @ApiResponse(
             responseCode = "404",
             description = "책장을 찾을 수 없습니다",
-            content = @Content
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                                "timestamp": "2024-01-23T10:00:00",
+                                "status": 404,
+                                "message": "책장을 찾을 수 없습니다",
+                                "errors": []
+                            }
+                            """)
+            )
     )
     @ApiResponse(
             responseCode = "500",
             description = "서버 오류가 발생했습니다",
-            content = @Content
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                                "timestamp": "2024-01-23T10:00:00",
+                                "status": 500,
+                                "message": "서버 오류가 발생했습니다",
+                                "errors": []
+                            }
+                            """)
+            )
     )
-    public ResponseEntity<?> deleteShelf (@PathVariable int id){
+    public ResponseEntity<?> deleteShelf (
+            @Parameter(
+                    description = "삭제할 책장 ID",
+                    required = true,
+                    example = "1"
+            )
+            @PathVariable int id){
         log.info("책장 삭제 - id: {}", id);
         shelfService.deleteShelf(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
