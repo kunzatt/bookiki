@@ -12,6 +12,8 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.servers.Server;
 
+// 스웨거 주소 : http://i12a206.p.ssafy.io:8088/api/swagger-ui/index.html#/
+
 @Configuration
 public class SwaggerConfig {
 
