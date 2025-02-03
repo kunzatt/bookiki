@@ -6,6 +6,7 @@ import com.corp.bookiki.notice.dto.NoticeRequest;
 import com.corp.bookiki.notice.dto.NoticeUpdate;
 import com.corp.bookiki.notice.entity.NoticeEntity;
 import com.corp.bookiki.notice.repository.NoticeRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,7 +35,7 @@ public class NoticeService {
     }
 
     // 공지사항 조회 (삭제되지 않은)
-    @Transactional
+    @Transactional(readOnly = true)
     public List<NoticeEntity> selectAllNotices() {
         try {
             return noticeRepository.findByDeletedFalseOrderByCreatedAtDesc();
@@ -46,10 +47,16 @@ public class NoticeService {
 
     // 공지사항 검색
     public List<NoticeEntity> searchNotice(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return selectAllNotices();
+        try {
+            if (keyword == null || keyword.trim().isEmpty()) {
+                return selectAllNotices();
+            }
+            return noticeRepository.findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(keyword, keyword);
+        } catch (Exception ex) {
+            log.error("공지사항 검색 실패: {}", ex.getMessage());
+            throw new NoticeException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-        return noticeRepository.findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(keyword, keyword);
+
     }
 
     // 공지사항 1개 조회
@@ -57,15 +64,16 @@ public class NoticeService {
     public NoticeEntity selectNoticeById(int id) {
         try {
             NoticeEntity notice = noticeRepository.getReferenceById(id);
-            if (notice == null) {
+            if (notice == null || notice.isDeleted()) {
                 throw new NoticeException(ErrorCode.NOTICE_NOT_FOUND);
             }
-            
-            notice.incrementViewCount();
 
+            notice.incrementViewCount();
             noticeRepository.save(notice);
 
             return notice;
+        } catch (EntityNotFoundException e) {
+            throw new NoticeException(ErrorCode.NOTICE_NOT_FOUND);
         } catch (Exception ex) {
             log.error("공지사항 조회 실패: {}", ex.getMessage());
             throw new NoticeException(ErrorCode.INTERNAL_SERVER_ERROR);
