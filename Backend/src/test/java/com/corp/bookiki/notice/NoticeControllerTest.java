@@ -1,13 +1,15 @@
 package com.corp.bookiki.notice;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.util.List;
-
+import com.corp.bookiki.global.config.SecurityConfig;
+import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.notice.controller.NoticeController;
+import com.corp.bookiki.notice.dto.NoticeRequest;
+import com.corp.bookiki.notice.dto.NoticeUpdate;
+import com.corp.bookiki.notice.entity.NoticeEntity;
+import com.corp.bookiki.notice.service.NoticeService;
+import com.corp.bookiki.util.CookieUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,17 +23,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.corp.bookiki.global.config.SecurityConfig;
-import com.corp.bookiki.global.config.TestSecurityBeansConfig;
-import com.corp.bookiki.notice.controller.NoticeController;
-import com.corp.bookiki.notice.dto.NoticeRequest;
-import com.corp.bookiki.notice.dto.NoticeUpdate;
-import com.corp.bookiki.notice.entity.NoticeEntity;
-import com.corp.bookiki.notice.service.NoticeService;
-import com.corp.bookiki.util.CookieUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @WebMvcTest(NoticeController.class)
