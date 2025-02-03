@@ -1,20 +1,21 @@
 package com.corp.bookiki.user.usersignup;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.MockBeans;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -22,18 +23,23 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.corp.bookiki.global.config.SecurityConfig;
+import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.controller.UserSignUpController;
 import com.corp.bookiki.user.dto.UserSignUpRequest;
 import com.corp.bookiki.user.service.UserSignUpService;
+import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
 @WebMvcTest(UserSignUpController.class)
-@MockBean(JpaMetamodelMappingContext.class)
+@AutoConfigureMockMvc
+@MockBeans({@MockBean(JpaMetamodelMappingContext.class)})
 @DisplayName("회원가입 컨트롤러 테스트")
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
 @Slf4j
 class UserSignUpControllerTest {
 
@@ -64,7 +70,7 @@ class UserSignUpControllerTest {
 		// given
 		UserSignUpRequest request = new UserSignUpRequest();
 		request.setEmail("test@test.com");
-		request.setPassword("password123");
+		request.setPassword("password123!@");
 		request.setUserName("Test User");
 		request.setCompanyId("EMP123");
 

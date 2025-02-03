@@ -1,8 +1,9 @@
 package com.corp.bookiki.global.error.code;
 
+import org.springframework.http.HttpStatus;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
@@ -28,6 +29,10 @@ public enum ErrorCode {
 	// 사용자 관련 에러
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다."),
 	USER_SEARCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "사용자 정보 조회 중 오류가 발생했습니다."),
+	INVALID_EMAIL_VERIFICATION(401, "유효하지 않은 인증 토큰입니다"),
+	EXPIRED_EMAIL_VERIFICATION(401, "만료된 인증 토큰입니다"),
+	DUPLICATE_EMAIL(400, "이미 등록된 이메일입니다"),
+	FAIL_EMAIL_SEND(500, "이메일 발송에 실패했습니다"),
 
 	// OAuth2 관련 에러 코드들
 	OAUTH2_INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 OAuth2 토큰입니다."),
