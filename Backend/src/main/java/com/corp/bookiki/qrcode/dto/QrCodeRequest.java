@@ -9,7 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(description = "QR 코드 생성 요청")
-public class QrCodeRequestDto {
+public class QrCodeRequest {
 	@Schema(
 		description = "도서 아이템 ID",
 		example = "123",

@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(description = "QR 코드 응답 정보")
-public class QrCodeResponseDto {
+public class QrCodeResponse {
 	@Schema(
 		description = "QR 코드 고유 식별자",
 		example = "1",
@@ -33,7 +33,7 @@ public class QrCodeResponseDto {
 	)
 	private LocalDateTime createdAt;
 
-	public QrCodeResponseDto(QrCodeEntity qrCode) {
+	public QrCodeResponse(QrCodeEntity qrCode) {
 		this.id = qrCode.getId();
 		this.qrValue = qrCode.getQrValue();
 		this.createdAt = qrCode.getCreatedAt();

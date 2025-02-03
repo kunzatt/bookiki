@@ -5,7 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
-import com.corp.bookiki.qrcode.dto.QrCodeResponseDto;
+import com.corp.bookiki.qrcode.dto.QrCodeResponse;
 import com.corp.bookiki.qrcode.entity.QrCodeEntity;
 import com.corp.bookiki.qrcode.repository.QrCodeRepository;
 
@@ -20,7 +20,7 @@ public class QrCodeService {
 	private final QrCodeRepository qrCodeRepository;
 	private final BookItemRepository bookItemRepository;
 
-	public QrCodeResponseDto createQRCode(Integer bookItemId) {
+	public QrCodeResponse createQRCode(Integer bookItemId) {
 		BookItemEntity bookItem = bookItemRepository.findById(bookItemId)
 			.orElseThrow(() -> new EntityNotFoundException("도서를 찾을 수 없습니다."));
 
@@ -29,7 +29,7 @@ public class QrCodeService {
 		}
 
 		QrCodeEntity qrCode = QrCodeEntity.create(bookItem);
-		return new QrCodeResponseDto(qrCodeRepository.save(qrCode));
+		return new QrCodeResponse(qrCodeRepository.save(qrCode));
 	}
 
 }

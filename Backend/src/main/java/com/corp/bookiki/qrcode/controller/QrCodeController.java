@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.corp.bookiki.global.error.dto.ErrorResponse;
-import com.corp.bookiki.qrcode.dto.QrCodeResponseDto;
+import com.corp.bookiki.qrcode.dto.QrCodeResponse;
 import com.corp.bookiki.qrcode.service.QrCodeService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,7 +37,7 @@ public class QrCodeController {
 			description = "QR 코드 생성 성공",
 			content = @Content(
 				mediaType = "application/json",
-				schema = @Schema(implementation = QrCodeResponseDto.class),
+				schema = @Schema(implementation = QrCodeResponse.class),
 				examples = @ExampleObject(value = """
                     {
                         "id": 1,
@@ -68,7 +68,7 @@ public class QrCodeController {
 		)
 	})
 	@PostMapping("admin/qrcodes/{bookItemId}")
-	public ResponseEntity<QrCodeResponseDto> createQRCode(
+	public ResponseEntity<QrCodeResponse> createQRCode(
 		@Parameter(
 			description = "도서 아이템 ID",
 			required = true,
