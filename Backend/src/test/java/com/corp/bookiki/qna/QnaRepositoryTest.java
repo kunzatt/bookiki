@@ -2,10 +2,16 @@ package com.corp.bookiki.qna;
 
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaRepository;
+import com.corp.bookiki.user.entity.Provider;
+import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -17,11 +23,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @Slf4j
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 class QnaRepositoryTest {
 
     @Autowired
     private QnaRepository qnaRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    private UserEntity testUser;
+
+    @BeforeEach
+    void setUp() {
+        // 테스트용 사용자 생성
+        testUser = UserEntity.builder()
+                .email("test@example.com")
+                .password("password")
+                .userName("Test User")
+                .companyId("TEST001")
+                .role(Role.USER)
+                .provider(Provider.BOOKIKI)
+                .build();
+        userRepository.save(testUser);
+    }
 
     @Test
     @DisplayName("삭제되지 않은 문의사항 조회 테스트")
@@ -31,14 +57,14 @@ class QnaRepositoryTest {
                 .title("Title 1")
                 .content("Content 1")
                 .qnaType("GENERAL")
-                .authorId(1)
+                .authorId(testUser.getId())
                 .build();
 
         QnaEntity qna2 = QnaEntity.builder()
                 .title("Title 2")
                 .content("Content 2")
                 .qnaType("GENERAL")
-                .authorId(1)
+                .authorId(testUser.getId())
                 .build();
 
         ReflectionTestUtils.setField(qna1, "deleted", false);
@@ -52,6 +78,7 @@ class QnaRepositoryTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitle()).isEqualTo("Title 1");
+        assertThat(result.get(0).getAuthorId()).isEqualTo(testUser.getId());
     }
 
     @Test
@@ -62,14 +89,14 @@ class QnaRepositoryTest {
                 .title("Important Question")
                 .content("Test Content")
                 .qnaType("GENERAL")
-                .authorId(1)
+                .authorId(testUser.getId())
                 .build();
 
         QnaEntity qna2 = QnaEntity.builder()
                 .title("General Question")
                 .content("Important Content")
                 .qnaType("GENERAL")
-                .authorId(1)
+                .authorId(testUser.getId())
                 .build();
 
         ReflectionTestUtils.setField(qna1, "deleted", false);
@@ -85,6 +112,8 @@ class QnaRepositoryTest {
         assertThat(result).hasSize(2);
         assertThat(result).extracting("title")
                 .containsExactlyInAnyOrder("Important Question", "General Question");
+        assertThat(result).extracting("authorId")
+                .containsOnly(testUser.getId());
     }
 
     @Test
@@ -95,14 +124,14 @@ class QnaRepositoryTest {
                 .title("General Question 1")
                 .content("Content 1")
                 .qnaType("GENERAL")
-                .authorId(1)
+                .authorId(testUser.getId())
                 .build();
 
         QnaEntity qna2 = QnaEntity.builder()
                 .title("Technical Question 1")
                 .content("Content 2")
                 .qnaType("TECHNICAL")
-                .authorId(1)
+                .authorId(testUser.getId())
                 .build();
 
         ReflectionTestUtils.setField(qna1, "deleted", false);
@@ -116,5 +145,6 @@ class QnaRepositoryTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitle()).isEqualTo("General Question 1");
+        assertThat(result.get(0).getAuthorId()).isEqualTo(testUser.getId());
     }
 }

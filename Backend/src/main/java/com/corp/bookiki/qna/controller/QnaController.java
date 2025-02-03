@@ -86,11 +86,12 @@ public class QnaController {
             )
     })
     @PostMapping("")
-    public ResponseEntity<Integer> createQna(@io.swagger.v3.oas.annotations.parameters.RequestBody(
-            description = "문의사항 등록 정보",
-            required = true,
-            content = @Content(schema = @Schema(implementation = QnaRequest.class))
-    ) @Valid @RequestBody QnaRequest request, @CurrentUser AuthUser authUser) {
+    public ResponseEntity<Integer> createQna(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    description = "문의사항 등록 정보",
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = QnaRequest.class))
+            ) @Valid @RequestBody QnaRequest request, @CurrentUser AuthUser authUser) {
         log.info("문의사항 등록: {}", request.getTitle());
         int qnaId = qnaService.createQna(request, authUser.getId());
 
