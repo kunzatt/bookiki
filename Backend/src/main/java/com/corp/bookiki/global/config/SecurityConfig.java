@@ -80,6 +80,8 @@ public class SecurityConfig {
 					.requestMatchers(
 						"/auth/**",  // 인증 관련 엔드포인트
 						"/email/**", // 이메일 인증
+						"/user/signup/**", // 이메일 인증
+						"/user/login/**", // 이메일 인증
 						"/test-token/**", // 테스트 토큰 발행
 						"/oauth2/**",
 						"/login/**",

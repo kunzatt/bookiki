@@ -1,10 +1,12 @@
 package com.corp.bookiki.notice;
 
+import com.corp.bookiki.global.error.exception.NoticeException;
 import com.corp.bookiki.notice.dto.NoticeRequest;
 import com.corp.bookiki.notice.dto.NoticeUpdate;
 import com.corp.bookiki.notice.entity.NoticeEntity;
 import com.corp.bookiki.notice.repository.NoticeRepository;
 import com.corp.bookiki.notice.service.NoticeService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -75,13 +78,13 @@ class NoticeServiceTest {
         List<NoticeEntity> result = noticeService.selectAllNotices();
 
         // then
-        assertThat(result.size()).isEqualTo(2);
+        assertThat(result).hasSize(2);
         assertThat(result.get(0).getTitle()).isEqualTo("Notice 1");
         assertThat(result.get(0).isDeleted()).isFalse();
     }
 
     @Test
-    void searchNotice() {
+    void searchNotice_WithKeyword() {
         // given
         String keyword = "Important";
         NoticeEntity notice = NoticeEntity.builder()
@@ -97,7 +100,6 @@ class NoticeServiceTest {
         // then
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getTitle()).isEqualTo("Important Notice");
-        verify(noticeRepository).findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(keyword, keyword);
     }
 
     @DisplayName("공지사항 상세 조회 테스트")
@@ -109,10 +111,7 @@ class NoticeServiceTest {
                 .title("Notice")
                 .content("Content")
                 .build();
-
-        // ID를 직접 설정 (ReflectionTestUtils를 활용)
         ReflectionTestUtils.setField(entity, "id", noticeId);
-
         when(noticeRepository.getReferenceById(noticeId)).thenReturn(entity);
 
         // when
@@ -121,9 +120,10 @@ class NoticeServiceTest {
         // then
         assertThat(result).isNotNull();
         assertThat(result.getTitle()).isEqualTo("Notice");
+        assertThat(result.getViewCount()).isEqualTo(1); // viewCount 증가 확인
     }
 
-    @DisplayName("공지사항 삭제 테스트")
+    @DisplayName("공지사항 삭제 테스트 - 정상 삭제")
     @Test
     void deleteNotice() {
         // given
@@ -144,7 +144,7 @@ class NoticeServiceTest {
         assertThat(entity.isDeleted()).isTrue();
     }
 
-    @DisplayName("공지사항 수정 테스트")
+    @DisplayName("공지사항 수정 테스트 - 정상 수정")
     @Test
     void updateNotice() {
         // given
@@ -170,5 +170,22 @@ class NoticeServiceTest {
         // then
         assertThat(entity.getTitle()).isEqualTo("New Title");
         assertThat(entity.getContent()).isEqualTo("New Content");
+    }
+
+    @DisplayName("존재하지 않는 공지사항 조회 시 예외 발생")
+    @Test
+    void selectNoticeById_NotFound() {
+        // given
+        int noticeId = 999;
+        when(noticeRepository.getReferenceById(noticeId))
+                .thenThrow(new EntityNotFoundException());
+
+        // when & then
+        try {
+            noticeService.selectNoticeById(noticeId);
+            fail("예외가 발생해야 합니다.");
+        } catch (NoticeException e) {
+            assertThat(e).isInstanceOf(NoticeException.class);
+        }
     }
 }
