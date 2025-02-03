@@ -1,7 +1,9 @@
 package com.corp.bookiki.qna.controller;
 
 import com.corp.bookiki.global.annotation.CurrentUser;
+import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
+import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.qna.dto.QnaDetailResponse;
 import com.corp.bookiki.qna.dto.QnaListResponse;
 import com.corp.bookiki.qna.dto.QnaRequest;
@@ -9,6 +11,10 @@ import com.corp.bookiki.qna.dto.QnaUpdate;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.service.QnaService;
 import com.corp.bookiki.user.dto.AuthUser;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -18,9 +24,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +46,7 @@ import java.util.List;
 public class QnaController {
 
     private final QnaService qnaService;
+    private final UserRepository userRepository;
 
     // 문의사항 등록
     @Operation(summary = "문의사항 등록", description = "새로운 문의사항을 등록합니다.")
@@ -100,7 +111,7 @@ public class QnaController {
             )
     })
     @GetMapping("")
-    public ResponseEntity<List<QnaListResponse>> selectQnas(
+    public ResponseEntity<Page<QnaListResponse>> selectQnas(
             @Parameter(description = "검색 키워드", example = "도서관")
             @RequestParam(required = false) String keyword,
             @Parameter(description = "문의사항 유형", example = "GENERAL")
@@ -116,15 +127,26 @@ public class QnaController {
         log.info("문의사항 목록 조회 - 페이지: {}, 크기: {}", page, size);
 
         PageHelper.startPage(page + 1, size); // PageHelper는 1부터 시작하므로 page + 1
-
         List<QnaEntity> qnas = qnaService.selectQnas(keyword, qnaType, answered, authUser);
+        PageInfo<QnaEntity> pageInfo = new PageInfo<>(qnas);
 
         List<QnaListResponse> responses = new ArrayList<>();
         for (QnaEntity qna : qnas) {
-            responses.add(new QnaListResponse(qna));
+            try {
+                UserEntity author = userRepository.getReferenceById(qna.getAuthorId());
+                responses.add(new QnaListResponse(qna, author.getUserName()));
+            } catch (EntityNotFoundException ex) {
+                throw new UserException(ErrorCode.USER_NOT_FOUND);
+            }
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(responses);
+        Page<QnaListResponse> responsePage = new PageImpl<>(
+                responses,
+                PageRequest.of(page, size),
+                pageInfo.getTotal()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(responsePage);
     }
 
     // 문의사항 1개 상세조회

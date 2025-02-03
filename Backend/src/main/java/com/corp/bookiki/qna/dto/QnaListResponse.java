@@ -4,6 +4,7 @@ import com.corp.bookiki.qna.entity.QnaEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDateTime;
 
@@ -26,11 +27,25 @@ public class QnaListResponse {
     @Schema(description = "생성일시", example = "2024-01-24T10:00:00")
     private LocalDateTime createdAt;
 
-    public QnaListResponse(QnaEntity qna) {
+    // 페이지 메타 정보
+    private int pageNumber;
+    private int pageSize;
+    private long totalElements;
+    private int totalPages;
+
+    public QnaListResponse(QnaEntity qna, String authorName) {
         this.id = qna.getId();
         this.title = qna.getTitle();
         this.qnaType = qna.getQnaType();
-        this.authorName = "박성문"; // 임시 테스트용 작성자 이름
+        this.authorName = authorName;
         this.createdAt = qna.getCreatedAt();
     }
+
+    public void setPageInfo(Page<?> page) {
+        this.pageNumber = page.getNumber();
+        this.pageSize = page.getSize();
+        this.totalElements = page.getTotalElements();
+        this.totalPages = page.getTotalPages();
+    }
+
 }
