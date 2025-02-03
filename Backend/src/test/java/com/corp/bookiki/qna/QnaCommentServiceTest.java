@@ -1,5 +1,7 @@
 package com.corp.bookiki.qna;
 
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.QnaCommentException;
 import com.corp.bookiki.qna.dto.QnaCommentRequest;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaCommentUpdate;
@@ -8,6 +10,7 @@ import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import com.corp.bookiki.qna.service.QnaCommentService;
 import com.corp.bookiki.qna.service.QnaService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,9 +27,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.*;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -143,5 +147,84 @@ class QnaCommentServiceTest {
         // then
         assertThat(mockComment.getContent()).isEqualTo("Updated Comment");
         verify(qnaCommentRepository).getReferenceById(1);
+    }
+
+    @Test
+    @DisplayName("댓글 생성 실패 - 빈 내용")
+    void createQnaComment_EmptyContent() {
+        // given
+        QnaCommentRequest request = new QnaCommentRequest();
+        ReflectionTestUtils.setField(request, "qnaId", TEST_QNA_ID);
+        ReflectionTestUtils.setField(request, "content", "");
+
+        // when & then
+        QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
+                qnaCommentService.createQnaComment(request, TEST_USER_ID));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
+        verify(qnaCommentRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("댓글 수정 실패 - 빈 내용")
+    void updateQnaComment_EmptyContent() {
+        // given
+        QnaCommentEntity mockComment = createMockComment(1, "Original Comment");
+        QnaCommentUpdate update = new QnaCommentUpdate();
+        ReflectionTestUtils.setField(update, "id", 1);
+        ReflectionTestUtils.setField(update, "content", "");
+
+        when(qnaCommentRepository.getReferenceById(1)).thenReturn(mockComment);
+
+        // when & then
+        QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
+                qnaCommentService.updateQnaComment(update));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
+        assertThat(mockComment.getContent()).isEqualTo("Original Comment");
+    }
+
+    @Test
+    @DisplayName("삭제된 댓글 조회 실패")
+    void selectQnaCommentById_Deleted() {
+        // given
+        QnaCommentEntity mockComment = createMockComment(1, "Test Comment");
+        ReflectionTestUtils.setField(mockComment, "deleted", true);
+        when(qnaCommentRepository.getReferenceById(1)).thenReturn(mockComment);
+
+        // when & then
+        QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
+                qnaCommentService.selectQnaCommentById(1));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.COMMENT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("댓글 조회 실패 - 존재하지 않는 ID")
+    void selectQnaCommentById_NotFound() {
+        // given
+        when(qnaCommentRepository.getReferenceById(anyInt()))
+                .thenThrow(EntityNotFoundException.class);
+
+        // when & then
+        QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
+                qnaCommentService.selectQnaCommentById(1));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.COMMENT_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("이미 삭제된 댓글 삭제 실패")
+    void deleteQnaComment_AlreadyDeleted() {
+        // given
+        QnaCommentEntity mockComment = createMockComment(1, "Test Comment");
+        ReflectionTestUtils.setField(mockComment, "deleted", true);
+        when(qnaCommentRepository.getReferenceById(1)).thenReturn(mockComment);
+
+        // when & then
+        QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
+                qnaCommentService.deleteQnaComment(1));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.COMMENT_NOT_FOUND);
     }
 }
