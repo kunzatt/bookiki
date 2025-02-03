@@ -24,14 +24,14 @@ public class SwaggerConfig {
 				.version("v1.0")
 				.contact(new Contact()
 					.name("Support Team")
-					.email("support@bookiki.com")
-					.url("https://github.com/bookiki"))
+					.email("bookiki206@gmail.com")
+					.url("https://lab.ssafy.com/s12-webmobile3-sub1/S12P11A206"))
 				.license(new License()
 					.name("Bookiki License")
-					.url("https://github.com/bookiki")))
+					.url("https://lab.ssafy.com/s12-webmobile3-sub1/S12P11A206")))
 			.externalDocs(new ExternalDocumentation()
 				.description("Bookiki Documentation")
-				.url("https://github.com/bookiki"))
+				.url("https://lab.ssafy.com/s12-webmobile3-sub1/S12P11A206"))
 			.servers(List.of(
 				new Server().url("/api").description("Local server")
 			));
