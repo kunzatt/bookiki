@@ -74,7 +74,7 @@ public class UserEntity {
 	@Column(nullable = false)
 	private Provider provider = Provider.BOOKIKI;
 
-	@Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+	@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
 	private Boolean deleted = false;
 
 	@Builder
