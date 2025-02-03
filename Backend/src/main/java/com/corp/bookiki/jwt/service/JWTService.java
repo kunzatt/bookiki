@@ -44,9 +44,9 @@ public class JWTService {
     public String generateAccessToken(Object principal) {
         Authentication auth;
         if (principal instanceof SecurityUserAdapter) {
-            auth = createAuthentication((SecurityUserAdapter) principal);
+            auth = createAuthentication((SecurityUserAdapter)principal);
         } else if (principal instanceof UserEntity) {
-            auth = createAuthentication(new SecurityUserAdapter((UserEntity) principal));
+            auth = createAuthentication(new SecurityUserAdapter((UserEntity)principal));
         } else {
             throw new IllegalArgumentException("Unsupported principal type");
         }
@@ -57,16 +57,16 @@ public class JWTService {
     public String generateRefreshToken(Object principal) {
         String email;
         if (principal instanceof SecurityUserAdapter) {
-            email = ((SecurityUserAdapter) principal).getEmail();
+            email = ((SecurityUserAdapter)principal).getEmail();
         } else if (principal instanceof UserEntity) {
-            email = ((UserEntity) principal).getEmail();
+            email = ((UserEntity)principal).getEmail();
         } else {
             throw new IllegalArgumentException("Unsupported principal type");
         }
 
         Authentication auth = createAuthentication(new SecurityUserAdapter(
-                principal instanceof UserEntity ? (UserEntity) principal
-                        : ((SecurityUserAdapter) principal).getUser()
+                principal instanceof UserEntity ? (UserEntity)principal
+                        : ((SecurityUserAdapter)principal).getUser()
         ));
         String refreshToken = tokenProvider.generateToken(auth, refreshTokenExpiration);
         saveRefreshToken(email, refreshToken);
@@ -134,11 +134,11 @@ public class JWTService {
         Role role;
 
         if (principal instanceof SecurityUserAdapter) {
-            SecurityUserAdapter adapter = (SecurityUserAdapter) principal;
+            SecurityUserAdapter adapter = (SecurityUserAdapter)principal;
             email = adapter.getEmail();
             role = adapter.getRole();
         } else if (principal instanceof UserEntity) {
-            UserEntity user = (UserEntity) principal;
+            UserEntity user = (UserEntity)principal;
             email = user.getEmail();
             role = user.getRole();
         } else {
@@ -224,4 +224,3 @@ public class JWTService {
         return temporaryTokenExpiration;
     }
 }
-
