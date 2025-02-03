@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 import com.corp.bookiki.qrcode.entity.QrCodeEntity;
 
 @Repository
-public interface QrCodeRepository extends JpaRepository<QrCodeEntity, Long> {
-	Optional<QrCodeEntity> findByQrValue(String qrValue);
-	Optional<QrCodeEntity> findByBookItemId(Long bookItemId);
+public interface QrCodeRepository extends JpaRepository<QrCodeEntity, Integer> {
+	Optional<QrCodeEntity> findByBookItemId(Integer bookItemId);
 }

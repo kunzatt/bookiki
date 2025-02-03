@@ -11,8 +11,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class BookItemResponseDto {
-	private Long id;
-	private Long bookInformationId;
+	private Integer id;
+	private Integer bookInformationId;
 	private LocalDateTime purchaseAt;
 	private StatusType statusType;
 	private LocalDateTime updatedAt;
@@ -21,14 +21,18 @@ public class BookItemResponseDto {
 	@Getter
 	@Setter
 	public static class QRCodeInfo {
-		private Long id;
+		private Integer id;
 		private String qrValue;
 		private LocalDateTime createdAt;
 	}
 
-	public BookItemResponse(BookItemEntity bookItem) {
+	public BookItemResponseDto(BookItemEntity bookItem) {
 		this.id = bookItem.getId();
-		this.bookInformationId = bookItem.getBookInformationId();
+
+		if (bookItem.getBookInformation() != null) {
+			this.bookInformationId = bookItem.getBookInformation().getId();
+		}
+
 		this.purchaseAt = bookItem.getPurchaseAt();
 		this.statusType = bookItem.getStatusType();
 		this.updatedAt = bookItem.getUpdatedAt();

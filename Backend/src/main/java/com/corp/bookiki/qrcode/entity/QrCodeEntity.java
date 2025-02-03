@@ -1,7 +1,6 @@
 package com.corp.bookiki.qrcode.entity;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 
@@ -15,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,7 +25,7 @@ public class QrCodeEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+	private Integer id;
 
 	@Column(name = "qr_value")
 	private String qrValue;
@@ -39,10 +37,11 @@ public class QrCodeEntity {
 	@JoinColumn(name = "book_item_id")
 	private BookItemEntity bookItem;
 
-	@Builder
-	private QrCodeEntity(BookItemEntity bookItem) {
-		this.qrValue = UUID.randomUUID().toString();
-		this.createdAt = LocalDateTime.now();
-		this.bookItem = bookItem;
+	public static QrCodeEntity create(BookItemEntity bookItem) {
+		QrCodeEntity qrCode = new QrCodeEntity();
+		qrCode.qrValue = "https://naver.com/" + bookItem.getId();
+		qrCode.createdAt = LocalDateTime.now();
+		qrCode.bookItem = bookItem;
+		return qrCode;
 	}
 }
