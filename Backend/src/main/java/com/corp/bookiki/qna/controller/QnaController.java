@@ -1,13 +1,14 @@
 package com.corp.bookiki.qna.controller;
 
+import com.corp.bookiki.global.annotation.CurrentUser;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
-import com.corp.bookiki.qna.QnaTestConstants;
 import com.corp.bookiki.qna.dto.QnaDetailResponse;
 import com.corp.bookiki.qna.dto.QnaListResponse;
 import com.corp.bookiki.qna.dto.QnaRequest;
 import com.corp.bookiki.qna.dto.QnaUpdate;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.service.QnaService;
+import com.corp.bookiki.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -78,9 +79,9 @@ public class QnaController {
             description = "문의사항 등록 정보",
             required = true,
             content = @Content(schema = @Schema(implementation = QnaRequest.class))
-    ) @Valid @RequestBody QnaRequest request) {
+    ) @Valid @RequestBody QnaRequest request, @CurrentUser AuthUser authUser) {
         log.info("문의사항 등록: {}", request.getTitle());
-        int qnaId = qnaService.createQna(request, QnaTestConstants.TEST_USER_ID);
+        int qnaId = qnaService.createQna(request, authUser.getId());
 
         // 등록된 문의사항의 id 반환
         return ResponseEntity.status(HttpStatus.CREATED).body(qnaId);
@@ -105,10 +106,18 @@ public class QnaController {
             @Parameter(description = "문의사항 유형", example = "GENERAL")
             @RequestParam(required = false) String qnaType,
             @Parameter(description = "답변 여부", example = "true")
-            @RequestParam(required = false) Boolean answered
+            @RequestParam(required = false) Boolean answered,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", example = "10")
+            @RequestParam(defaultValue = "10") int size,
+            @CurrentUser AuthUser authUser
     ) {
-        log.info("문의사항 목록 조회");
-        List<QnaEntity> qnas = qnaService.selectQnas(keyword, qnaType, answered);
+        log.info("문의사항 목록 조회 - 페이지: {}, 크기: {}", page, size);
+
+        PageHelper.startPage(page + 1, size); // PageHelper는 1부터 시작하므로 page + 1
+
+        List<QnaEntity> qnas = qnaService.selectQnas(keyword, qnaType, answered, authUser);
 
         List<QnaListResponse> responses = new ArrayList<>();
         for (QnaEntity qna : qnas) {
@@ -141,10 +150,11 @@ public class QnaController {
     @GetMapping("/{id}")
     public ResponseEntity<QnaDetailResponse> selectQnaById(
             @Parameter(description = "문의사항 ID", required = true, example = "1")
-            @PathVariable int id
+            @PathVariable int id,
+            @CurrentUser AuthUser authUser
     ) {
         log.info("문의사항 상세 조회: id={}", id);
-        QnaDetailResponse qnaResponse = qnaService.selectQnaByIdWithComment(id);
+        QnaDetailResponse qnaResponse = qnaService.selectQnaByIdWithComment(id, authUser);
         return ResponseEntity.status(HttpStatus.OK).body(qnaResponse);
     }
 
@@ -164,10 +174,11 @@ public class QnaController {
     @DeleteMapping("")
     public ResponseEntity<String> deleteQna(
             @Parameter(description = "문의사항 ID", required = true, example = "1")
-            @PathVariable int id
+            @PathVariable int id,
+            @CurrentUser AuthUser authUser
     ) {
         log.info("문의사항 삭제: id={}", id);
-        qnaService.deleteQna(id);
+        qnaService.deleteQna(id, authUser.getId());
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("문의사항이 삭제되었습니다.");
     }
 
@@ -201,10 +212,11 @@ public class QnaController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = QnaUpdate.class))
             )
-            @Valid @RequestBody QnaUpdate update
+            @Valid @RequestBody QnaUpdate update,
+            @CurrentUser AuthUser authUser
     ) {
         log.info("문의사항 수정: id={}", update.getId());
-        qnaService.updateQna(update);
+        qnaService.updateQna(update, authUser.getId());
         return ResponseEntity.status(HttpStatus.OK).body("문의사항이 수정되었습니다.");
     }
 }

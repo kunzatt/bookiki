@@ -11,6 +11,8 @@ import com.corp.bookiki.qna.entity.QnaCommentEntity;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import com.corp.bookiki.qna.repository.QnaRepository;
+import com.corp.bookiki.user.dto.AuthUser;
+import com.corp.bookiki.user.entity.Role;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -38,9 +40,16 @@ public class QnaService {
 
     // 문의사항 조회
     @Transactional(readOnly = true)
-    public List<QnaEntity> selectQnas(String keyword, String qnaType, Boolean answered) {
+    public List<QnaEntity> selectQnas(String keyword, String qnaType, Boolean answered, AuthUser authUser) {
         // 1. 기본 목록 가져오기
-        List<QnaEntity> filteredQnas = qnaRepository.findByDeletedFalseOrderByCreatedAtDesc();
+        List<QnaEntity> filteredQnas;
+
+        // 관리자는 모든 문의사항을 볼 수 있고, 사용자는 자신의 문의사항만 볼 수 있음
+        if (authUser.getRole() == Role.ADMIN) {
+            filteredQnas = qnaRepository.findByDeletedFalseOrderByCreatedAtDesc();
+        } else {
+            filteredQnas = qnaRepository.findByAuthorIdAndDeletedFalseOrderByCreatedAtDesc(authUser.getId());
+        }
 
         // 2. 답변 유무로 필터링
         if (answered != null) {
@@ -90,8 +99,14 @@ public class QnaService {
 
     // 댓글 목록까지 포함한 상세 조회 메서드
     @Transactional(readOnly = true)
-    public QnaDetailResponse selectQnaByIdWithComment(int id) {
+    public QnaDetailResponse selectQnaByIdWithComment(int id, AuthUser authUser) {
         QnaEntity qna = selectQnaById(id);
+
+        // 관리자가 아니고, 작성자도 아닌 경우 접근 거부
+        if (authUser.getRole() != Role.ADMIN && qna.getAuthorId() != authUser.getId()) {
+            throw new QnaException(ErrorCode.UNAUTHORIZED);
+        }
+
         List<QnaCommentEntity> comments = qnaCommentRepository.findByQnaIdAndDeletedFalseOrderByCreatedAtAsc(id);
         List<QnaCommentResponse> responses = new ArrayList<>();
         for (QnaCommentEntity comment : comments) {
@@ -102,15 +117,23 @@ public class QnaService {
 
     // 문의사항 삭제
     @Transactional
-    public void deleteQna(int id) {
+    public void deleteQna(int id, int currentUserId) {
         QnaEntity qna = selectQnaById(id);
+        // 작성자 본인만 삭제 가능하도록
+        if (qna.getAuthorId() != currentUserId) {
+            throw new QnaException(ErrorCode.UNAUTHORIZED);
+        }
         qna.delete();
     }
 
     // 문의사항 수정
     @Transactional
-    public void updateQna(QnaUpdate update) {
+    public void updateQna(QnaUpdate update, int currentUserId) {
         QnaEntity qna = selectQnaById(update.getId());
+        // 작성자 본인만 수정 가능하도록
+        if (qna.getAuthorId() != currentUserId) {
+            throw new QnaException(ErrorCode.UNAUTHORIZED);
+        }
         qna.update(update.getTitle(), update.getQnaType(), update.getContent());
     }
 

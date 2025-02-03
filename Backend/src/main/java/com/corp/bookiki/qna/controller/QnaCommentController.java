@@ -1,10 +1,11 @@
 package com.corp.bookiki.qna.controller;
 
+import com.corp.bookiki.global.annotation.CurrentUser;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
-import com.corp.bookiki.qna.QnaTestConstants;
 import com.corp.bookiki.qna.dto.QnaCommentRequest;
 import com.corp.bookiki.qna.dto.QnaCommentUpdate;
 import com.corp.bookiki.qna.service.QnaCommentService;
+import com.corp.bookiki.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,12 +19,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/qna")
 @RequiredArgsConstructor
 @Tag(name = "문의사항 답변 API", description = "관리자 문의사항 답변 관련 API")
+@PreAuthorize("hasRole('ADMIN')")
 @Slf4j
 public class QnaCommentController {
 
@@ -78,10 +81,11 @@ public class QnaCommentController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = QnaCommentRequest.class))
             )
-            @Valid @RequestBody QnaCommentRequest request
+            @Valid @RequestBody QnaCommentRequest request,
+            @CurrentUser AuthUser authUser
     ) {
         log.info("문의사항 답변 등록: {}", request.getContent());
-        int qnaCommentId = qnaCommentService.createQnaComment(request, QnaTestConstants.TEST_ADMIN_ID);
+        int qnaCommentId = qnaCommentService.createQnaComment(request, authUser.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(qnaCommentId);
     }
 
@@ -114,7 +118,8 @@ public class QnaCommentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteQnaComment(
             @Parameter(description = "답변 ID", required = true, example = "1")
-            @PathVariable int id) {
+            @PathVariable int id,
+            @CurrentUser AuthUser authUser) {
         log.info("문의사항 삭제: id={}", id);
         qnaCommentService.deleteQnaComment(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("문의사항 답변이 삭제되었습니다.");
@@ -150,7 +155,8 @@ public class QnaCommentController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = QnaCommentUpdate.class))
             )
-            @Valid @RequestBody QnaCommentUpdate update
+            @Valid @RequestBody QnaCommentUpdate update,
+            @CurrentUser AuthUser authUser
     ) {
         log.info("문의사항 답변 수정: id={}", update.getId());
         qnaCommentService.updateQnaComment(update);

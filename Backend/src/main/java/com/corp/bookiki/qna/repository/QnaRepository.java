@@ -14,4 +14,7 @@ public interface QnaRepository extends JpaRepository<QnaEntity, Integer> {
 
     // 특정 유형의 문의사항만 조회
     List<QnaEntity> findByDeletedFalseAndQnaTypeOrderByCreatedAtDesc(String qnaType);
+
+    // 해당 사용자에 대한 문의사항만 조회
+    List<QnaEntity> findByAuthorIdAndDeletedFalseOrderByCreatedAtDesc(int authorId);
 }
