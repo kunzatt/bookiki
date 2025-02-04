@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/admin/shelf/categories")
+@RequestMapping("/api/admin/shelf/categories")
 @RequiredArgsConstructor
 @Tag(name = "책장 정보 API", description = "책장 정보 CRUD API")
 @Slf4j

@@ -35,7 +35,7 @@ public class SwaggerConfig {
 				.description("Bookiki Documentation")
 				.url("https://lab.ssafy.com/s12-webmobile3-sub1/S12P11A206"))
 			.servers(List.of(
-				new Server().url("/api").description("Local server")
+				new Server().url("").description("Local server")
 			));
 	}
 }

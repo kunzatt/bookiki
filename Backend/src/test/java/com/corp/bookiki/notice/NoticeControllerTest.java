@@ -77,7 +77,7 @@ class NoticeControllerTest {
 
 		// when
 		ResultActions result = mockMvc.perform(
-			post("/admin/notices")
+			post("/api/admin/notices")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request))
 		);
@@ -107,14 +107,14 @@ class NoticeControllerTest {
 		given(noticeService.searchNotice("Important")).willReturn(notices);
 
 		// when - 전체 조회
-		mockMvc.perform(get("/notices"))
+		mockMvc.perform(get("/api/notices"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content[0].id").value(1))
 			.andExpect(jsonPath("$.content[0].title").value("Important Notice"))
 			.andExpect(jsonPath("$.content[0].content").value("Test Content"));
 
 		// when - 키워드 검색
-		mockMvc.perform(get("/notices")
+		mockMvc.perform(get("/api/notices")
 				.param("keyword", "Important"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content[0].id").value(1))
@@ -127,7 +127,7 @@ class NoticeControllerTest {
 	@Test
 	public void selectNoticeById() throws Exception {
 		// given
-		final String url = "/notices/{id}";
+		final String url = "/api/notices/{id}";
 		final String title = "title";
 		final String content = "content";
 
@@ -153,7 +153,7 @@ class NoticeControllerTest {
 	@Test
 	public void deleteNotice() throws Exception {
 		// given
-		final String url = "/admin/notices/{id}";
+		final String url = "/api/admin/notices/{id}";
 		final int id = 1;
 
 		doNothing().when(noticeService).deleteNotice(id);
@@ -172,7 +172,7 @@ class NoticeControllerTest {
 	@Test
 	public void updateArticle() throws Exception {
 		// given
-		final String url = "/admin/notices";
+		final String url = "/api/admin/notices";
 		NoticeUpdate update = NoticeUpdate.builder()
 			.id(1)
 			.title("newTitle")

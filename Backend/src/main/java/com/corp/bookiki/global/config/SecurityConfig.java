@@ -78,11 +78,10 @@ public class SecurityConfig {
 				log.debug("URL 기반 보안 설정 구성");
 				auth
 					.requestMatchers(
-						"/auth/**",  // 인증 관련 엔드포인트
-						"/email/**", // 이메일 인증
-						"/user/signup/**", // 이메일 인증
-						"/user/login/**", // 이메일 인증
-						"/test-token/**", // 테스트 토큰 발행
+						"/api/auth/**",  // 인증 관련 엔드포인트
+						"/api/email/**", // 이메일 인증
+						"/api/user/signup/**", // 이메일 인증
+						"/api/user/login/**", // 이메일 인증
 						"/oauth2/**",
 						"/login/**",
 						"/v3/api-docs/**",
@@ -94,7 +93,6 @@ public class SecurityConfig {
 						"/api-docs/**"
 					).permitAll()   //  인증 없이 사용
 					.requestMatchers("/api/admin").hasRole("ADMIN")  // Role에 따라 권한 부여
-					.requestMatchers("/api/user").hasRole("USER")
 					.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
 				log.debug("URL 보안 설정 완료");
 			})

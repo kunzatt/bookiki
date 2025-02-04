@@ -81,10 +81,10 @@ cookie:
 server:
   port: ${SERVER_PORT:8088}
   servlet:
-    context-path: /api
     encoding:
       charset: UTF-8
       force: true
+    context-path: "/"
 
 logging:
   level:
