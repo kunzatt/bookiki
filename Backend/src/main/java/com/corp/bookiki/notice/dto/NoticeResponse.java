@@ -15,7 +15,7 @@ import lombok.Setter;
 @Schema(description = "공지사항 응답")
 public class NoticeResponse {
 	@Schema(description = "공지사항 ID", example = "1")
-	private int id;
+	private Integer id;
 
 	@Schema(description = "제목", example = "시스템 점검 안내")
 	private String title;
@@ -30,7 +30,7 @@ public class NoticeResponse {
 	private LocalDateTime updatedAt;
 
 	@Schema(description = "조회수", example = "100")
-	private int viewCount;
+	private Integer viewCount;
 
 	// ResponseDTO는 단순 데이터 전달이 목적이기 때문에 Builder보다는 기본 생성자 사용
 	// @Builder는 Entity나 RequestDTO에서 사용
