@@ -2,6 +2,7 @@ package com.corp.bookiki.notice;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -12,14 +13,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
@@ -37,9 +41,11 @@ import lombok.extern.slf4j.Slf4j;
 @WebMvcTest(NoticeController.class)
 @MockBean(JpaMetamodelMappingContext.class)
 @Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
-@AutoConfigureMockMvc(addFilters = false)  // Security filter 비활성화
 @DisplayName("회원가입 컨트롤러 테스트")
 class NoticeControllerTest {
+
+	@Autowired
+	private WebApplicationContext context;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -52,12 +58,17 @@ class NoticeControllerTest {
 
 	// 테스트 실행 전 설정
 	@BeforeEach
-	public void setup() {
-		log.info("Setting up NoticeControllerTest...");
+	void setup() {
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
+		log.info("MockMvc 설정이 완료되었습니다.");
 	}
 
 	// 공지사항 작성 테스트
 	@Test
+	@WithMockUser(roles = "ADMIN")
 	@DisplayName("공지사항 작성 성공")
 	public void createNotice() throws Exception {
 		// given
@@ -79,15 +90,18 @@ class NoticeControllerTest {
 
 	// 공지사항 목록 조회 테스트
 	@Test
+	@WithMockUser()
 	@DisplayName("공지사항 목록 조회 및 검색 테스트")
 	public void selectAllNoticesTest() throws Exception {
+
 		// given
-		List<NoticeEntity> notices = List.of(
-			NoticeEntity.builder()
-				.title("Important Notice")
-				.content("Test Content")
-				.build()
-		);
+		NoticeEntity notice = NoticeEntity.builder()
+			.title("Important Notice")
+			.content("Test Content")
+			.build();
+
+		ReflectionTestUtils.setField(notice, "id", 1);
+		List<NoticeEntity> notices = List.of(notice);
 
 		given(noticeService.selectAllNotices()).willReturn(notices);
 		given(noticeService.searchNotice("Important")).willReturn(notices);
@@ -95,16 +109,21 @@ class NoticeControllerTest {
 		// when - 전체 조회
 		mockMvc.perform(get("/notices"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[0].title").value("Important Notice"));
+			.andExpect(jsonPath("$.content[0].id").value(1))
+			.andExpect(jsonPath("$.content[0].title").value("Important Notice"))
+			.andExpect(jsonPath("$.content[0].content").value("Test Content"));
 
 		// when - 키워드 검색
 		mockMvc.perform(get("/notices")
 				.param("keyword", "Important"))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[0].title").value("Important Notice"));
+			.andExpect(jsonPath("$.content[0].id").value(1))
+			.andExpect(jsonPath("$.content[0].title").value("Important Notice"))
+			.andExpect(jsonPath("$.content[0].content").value("Test Content"));
 	}
 
 	@DisplayName("공지사항 목록 조회 성공")
+	@WithMockUser()
 	@Test
 	public void selectNoticeById() throws Exception {
 		// given
@@ -130,6 +149,7 @@ class NoticeControllerTest {
 	}
 
 	@DisplayName("공지사항 삭제 성공")
+	@WithMockUser(roles = "ADMIN")
 	@Test
 	public void deleteNotice() throws Exception {
 		// given
@@ -148,6 +168,7 @@ class NoticeControllerTest {
 	}
 
 	@DisplayName("공지사항 수정 성공")
+	@WithMockUser(roles = "ADMIN")
 	@Test
 	public void updateArticle() throws Exception {
 		// given

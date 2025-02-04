@@ -45,10 +45,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // MyBatis
-    implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:3.0.3'
-    testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:3.0.3'
-
     // AWS
     implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.2.1'
     implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.2.1'
@@ -102,6 +98,9 @@ dependencies {
 
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // ChatBot
+    implementation 'com.google.cloud:google-cloud-dialogflow:4.63.0'
 }
 
 tasks.named('test') {
