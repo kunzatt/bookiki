@@ -78,8 +78,7 @@ public class UserEntity {
 	private Boolean deleted = false;
 
 	@Builder
-	public UserEntity(Integer id, String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage, Boolean deleted) {
-		this.id = id;
+	public UserEntity(String email, String password, String userName, String companyId, Role role, Provider provider, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt, String profileImage, Boolean deleted) {
 		this.email = email;
 		this.password = password;
 		this.userName = userName;

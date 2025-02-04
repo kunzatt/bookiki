@@ -1,11 +1,15 @@
 package com.corp.bookiki.user.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.UserSignUpRequest;
+import com.corp.bookiki.user.entity.Provider;
+import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 
@@ -32,6 +36,10 @@ public class UserSignUpService {
 			.password(request.getPassword())
 			.userName(request.getUserName())
 			.companyId(request.getCompanyId())
+			.provider(Provider.BOOKIKI)
+			.role(Role.USER)
+			.createdAt(LocalDateTime.now())
+			.updatedAt(LocalDateTime.now())
 			.build();
 
 		// 사용자 저장
