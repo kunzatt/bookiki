@@ -1,8 +1,11 @@
 package com.corp.bookiki.global.config;
 
-import java.util.Arrays;
-import java.util.List;
-
+import com.corp.bookiki.auth.service.CustomOAuth2UserService;
+import com.corp.bookiki.jwt.filter.JWTFilter;
+import com.corp.bookiki.jwt.handler.*;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,24 +16,13 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import com.corp.bookiki.auth.service.CustomOAuth2UserService;
-import com.corp.bookiki.jwt.filter.JWTFilter;
-import com.corp.bookiki.jwt.handler.CustomLogoutHandler;
-import com.corp.bookiki.jwt.handler.LoginFailureHandler;
-import com.corp.bookiki.jwt.handler.LoginSuccessHandler;
-import com.corp.bookiki.jwt.handler.OAuth2AuthenticationFailureHandler;
-import com.corp.bookiki.jwt.handler.OAuth2AuthenticationSuccessHandler;
-
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -47,7 +39,7 @@ public class SecurityConfig {
 	private final CustomOAuth2UserService customOAuth2UserService;  // 추가
 	private final CustomLogoutHandler logoutHandler;  // 추가
 
-	@Value("$FRONTEND_URL}")
+	@Value("${FRONTEND_URL}")
 	private String frontendUrl;
 
 	@Bean
@@ -66,7 +58,7 @@ public class SecurityConfig {
 				log.debug("폼 로그인 설정 시작");
 				form
 					.loginPage("/api/auth/login")      // 로그인 페이지 경로
-					.loginProcessingUrl("/api/auth/login-process")  // 실제 로그인 처리 경로
+					.loginProcessingUrl("/api/auth/login")  // 실제 로그인 처리 경로
 					.usernameParameter("email")     // 이메일을 username으로 사용
 					.passwordParameter("password")   // 비밀번호 파라미터명
 					.successHandler(loginSuccessHandler)
@@ -91,7 +83,8 @@ public class SecurityConfig {
 						"/swagger-ui.html",
 						"/swagger-resources/**",
 						"/webjars/**",
-						"/api-docs/**"
+						"/api-docs/**",
+						"/test-token/**"
 					).permitAll()   //  인증 없이 사용
 					.requestMatchers("/api/admin").hasRole("ADMIN")  // Role에 따라 권한 부여
 					.requestMatchers("/api/user").hasRole("USER")
@@ -158,14 +151,5 @@ public class SecurityConfig {
 	@Bean
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 		return config.getAuthenticationManager();
-	}
-
-	@Configuration
-	public class PasswordConfig {
-
-		@Bean
-		public PasswordEncoder passwordEncoder() {
-			return new BCryptPasswordEncoder();
-		}
 	}
 }
