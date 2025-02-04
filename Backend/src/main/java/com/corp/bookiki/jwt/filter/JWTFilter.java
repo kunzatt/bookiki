@@ -46,6 +46,8 @@ public class JWTFilter extends OncePerRequestFilter {
 	private final List<String> excludedUrls = Arrays.asList(
 		"/api/auth/**",
 		"/api/email/**",
+		"/api/login/**",
+		"/api/signup/**",
 		"/favicon.ico",
 		"/v3/api-docs/**",
 		"/swagger-ui/**",
