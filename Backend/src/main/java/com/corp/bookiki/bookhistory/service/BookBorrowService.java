@@ -36,7 +36,7 @@ public class BookBorrowService {
 			throw new BookHistoryException(ErrorCode.BOOK_ALREADY_BORROWED);
 		}
 
-		BookHistoryEntity history = new BookHistoryEntity(bookItem, user);
+		BookHistoryEntity history = BookHistoryEntity.createForBorrow(bookItem, user);
 		bookItem.borrow();
 
 		BookHistoryEntity savedHistory = bookHistoryRepository.save(history);

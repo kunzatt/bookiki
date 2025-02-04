@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -41,10 +42,21 @@ public class BookHistoryEntity {
 
 	private LocalDateTime returnedAt;
 
-	public BookHistoryEntity(BookItemEntity bookItem, UserEntity user) {
+	@Builder
+	public BookHistoryEntity(BookItemEntity bookItem, UserEntity user, LocalDateTime borrowedAt, LocalDateTime returnedAt) {
 		this.bookItem = bookItem;
 		this.user = user;
-		this.borrowedAt = LocalDateTime.now();
+		this.borrowedAt = borrowedAt;
+		this.returnedAt = returnedAt;
+	}
+
+	public static BookHistoryEntity createForBorrow(BookItemEntity bookItem, UserEntity user) {
+		return BookHistoryEntity.builder()
+			.bookItem(bookItem)
+			.user(user)
+			.borrowedAt(LocalDateTime.now())
+			.returnedAt(null)
+			.build();
 	}
 
 	public void returnBook() {
