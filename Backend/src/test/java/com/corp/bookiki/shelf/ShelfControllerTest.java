@@ -19,6 +19,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -47,6 +48,7 @@ class ShelfControllerTest {
     private ShelfService shelfService;
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("전체 책장 조회 성공")
     void selectAllShelf_Success() throws Exception {
         // given
@@ -78,6 +80,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("책장 생성 성공")
     void createShelf_Success() throws Exception {
         // given
@@ -98,6 +101,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("잘못된 책장 번호로 생성 실패")
     void createShelf_WithInvalidShelfNumber_ReturnsBadRequest() throws Exception {
         // given
@@ -119,6 +123,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("책장 수정 성공")
     void updateShelf_Success() throws Exception {
         // given
@@ -139,6 +144,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("존재하지 않는 책장 수정 시도시 404 반환")
     void updateShelf_WithNonExistentId_ReturnsNotFound() throws Exception {
         // given
@@ -161,6 +167,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("책장 삭제 성공")
     void deleteShelf_Success() throws Exception {
         // given
@@ -177,6 +184,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("존재하지 않는 책장 삭제 시도시 404 반환")
     void deleteShelf_WithNonExistentId_ReturnsNotFound() throws Exception {
         // given
@@ -193,6 +201,7 @@ class ShelfControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "ADMIN")
     @DisplayName("책장 삭제 시 서버 오류 발생")
     void deleteShelf_WhenServerError_Returns500() throws Exception {
         // given
