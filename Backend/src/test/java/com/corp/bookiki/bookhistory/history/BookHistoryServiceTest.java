@@ -25,7 +25,7 @@ import com.corp.bookiki.bookhistory.enitity.PeriodType;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.user.entity.UserEntity;
 
 @ExtendWith(MockitoExtension.class)
@@ -112,7 +112,7 @@ class BookHistoryServiceTest {
 			// startDate와 endDate를 설정하지 않음
 
 			// when & then
-			assertThrows(BusinessException.class,
+			assertThrows(BookHistoryException.class,
 				() -> bookHistoryService.getBookHistories(request, PageRequest.of(0, 10)));
 		}
 	}

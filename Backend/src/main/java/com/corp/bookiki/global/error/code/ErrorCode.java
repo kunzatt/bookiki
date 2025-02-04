@@ -67,6 +67,8 @@ public enum ErrorCode {
 	INVALID_RETURN_DATE(400, "잘못된 반납 날짜입니다"),
 	DUPLICATE_FAVORITE(400, "이미 즐겨찾기에 추가된 도서입니다"),
 	FAVORITE_NOT_FOUND(404, "즐겨찾기를 찾을 수 없습니다"),
+	INVALID_INPUT_VALUE_NO_DATE(400, "사용자 정의 기간 조회 시 시작일과 종료일은 필수입니다"),
+	INVALID_INPUT_VALUE_AFTER_DATE(400, "시작일이 종료일보다 늦을 수 없습니다"),
 
 	// Notification
 	NOTIFICATION_NOT_FOUND(404, "알림을 찾을 수 없습니다"),

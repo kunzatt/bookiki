@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 import com.corp.bookiki.bookhistory.enitity.PeriodType;
 import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,12 +43,10 @@ public class BookHistoryRequest {
 	public void validate() {
 		if (periodType == PeriodType.CUSTOM) {
 			if (startDate == null || endDate == null) {
-				throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
-					"사용자 정의 기간 조회 시 시작일과 종료일은 필수입니다");
+				throw new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE_NO_DATE);
 			}
 			if (startDate.isAfter(endDate)) {
-				throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
-					"시작일이 종료일보다 늦을 수 없습니다");
+				throw new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE_AFTER_DATE);
 			}
 		} else {
 			startDate = periodType.getStartDate();
