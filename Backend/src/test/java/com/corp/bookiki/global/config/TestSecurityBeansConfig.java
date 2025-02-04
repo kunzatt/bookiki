@@ -49,22 +49,4 @@ public class TestSecurityBeansConfig {
 
 	@MockBean
 	private CustomLogoutHandler customLogoutHandler;
-
-//	@MockBean
-//	private CookieUtil cookieUtil;  // 추가
-//
-//	@Bean
-//	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//		http
-//				.csrf((csrf) -> csrf.disable())  // 새로운 방식으로 변경
-//				.authorizeHttpRequests(authorize -> authorize
-//						.requestMatchers("/admin/**").permitAll()
-//						.anyRequest().authenticated()
-//				)
-//				.sessionManagement(session -> session
-//						.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//				);
-//
-//		return http.build();
-//	}
 }
