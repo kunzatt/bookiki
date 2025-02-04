@@ -1,8 +1,13 @@
 package com.corp.bookiki.bookitem.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.corp.bookiki.bookcheckout.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BusinessException;
 import com.corp.bookiki.qrcode.entity.QrCodeEntity;
 
 import jakarta.persistence.Column;
@@ -15,6 +20,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -38,7 +44,7 @@ public class BookItemEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status_type")
-	private StatusType statusType;
+	private BookStatus bookStatus = BookStatus.AVAILABLE;
 
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
@@ -49,5 +55,19 @@ public class BookItemEntity {
 	@PreUpdate
 	protected void onUpdate() {
 		updatedAt = LocalDateTime.now();
+	}
+
+	@OneToMany(mappedBy = "bookItem")
+	private List<BookHistoryEntity> bookHistories = new ArrayList<>();
+
+	public boolean isAvailable() {
+		return bookStatus == BookStatus.AVAILABLE;
+	}
+
+	public void borrow() {
+		if (!isAvailable()) {
+			throw new BusinessException(ErrorCode.BOOK_ALREADY_BORROWED);
+		}
+		this.bookStatus = BookStatus.BORROWED;
 	}
 }
