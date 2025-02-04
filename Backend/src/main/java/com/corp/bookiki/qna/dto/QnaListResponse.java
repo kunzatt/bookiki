@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Schema(description = "문의사항 목록 응답")
 public class QnaListResponse {
     @Schema(description = "QnA ID", example = "1")
-    private int id;
+    private Integer id;
 
     @Schema(description = "제목", example = "도서관 이용 문의")
     private String title;
@@ -28,10 +28,10 @@ public class QnaListResponse {
     private LocalDateTime createdAt;
 
     // 페이지 메타 정보
-    private int pageNumber;
-    private int pageSize;
-    private long totalElements;
-    private int totalPages;
+    private Integer pageNumber;
+    private Integer pageSize;
+    private Long totalElements;
+    private Integer totalPages;
 
     public QnaListResponse(QnaEntity qna, String authorName) {
         this.id = qna.getId();

@@ -21,7 +21,7 @@ import java.util.List;
 public class QnaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(nullable = false)
     private String title;
@@ -33,7 +33,7 @@ public class QnaEntity {
     private String content;
 
     @Column(name = "author_id", nullable = false)
-    private int authorId;
+    private Integer authorId;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

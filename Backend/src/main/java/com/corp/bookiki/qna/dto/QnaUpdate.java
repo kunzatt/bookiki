@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Schema(description = "문의사항 수정 요청")
 public class QnaUpdate {
     @Schema(description = "문의사항 ID", example = "1", required = true)
-    private int id;
+    private Integer id;
 
     @Schema(description = "제목", example = "JPA 도서 신청 (수정)", required = true)
     @NotBlank(message = "제목은 필수 입력값입니다.")

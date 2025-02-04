@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class QnaCommentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
 
     @Column(name = "qna_id", nullable = false)
     private int qnaId;

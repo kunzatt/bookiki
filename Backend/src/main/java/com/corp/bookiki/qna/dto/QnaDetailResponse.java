@@ -13,7 +13,7 @@ import java.util.List;
 @Schema(description = "문의사항 상세 응답")
 public class QnaDetailResponse {
     @Schema(description = "QnA ID", example = "1")
-    private int id;
+    private Integer id;
 
     @Schema(description = "제목", example = "도서관 이용 문의")
     private String title;
@@ -25,7 +25,7 @@ public class QnaDetailResponse {
     private String content;
 
     @Schema(description = "작성자 ID", example = "1")
-    private int authorId;
+    private Integer authorId;
 
     // entity에는 없지만, 함께 사용해야할 column
     @Schema(description = "작성자 이름", example = "홍길동")
