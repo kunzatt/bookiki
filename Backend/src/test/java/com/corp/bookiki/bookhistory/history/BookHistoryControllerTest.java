@@ -38,7 +38,7 @@ import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -159,7 +159,7 @@ class BookHistoryControllerTest {
 			request.setPeriodType(PeriodType.CUSTOM);
 
 			given(bookHistoryService.getBookHistories(any(BookHistoryRequest.class), any(Pageable.class)))
-				.willThrow(new BusinessException(ErrorCode.INVALID_INPUT_VALUE));
+				.willThrow(new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE));
 
 			log.info("테스트 요청 생성: periodType={}, dates=null", request.getPeriodType());
 

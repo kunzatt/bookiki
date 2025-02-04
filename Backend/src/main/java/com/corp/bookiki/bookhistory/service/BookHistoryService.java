@@ -11,7 +11,7 @@ import com.corp.bookiki.bookhistory.dto.BookHistoryRequest;
 import com.corp.bookiki.bookhistory.dto.BookHistoryResponse;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class BookHistoryService {
 			).map(BookHistoryResponse::from);
 		} catch (Exception e) {
 			log.error("도서 대출 기록 조회 중 오류 발생", e);
-			throw new BusinessException(ErrorCode.HISTORY_NOT_FOUND);
+			throw new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND);
 		}
 	}
 }

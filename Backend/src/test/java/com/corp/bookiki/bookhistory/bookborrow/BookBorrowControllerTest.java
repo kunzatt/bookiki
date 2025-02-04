@@ -33,7 +33,7 @@ import com.corp.bookiki.bookhistory.service.BookBorrowService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -117,7 +117,7 @@ class BookBorrowControllerTest {
 			request.setBookItemId(999);
 
 			given(bookBorrowService.borrowBook(any(BookBorrowRequest.class)))
-				.willThrow(new BusinessException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+				.willThrow(new BookHistoryException(ErrorCode.BOOK_ITEM_NOT_FOUND));
 			log.info("존재하지 않는 도서 대출 요청 테스트 시작: bookItemId={}", request.getBookItemId());
 
 			// when & then

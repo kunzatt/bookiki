@@ -7,7 +7,7 @@ import java.util.List;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookItemException;
 import com.corp.bookiki.qrcode.entity.QrCodeEntity;
 
 import jakarta.persistence.Column;
@@ -49,6 +49,7 @@ public class BookItemEntity {
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
+
 	@OneToOne(mappedBy = "bookItem")
 	private QrCodeEntity qrCode;
 
@@ -66,7 +67,7 @@ public class BookItemEntity {
 
 	public void borrow() {
 		if (!isAvailable()) {
-			throw new BusinessException(ErrorCode.BOOK_ALREADY_BORROWED);
+			throw new BookItemException(ErrorCode.BOOK_ALREADY_BORROWED);
 		}
 		this.bookStatus = BookStatus.BORROWED;
 	}

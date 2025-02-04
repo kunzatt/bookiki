@@ -3,7 +3,7 @@ package com.corp.bookiki.bookhistory.enitity;
 import java.time.LocalDate;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BusinessException;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 
 import lombok.Getter;
 
@@ -29,8 +29,7 @@ public enum PeriodType {
 			case LAST_THREE_MONTHS -> LocalDate.now().minusMonths(3);
 			case LAST_SIX_MONTHS -> LocalDate.now().minusMonths(6);
 			case LAST_YEAR -> LocalDate.now().minusYears(1);
-			case CUSTOM -> throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE,
-				"CUSTOM 타입은 시작일을 직접 지정해야 합니다");
+			case CUSTOM -> throw new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE);
 		};
 	}
 }
