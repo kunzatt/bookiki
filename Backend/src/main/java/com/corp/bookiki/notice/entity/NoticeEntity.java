@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 public class NoticeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private int id;
+	private Integer id;
 
 	@Column(nullable = false, length = 255)
 	private String title;
@@ -43,10 +43,10 @@ public class NoticeEntity {
 	private LocalDateTime updatedAt;
 
 	@Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-	private boolean deleted; // false가 0으로, true가 1로 자동 변환
+	private Boolean deleted; // false가 0으로, true가 1로 자동 변환
 
 	@Column(nullable = false, columnDefinition = "INT DEFAULT 0")
-	private int viewCount;
+	private Integer viewCount;
 
 	@Builder
 	private NoticeEntity(String title, String content) {
