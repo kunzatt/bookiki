@@ -81,7 +81,7 @@ class UserSignUpControllerTest {
 		log.info("Mock 서비스 동작 설정 완료");
 
 		// then
-		mockMvc.perform(post("/user/signup")
+		mockMvc.perform(post("/api/user/signup")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
@@ -101,7 +101,7 @@ class UserSignUpControllerTest {
 		log.info("이메일 중복 확인 테스트 시작: {}", email);
 
 		// then
-		mockMvc.perform(get("/user/signup/email/check")
+		mockMvc.perform(get("/api/user/signup/email/check")
 				.param("email", email))
 			.andExpect(status().isOk())
 			.andExpect(content().string("이메일이 중복 되지 않습니다."));
@@ -119,7 +119,7 @@ class UserSignUpControllerTest {
 		log.info("사번 중복 확인 테스트 시작: {}", companyId);
 
 		// then
-		mockMvc.perform(get("/user/signup/company-id/check")
+		mockMvc.perform(get("/api/user/signup/company-id/check")
 				.param("companyId", companyId))
 			.andExpect(status().isOk())
 			.andExpect(content().string("사번이 중복 되지 않습니다."));
@@ -140,7 +140,7 @@ class UserSignUpControllerTest {
 		log.info("Mock 서비스에 UserException 발생 설정 완료");
 
 		// then
-		mockMvc.perform(post("/user/signup")
+		mockMvc.perform(post("/api/user/signup")
 				.with(csrf())
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
