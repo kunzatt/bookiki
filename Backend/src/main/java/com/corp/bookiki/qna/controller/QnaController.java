@@ -194,7 +194,7 @@ public class QnaController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))
             )
     })
-    @DeleteMapping("")
+    @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteQna(
             @Parameter(description = "문의사항 ID", required = true, example = "1")
             @PathVariable int id,
