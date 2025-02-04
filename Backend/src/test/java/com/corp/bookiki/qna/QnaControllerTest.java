@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -164,11 +165,12 @@ class QnaControllerTest {
         qnaList.add(qna);
 
         UserEntity testUser = UserEntity.builder()
-                .id(1)
                 .userName("테스트유저")
                 .email("test@test.com")
                 .role(Role.USER)
                 .build();
+
+        ReflectionTestUtils.setField(testUser, "id", 1);
 
         when(qnaService.selectQnas(null, null, null, authUser)).thenReturn(qnaList);
         when(userRepository.getReferenceById(1)).thenReturn(testUser);
