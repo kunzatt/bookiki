@@ -65,6 +65,35 @@ public class BookHistoryService {
 		}
 	}
 
+	public Page<BookHistoryResponse> getUserBookHistories(
+		Integer userId,
+		LocalDate startDate,
+		LocalDate endDate,
+		String keyword,
+		Pageable pageable
+	) {
+		try {
+			log.debug("사용자별 대출 기록 조회 시작 - 사용자: {}, 시작일: {}, 종료일: {}, 키워드: {}",
+				userId, startDate, endDate, keyword);
+
+			LocalDateTime startDateTime = startDate.atStartOfDay();
+			LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+
+			Page<BookHistoryEntity> histories = bookHistoryRepository
+				.searchUserBookHistoryWithCount(userId, startDateTime, endDateTime, keyword, pageable);
+
+			log.debug("사용자별 대출 기록 조회 완료 - 사용자: {}, 총 {} 건",
+				userId, histories.getTotalElements());
+
+			return histories.map(BookHistoryResponse::from);
+		} catch (Exception e) {
+			log.error("사용자별 도서 대출 기록 조회 중 오류 발생 - 사용자: {}, 시작일: {}, 종료일: {}, 키워드: {}",
+				userId, startDate, endDate, keyword, e);
+			throw new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND);
+		}
+	}
+
+
 	public boolean isBookCurrentlyBorrowed(BookItemEntity bookItem) {
 		return bookHistoryRepository.findCurrentBorrowByBookItem(bookItem).isPresent();
 	}

@@ -96,4 +96,36 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		@Param("endDate") LocalDateTime endDate,
 		Pageable pageable
 	);
+
+	@Query(value = """
+        SELECT bh 
+        FROM BookHistoryEntity bh 
+        JOIN FETCH bh.bookItem bi 
+        JOIN FETCH bi.bookInformation bi_info
+        JOIN FETCH bh.user u
+        WHERE bh.user.id = :userId
+        AND bh.borrowedAt BETWEEN :startDate AND :endDate
+        AND (:keyword IS NULL 
+            OR bi_info.title LIKE %:keyword% 
+            OR bi_info.author LIKE %:keyword%)
+        """,
+		countQuery = """
+        SELECT COUNT(bh) 
+        FROM BookHistoryEntity bh 
+        JOIN bh.bookItem bi 
+        JOIN bi.bookInformation bi_info
+        WHERE bh.user.id = :userId
+        AND bh.borrowedAt BETWEEN :startDate AND :endDate
+        AND (:keyword IS NULL 
+            OR bi_info.title LIKE %:keyword% 
+            OR bi_info.author LIKE %:keyword%)
+        """
+	)
+	Page<BookHistoryEntity> searchUserBookHistoryWithCount(
+		@Param("userId") Integer userId,
+		@Param("startDate") LocalDateTime startDate,
+		@Param("endDate") LocalDateTime endDate,
+		@Param("keyword") String keyword,
+		Pageable pageable
+	);
 }
