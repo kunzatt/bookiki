@@ -41,7 +41,6 @@ public class ShelfUpdateRequest {
     @Schema(name = "ShelfRequest", description = "책장 정보 요청")
     public ShelfEntity toEntity() {
         return ShelfEntity.builder()
-                .id(this.id)
                 .shelfNumber(this.shelfNumber)
                 .lineNumber(this.lineNumber)
                 .category(this.category)

@@ -115,7 +115,12 @@ class ShelfRepositoryTest {
         ShelfEntity savedShelf = shelfRepository.save(shelf);
 
         // when
-        savedShelf.setCategory(200);
+        savedShelf.update(
+                savedShelf.getShelfNumber(),  // 기존 값 유지
+                savedShelf.getLineNumber(),   // 기존 값 유지
+                200                           // 변경할 카테고리 값
+        );
+
         ShelfEntity updatedShelf = shelfRepository.save(savedShelf);
 
         // then

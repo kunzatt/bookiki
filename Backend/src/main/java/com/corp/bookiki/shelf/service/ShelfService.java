@@ -60,16 +60,12 @@ public class ShelfService {
         try{
             ShelfEntity shelfEntity = shelfRepository.findById(request.getId())
                     .orElseThrow(() -> new ShelfException(ErrorCode.SHELF_NOT_FOUND));
-            if (request.getShelfNumber() <= 0) {
-                throw new ShelfException(ErrorCode.INVALID_SHELF_NUMBER);
-            }
-            if (request.getLineNumber() <= 0) {
-                throw new ShelfException(ErrorCode.INVALID_LINE_NUMBER);
-            }
 
-            shelfEntity.setShelfNumber(request.getShelfNumber());
-            shelfEntity.setLineNumber(request.getLineNumber());
-            shelfEntity.setCategory(request.getCategory());
+            shelfEntity.update(
+                    request.getShelfNumber(),
+                    request.getLineNumber(),
+                    request.getCategory()
+            );
 
             shelfRepository.save(shelfEntity);
         } catch (ShelfException ex) {

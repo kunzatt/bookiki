@@ -1,7 +1,12 @@
 package com.corp.bookiki.shelf.entity;
 
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.ShelfException;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
@@ -12,7 +17,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
         }
 )
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
 public class ShelfEntity {
@@ -31,11 +35,31 @@ public class ShelfEntity {
     private Integer category;
 
     @Builder
-    public ShelfEntity(Integer id, Integer shelfNumber, Integer lineNumber, Integer category) {
-        this.id = id;
+    public ShelfEntity(Integer shelfNumber, Integer lineNumber, Integer category) {
         this.shelfNumber = shelfNumber;
         this.lineNumber = lineNumber;
         this.category = category;
+    }
+
+    public void update(int shelfNumber, int lineNumber, Integer category) {
+        validateShelfNumber(shelfNumber);
+        validateLineNumber(lineNumber);
+
+        this.shelfNumber = shelfNumber;
+        this.lineNumber = lineNumber;
+        this.category = category;
+    }
+
+    private void validateLineNumber(int lineNumber) {
+        if (shelfNumber <= 0) {
+            throw new ShelfException(ErrorCode.INVALID_SHELF_NUMBER);
+        }
+    }
+
+    private void validateShelfNumber(int shelfNumber) {
+        if (lineNumber <= 0) {
+            throw new ShelfException(ErrorCode.INVALID_LINE_NUMBER);
+        }
     }
 
 }

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,13 +37,11 @@ class ShelfServiceTest {
     void selectAllShelf_Success() {
         // given
         ShelfEntity shelf1 = ShelfEntity.builder()
-                .id(1)
                 .shelfNumber(1)
                 .lineNumber(2)
                 .category(100)
                 .build();
         ShelfEntity shelf2 = ShelfEntity.builder()
-                .id(2)
                 .shelfNumber(2)
                 .lineNumber(3)
                 .category(200)
@@ -104,11 +103,12 @@ class ShelfServiceTest {
         request.setCategory(100);
 
         ShelfEntity savedShelf = ShelfEntity.builder()
-                .id(1)
                 .shelfNumber(1)
                 .lineNumber(2)
                 .category(100)
                 .build();
+
+        ReflectionTestUtils.setField(savedShelf, "id", 1);
 
         when(shelfRepository.save(any(ShelfEntity.class))).thenReturn(savedShelf);
 
