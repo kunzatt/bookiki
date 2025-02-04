@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookcheckout.service;
+package com.corp.bookiki.bookhistory.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -14,10 +14,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.corp.bookiki.bookcheckout.dto.BookBorrowRequest;
-import com.corp.bookiki.bookcheckout.dto.BookBorrowResponse;
-import com.corp.bookiki.bookcheckout.enitity.BookHistoryEntity;
-import com.corp.bookiki.bookcheckout.repository.BookCheckOutRepository;
+import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
+import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
+import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
+import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -33,7 +33,7 @@ class BookBorrowServiceTest {
 	private BookBorrowService bookBorrowService;
 
 	@Mock
-	private BookCheckOutRepository bookHistoryRepository;
+	private BookHistoryRepository bookHistoryRepository;
 
 	@Mock
 	private BookItemRepository bookItemRepository;

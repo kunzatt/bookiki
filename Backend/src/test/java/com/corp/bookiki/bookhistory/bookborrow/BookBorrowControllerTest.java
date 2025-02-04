@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookcheckout.bookborrow;
+package com.corp.bookiki.bookhistory.bookborrow;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
@@ -26,10 +26,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.corp.bookiki.bookcheckout.controller.BookBorrowController;
-import com.corp.bookiki.bookcheckout.dto.BookBorrowRequest;
-import com.corp.bookiki.bookcheckout.dto.BookBorrowResponse;
-import com.corp.bookiki.bookcheckout.service.BookBorrowService;
+import com.corp.bookiki.bookhistory.controller.BookBorrowController;
+import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
+import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
+import com.corp.bookiki.bookhistory.service.BookBorrowService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;

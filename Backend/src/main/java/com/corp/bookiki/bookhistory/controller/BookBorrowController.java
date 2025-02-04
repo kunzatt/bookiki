@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookcheckout.controller;
+package com.corp.bookiki.bookhistory.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.corp.bookiki.bookcheckout.dto.BookBorrowRequest;
-import com.corp.bookiki.bookcheckout.dto.BookBorrowResponse;
-import com.corp.bookiki.bookcheckout.service.BookBorrowService;
+import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
+import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
+import com.corp.bookiki.bookhistory.service.BookBorrowService;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/api/books")
 @RequiredArgsConstructor
 @Tag(name = "도서 대출 API", description = "도서 대출 관련 API")
 @Slf4j

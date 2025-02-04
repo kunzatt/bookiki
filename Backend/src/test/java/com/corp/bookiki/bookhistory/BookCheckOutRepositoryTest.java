@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookcheckout;
+package com.corp.bookiki.bookhistory;
 
 public class BookCheckOutRepositoryTest {
 }

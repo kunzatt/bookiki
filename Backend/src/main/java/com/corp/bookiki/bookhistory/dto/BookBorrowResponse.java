@@ -1,8 +1,8 @@
-package com.corp.bookiki.bookcheckout.dto;
+package com.corp.bookiki.bookhistory.dto;
 
 import java.time.LocalDateTime;
 
-import com.corp.bookiki.bookcheckout.enitity.BookHistoryEntity;
+import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -38,12 +38,12 @@ public class BookBorrowResponse {
 	)
 	private LocalDateTime borrowedAt;
 
-	public static BookBorrowResponse from(BookHistoryEntity history) {
+	public static BookBorrowResponse from(BookHistoryEntity entity) {
 		return BookBorrowResponse.builder()
-			.id(history.getId())
-			.bookItemId(history.getBookItem().getId())
-			.userId(history.getUser().getId())
-			.borrowedAt(history.getBorrowedAt())
+			.id(entity.getId())
+			.bookItemId(entity.getBookItem().getId())
+			.userId(entity.getUser().getId())
+			.borrowedAt(entity.getBorrowedAt())
 			.build();
 	}
 }

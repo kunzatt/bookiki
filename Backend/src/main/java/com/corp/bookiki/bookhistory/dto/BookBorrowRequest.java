@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookcheckout.dto;
+package com.corp.bookiki.bookhistory.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;

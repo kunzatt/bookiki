@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookcheckout.enitity;
+package com.corp.bookiki.bookhistory.enitity;
 
 import java.time.LocalDateTime;
 

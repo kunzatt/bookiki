@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.corp.bookiki.bookcheckout.enitity.BookHistoryEntity;
+import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BusinessException;
