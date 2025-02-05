@@ -7,6 +7,7 @@ import com.corp.bookiki.global.annotation.CurrentUser;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.user.dto.AuthUser;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -30,7 +31,10 @@ public class ChatbotController {
 
     private final ChatbotService chatbotService;
 
-    @Operation(summary = "챗봇 메시지 전송", description = "사용자의 메시지를 처리하고 챗봇의 응답을 반환합니다.")
+    @Operation(
+            summary = "챗봇 메시지 전송",
+            description = "사용자의 메시지를 처리하고 챗봇의 응답을 반환합니다."
+    )
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
@@ -47,11 +51,25 @@ public class ChatbotController {
                             mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)
                     )
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "인증되지 않은 사용자",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    )
             )
     })
     @PostMapping("/message")
     public ResponseEntity<ChatbotResponse> sendMessage(
-            @CurrentUser AuthUser user,  // 현재 인증된 사용자
+            @Parameter(hidden = true) @CurrentUser AuthUser user,
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = ChatbotRequest.class)
+                    )
+            )
             @Valid @RequestBody ChatbotRequest request
     ) {
         log.info("챗봇 메시지 수신 - 사용자: {}, 메시지: {}", user.getId(), request.getMessage());
