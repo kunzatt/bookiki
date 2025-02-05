@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/auth/email/verify")
+@RequestMapping("/api/auth/email/verify")
 @RequiredArgsConstructor
 @Tag(name = "이메일 인증 API", description = "이메일 인증 코드 발송 및 확인 API")
 @Slf4j

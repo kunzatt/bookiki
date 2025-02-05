@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
@@ -42,7 +43,6 @@ class UserInformationForAdminServiceTest {
 		log.info("전체 사용자 조회 테스트 시작");
 		LocalDateTime now = LocalDateTime.now();
 		UserEntity user = UserEntity.builder()
-			.id(1)
 			.email("test@example.com")
 			.userName("테스트")
 			.companyId("CORP001")
@@ -53,6 +53,7 @@ class UserInformationForAdminServiceTest {
 			.activeAt(now)
 			.profileImage("profile.jpg")
 			.build();
+		ReflectionTestUtils.setField(user, "id", 1);
 		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
 
 		when(userRepository.findAll()).thenReturn(List.of(user));
@@ -74,7 +75,6 @@ class UserInformationForAdminServiceTest {
 		log.info("개별 사용자 조회 테스트 시작");
 		LocalDateTime now = LocalDateTime.now();
 		UserEntity user = UserEntity.builder()
-			.id(1)
 			.email("test@example.com")
 			.userName("테스트")
 			.companyId("CORP001")
@@ -85,6 +85,7 @@ class UserInformationForAdminServiceTest {
 			.activeAt(now)
 			.profileImage("profile.jpg")
 			.build();
+		ReflectionTestUtils.setField(user, "id", 1);
 		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
 
 		when(userRepository.findById(1)).thenReturn(Optional.of(user));
@@ -119,7 +120,6 @@ class UserInformationForAdminServiceTest {
 		LocalDateTime newActiveAt = now.plusHours(1);
 
 		UserEntity user = UserEntity.builder()
-			.id(1)
 			.email("test@example.com")
 			.userName("테스트")
 			.companyId("CORP001")
@@ -130,6 +130,7 @@ class UserInformationForAdminServiceTest {
 			.activeAt(now)
 			.profileImage("profile.jpg")
 			.build();
+		ReflectionTestUtils.setField(user, "id", 1);
 		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
 
 		when(userRepository.findById(1)).thenReturn(Optional.of(user));
@@ -152,7 +153,6 @@ class UserInformationForAdminServiceTest {
 		LocalDateTime now = LocalDateTime.now();
 
 		UserEntity user = UserEntity.builder()
-			.id(1)
 			.email("test@example.com")
 			.userName("테스트")
 			.companyId("CORP001")
@@ -164,6 +164,7 @@ class UserInformationForAdminServiceTest {
 			.profileImage("profile.jpg")
 			.deleted(false)
 			.build();
+		ReflectionTestUtils.setField(user, "id", 1);
 		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
 
 		when(userRepository.findById(1)).thenReturn(Optional.of(user));

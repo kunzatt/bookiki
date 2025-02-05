@@ -67,7 +67,7 @@ public class QrCodeController {
 			)
 		)
 	})
-	@PostMapping("admin/qrcodes/{bookItemId}")
+	@PostMapping("/api/admin/qrcodes/{bookItemId}")
 	public ResponseEntity<QrCodeResponse> createQRCode(
 		@Parameter(
 			description = "도서 아이템 ID",

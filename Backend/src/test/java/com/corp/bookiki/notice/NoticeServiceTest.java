@@ -53,6 +53,8 @@ class NoticeServiceTest {
                 .content(request.getContent())
                 .build();
 
+        ReflectionTestUtils.setField(entity, "id", 1);
+
         when(noticeRepository.save(any(NoticeEntity.class))).thenReturn(entity);
 
         // when

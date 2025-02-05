@@ -81,10 +81,10 @@ cookie:
 server:
   port: ${SERVER_PORT:8088}
   servlet:
-    context-path: /api
     encoding:
       charset: UTF-8
       force: true
+    context-path: "/"
 
 logging:
   level:
@@ -130,9 +130,10 @@ websocket:
   endpoint: /ws
   allowed-origins: ${CORS_ALLOWED_ORIGINS:"*"}
 
-api:
-  nl:
-    key: ${NL_API_KEY}
+naver:
+  api:
+    books-client-id: ${BOOKS_NAVER_CLIENT_ID}
+    books-client-secret: ${BOOKS_NAVER_CLIENT_SECRET}
 
 ---
 # test 프로필

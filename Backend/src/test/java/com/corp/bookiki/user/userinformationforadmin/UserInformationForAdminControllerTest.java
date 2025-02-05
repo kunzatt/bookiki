@@ -71,7 +71,7 @@ class UserInformationForAdminControllerTest {
 		when(userInformationForAdminService.getUserDetails()).thenReturn(List.of(response));
 		log.info("Mock 서비스 동작 설정 완료");
 
-		mockMvc.perform(get("/admin/users")
+		mockMvc.perform(get("/api/admin/users")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$[0].email").value("test@example.com"))
@@ -94,7 +94,7 @@ class UserInformationForAdminControllerTest {
 		when(userInformationForAdminService.getUserDetailsById(1)).thenReturn(response);
 		log.info("Mock 서비스 동작 설정 완료");
 
-		mockMvc.perform(get("/admin/users/1")
+		mockMvc.perform(get("/api/admin/users/1")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.email").value("test@example.com"))
@@ -121,7 +121,7 @@ class UserInformationForAdminControllerTest {
 			.thenReturn(response);
 		log.info("Mock 서비스 동작 설정 완료");
 
-		mockMvc.perform(put("/admin/users/1")
+		mockMvc.perform(put("/api/admin/users/1")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(objectMapper.writeValueAsString(request)))
 			.andExpect(status().isOk())
@@ -147,7 +147,7 @@ class UserInformationForAdminControllerTest {
 		when(userInformationForAdminService.deleteUser(1)).thenReturn(response);
 		log.info("Mock 서비스 동작 설정 완료");
 
-		mockMvc.perform(delete("/admin/users/1")
+		mockMvc.perform(delete("/api/admin/users/1")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(1))

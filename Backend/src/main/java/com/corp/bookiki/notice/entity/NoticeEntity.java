@@ -43,7 +43,7 @@ public class NoticeEntity {
 	private LocalDateTime updatedAt;
 
 	@Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-	private Boolean deleted; // false가 0으로, true가 1로 자동 변환
+	private boolean deleted; // false가 0으로, true가 1로 자동 변환
 
 	@Column(nullable = false, columnDefinition = "INT DEFAULT 0")
 	private Integer viewCount;

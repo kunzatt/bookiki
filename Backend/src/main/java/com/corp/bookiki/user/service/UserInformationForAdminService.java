@@ -24,22 +24,31 @@ public class UserInformationForAdminService {
 	@Transactional(readOnly = true)
 	public List<UserInformationForAdminResponse> getUserDetails() {
 		return userRepository.findAll().stream()
+			.filter(user -> !user.getDeleted())
 			.map(UserInformationForAdminResponse::from)
 			.collect(Collectors.toList());
 	}
 
 	@Transactional(readOnly = true)
 	public UserInformationForAdminResponse getUserDetailsById(Integer id) {
-		return UserInformationForAdminResponse.from(
-			userRepository.findById(id)
-				.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND))
-		);
+		UserEntity user = userRepository.findById(id)
+			.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+
+		if (user.getDeleted()) {
+			throw new UserException(ErrorCode.USER_NOT_FOUND);
+		}
+
+		return UserInformationForAdminResponse.from(user);
 	}
 
 	@Transactional
 	public UserInformationForAdminResponse updateUserActiveAt(Integer id, UserInformationForAdminRequest request) {
 		UserEntity user = userRepository.findById(id)
 			.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+
+		if (user.getDeleted()) {
+			throw new UserException(ErrorCode.USER_NOT_FOUND);
+		}
 
 		user.updateActiveAt(request.getActiveAt());
 		return UserInformationForAdminResponse.from(user);
@@ -50,8 +59,11 @@ public class UserInformationForAdminService {
 		UserEntity user = userRepository.findById(id)
 			.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
 
+		if (user.getDeleted()) {
+			throw new UserException(ErrorCode.USER_NOT_FOUND);
+		}
+
 		user.delete();
 		return UserInformationForAdminResponse.from(user);
 	}
-
 }
