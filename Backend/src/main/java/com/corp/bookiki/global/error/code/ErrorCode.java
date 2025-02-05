@@ -33,6 +33,8 @@ public enum ErrorCode {
 	EXPIRED_EMAIL_VERIFICATION(401, "만료된 인증 토큰입니다"),
 	DUPLICATE_EMAIL(400, "이미 등록된 이메일입니다"),
 	FAIL_EMAIL_SEND(500, "이메일 발송에 실패했습니다"),
+	HAS_OVERDUE_BOOKS(400, "이미 연체된 도서가 있습니다"),
+	BORROW_LIMIT_EXCEEDED(400, "대출 한도가 초과했습니다."),
 
 	// OAuth2 관련 에러 코드들
 	OAUTH2_INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 OAuth2 토큰입니다."),
@@ -67,6 +69,8 @@ public enum ErrorCode {
 	INVALID_RETURN_DATE(400, "잘못된 반납 날짜입니다"),
 	DUPLICATE_FAVORITE(400, "이미 즐겨찾기에 추가된 도서입니다"),
 	FAVORITE_NOT_FOUND(404, "즐겨찾기를 찾을 수 없습니다"),
+	INVALID_INPUT_VALUE_NO_DATE(400, "사용자 정의 기간 조회 시 시작일과 종료일은 필수입니다"),
+	INVALID_INPUT_VALUE_AFTER_DATE(400, "시작일이 종료일보다 늦을 수 없습니다"),
 
 	// Notification
 	NOTIFICATION_NOT_FOUND(404, "알림을 찾을 수 없습니다"),

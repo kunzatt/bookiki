@@ -173,7 +173,6 @@ class QnaControllerTest {
         qnaList.add(qna);
 
         UserEntity testUser = UserEntity.builder()
-                .id(1)
                 .userName("테스트유저")
                 .email("test@test.com")
                 .role(Role.USER)

@@ -27,6 +27,7 @@ import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookInformationException;
 import com.corp.bookiki.util.CookieUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +67,7 @@ class BookInformationControllerTest {
 		log.info("테스트 도서 정보 생성: ISBN={}", isbn);
 		given(bookInformationService.addBookInformationByIsbn(isbn)).willReturn(response);
 
-		mockMvc.perform(get("/books/info/isbn/{isbn}", isbn))
+		mockMvc.perform(get("/api/books/info/isbn/{isbn}", isbn))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.isbn").value(isbn));
 
@@ -81,7 +82,7 @@ class BookInformationControllerTest {
 		given(bookInformationService.addBookInformationByIsbn(anyString()))
 			.willThrow(new BookInformationException(ErrorCode.INVALID_ISBN));
 
-		mockMvc.perform(get("/books/info/isbn/{isbn}", isbn))
+		mockMvc.perform(get("/api/books/info/isbn/{isbn}", isbn))
 			.andExpect(status().isBadRequest());
 	}
 
@@ -93,7 +94,7 @@ class BookInformationControllerTest {
 		given(bookInformationService.addBookInformationByIsbn(anyString()))
 			.willThrow(new BookInformationException(ErrorCode.BOOK_INFO_NOT_FOUND));
 
-		mockMvc.perform(get("/books/info/isbn/{isbn}", isbn))
+		mockMvc.perform(get("/api/books/info/isbn/{isbn}", isbn))
 			.andExpect(status().isNotFound());
 	}
 
@@ -108,7 +109,7 @@ class BookInformationControllerTest {
 
 		given(bookInformationService.getBookInformation(id)).willReturn(response);
 
-		mockMvc.perform(get("/books/info/{id}", id))
+		mockMvc.perform(get("/api/books/info/{id}", id))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.id").value(id));
 	}
