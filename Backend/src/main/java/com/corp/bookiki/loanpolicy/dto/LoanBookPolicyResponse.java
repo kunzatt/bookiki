@@ -5,8 +5,10 @@ import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @Schema(description = "최대 대출 가능 도서 수 응답")
 public class LoanBookPolicyResponse {
