@@ -135,6 +135,18 @@ naver:
     books-client-id: ${BOOKS_NAVER_CLIENT_ID}
     books-client-secret: ${BOOKS_NAVER_CLIENT_SECRET}
 
+dialogflow:
+  project-id: ${DIALOGFLOW_PROJECT_ID}
+  client-email: ${DIALOGFLOW_CLIENT_EMAIL}
+  private-key: ${DIALOGFLOW_PRIVATE_KEY}
+  language-code: ko-KR
+
+chatbot:
+  context:
+    lifetime-minutes: 30
+  confidence:
+    threshold: 0.7
+
 ---
 # test 프로필
 spring:
