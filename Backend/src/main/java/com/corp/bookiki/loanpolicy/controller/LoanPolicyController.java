@@ -54,7 +54,7 @@ public class LoanPolicyController {
 		return ResponseEntity.ok(loanPolicyService.getCurrentPolicy());
 	}
 
-	@PatchMapping("/max-books")
+	@PatchMapping("/books")
 	@Operation(summary = "최대 대출 가능 도서 수 수정", description = "최대로 대출할 수 있는 도서의 수를 수정합니다.")
 	@ApiResponses({
 		@ApiResponse(
@@ -91,7 +91,7 @@ public class LoanPolicyController {
 		return ResponseEntity.ok(loanPolicyService.updateMaxBooks(request));
 	}
 
-	@PatchMapping("/loan-period")
+	@PatchMapping("/period")
 	@Operation(summary = "대출 기간 수정", description = "도서 대출 가능 기간(일)을 수정합니다.")
 	@ApiResponses({
 		@ApiResponse(
