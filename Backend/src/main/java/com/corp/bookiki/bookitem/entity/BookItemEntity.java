@@ -46,6 +46,9 @@ public class BookItemEntity {
 	@OneToOne(mappedBy = "bookItem")
 	private QrCodeEntity qrCode;
 
+	@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+	private Boolean deleted = false;
+
 	@PreUpdate
 	protected void onUpdate() {
 		updatedAt = LocalDateTime.now();

@@ -78,6 +78,7 @@ public class SecurityConfig {
 				log.debug("URL 기반 보안 설정 구성");
 				auth
 					.requestMatchers(
+						"/api/**",
 						"/api/auth/**",  // 인증 관련 엔드포인트
 						"/api/email/**", // 이메일 인증
 						"/api/user/signup/**", // 이메일 인증
