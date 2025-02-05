@@ -39,7 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/qna")
+@RequestMapping("/api/qna")
 @RequiredArgsConstructor
 @Tag(name = "문의사항 API", description = "문의사항 관련 API")
 @Slf4j

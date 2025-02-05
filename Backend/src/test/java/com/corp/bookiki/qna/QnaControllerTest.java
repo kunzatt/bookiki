@@ -105,7 +105,7 @@ class QnaControllerTest {
         when(qnaService.createQna(any(QnaRequest.class), eq(1))).thenReturn(expectedId);
 
         // when & then
-        mockMvc.perform(post("/qna")
+        mockMvc.perform(post("/api/qna")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
@@ -124,7 +124,7 @@ class QnaControllerTest {
         doNothing().when(qnaService).deleteQna(eq(qnaId), eq(1));
 
         // when & then
-        mockMvc.perform(delete("/qna/{id}", qnaId))
+        mockMvc.perform(delete("/api/qna/{id}", qnaId))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -145,7 +145,7 @@ class QnaControllerTest {
         doNothing().when(qnaService).updateQna(any(QnaUpdate.class), eq(1));
 
         // when & then
-        mockMvc.perform(put("/qna")
+        mockMvc.perform(put("/api/qna")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
@@ -197,7 +197,7 @@ class QnaControllerTest {
                 .willReturn(testUser);
 
         // when & then
-        mockMvc.perform(get("/qna")
+        mockMvc.perform(get("/api/qna")
                         .param("page", String.valueOf(pageable.getPageNumber()))
                         .param("size", String.valueOf(pageable.getPageSize()))
                         .param("sort", "createdAt,desc")
