@@ -3,7 +3,7 @@ package com.corp.bookiki.bookitem.dto;
 import java.time.LocalDateTime;
 
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
-import com.corp.bookiki.bookitem.entity.StatusType;
+import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.qrcode.dto.QrCodeResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,7 +43,7 @@ public class BookItemResponse {
 		required = true,
 		allowableValues = {"AVAILABLE", "UNAVAILABLE", "LOST", "DAMAGED"}
 	)
-	private StatusType statusType;
+	private BookStatus bookStatus;
 
 	@Schema(
 		description = "도서 정보 수정 일시",
@@ -68,7 +68,7 @@ public class BookItemResponse {
 		}
 
 		this.purchaseAt = bookItem.getPurchaseAt();
-		this.statusType = bookItem.getStatusType();
+		this.bookStatus = bookItem.getBookStatus();
 		this.updatedAt = bookItem.getUpdatedAt();
 
 		if (bookItem.getQrCode() != null) {

@@ -83,6 +83,8 @@ public class SecurityConfig {
 						"/api/email/**", // 이메일 인증
 						"/api/user/signup/**", // 이메일 인증
 						"/api/user/login/**", // 이메일 인증
+						"/api/books/**",
+						"/api/users/books/**",
 						"/oauth2/**",
 						"/login/**",
 						"/v3/api-docs/**",
