@@ -31,21 +31,26 @@ public class BookItemResponse {
 	@Schema(
 		description = "도서 구매 일시",
 		example = "2024-02-03T10:30:00",
-		required = true
+		required = true,
+		type = "string",
+		format = "date-time"
 	)
 	private LocalDateTime purchaseAt;
 
 	@Schema(
-		description = "도서 상태",
+		description = "도서 상태 (AVAILABLE: 대출 가능, UNAVAILABLE: 대출 불가, LOST: 분실, DAMAGED: 파손)",
 		example = "AVAILABLE",
-		required = true
+		required = true,
+		allowableValues = {"AVAILABLE", "UNAVAILABLE", "LOST", "DAMAGED"}
 	)
 	private StatusType statusType;
 
 	@Schema(
 		description = "도서 정보 수정 일시",
 		example = "2024-02-03T10:30:00",
-		required = true
+		required = true,
+		type = "string",
+		format = "date-time"
 	)
 	private LocalDateTime updatedAt;
 
