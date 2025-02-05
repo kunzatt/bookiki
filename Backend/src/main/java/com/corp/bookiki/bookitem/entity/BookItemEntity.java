@@ -79,10 +79,9 @@ public class BookItemEntity {
 	}
 
 	@Builder
-	public BookItemEntity(Integer id, BookInformationEntity bookInformation, LocalDateTime purchaseAt,
+	public BookItemEntity(BookInformationEntity bookInformation, LocalDateTime purchaseAt,
 		BookStatus bookStatus, LocalDateTime updatedAt, QrCodeEntity qrCode, Boolean deleted,
 		List<BookHistoryEntity> bookHistories) {
-		this.id = id;
 		this.bookInformation = bookInformation;
 		this.purchaseAt = purchaseAt;
 		this.bookStatus = bookStatus != null ? bookStatus : BookStatus.AVAILABLE;
