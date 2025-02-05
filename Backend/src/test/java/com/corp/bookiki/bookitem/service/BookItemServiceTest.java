@@ -23,6 +23,7 @@ import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -58,7 +59,7 @@ class BookItemServiceTest {
 
 			Page<BookItemEntity> mockPage = new PageImpl<>(List.of(mockEntity));
 
-			given(bookItemRepository.findAll(pageRequest)).willReturn(mockPage);
+			given(bookItemRepository.findByDeletedFalse(pageRequest)).willReturn(mockPage);
 			log.info("Mock 설정 완료: 페이지네이션된 도서 아이템 목록");
 
 			// when
@@ -68,49 +69,113 @@ class BookItemServiceTest {
 			// then
 			assertThat(result).isNotNull();
 			assertThat(result.getContent()).isNotEmpty();
-			verify(bookItemRepository).findAll(pageRequest);
+			// verify도 findByDeletedFalse()로 수정
+			verify(bookItemRepository).findByDeletedFalse(pageRequest);
 			log.info("도서 아이템 목록 조회 테스트 성공");
 		}
-	}
 
-	@Nested
-	@DisplayName("도서 아이템 단건 조회 테스트")
-	class GetBookItemById {
-		@Test
-		void getBookItemById_WhenExists_ShouldReturnBookItem() {
-			// given
-			Integer id = 1;
-			BookItemEntity mockBookItem = BookItemEntity.builder()
-				.id(id)
-				.purchaseAt(LocalDateTime.now())
-				.bookStatus(BookStatus.AVAILABLE)
-				.deleted(false)
-				.build();
+		@Nested
+		@DisplayName("도서 아이템 단건 조회 테스트")
+		class GetBookItemById {
+			@Test
+			void getBookItemById_WhenExists_ShouldReturnBookItem() {
+				// given
+				Integer id = 1;
+				BookItemEntity mockBookItem = BookItemEntity.builder()
+					.id(id)
+					.purchaseAt(LocalDateTime.now())
+					.bookStatus(BookStatus.AVAILABLE)
+					.deleted(false)
+					.build();
 
-			given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
-			log.info("Mock 설정 완료: ID로 도서 아이템 조회");
+				given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
+				log.info("Mock 설정 완료: ID로 도서 아이템 조회");
 
-			// when
-			BookItemResponse result = bookItemService.getBookItemById(id);
-			log.info("도서 아이템 단건 조회 결과: id={}", id);
+				// when
+				BookItemResponse result = bookItemService.getBookItemById(id);
+				log.info("도서 아이템 단건 조회 결과: id={}", id);
 
-			// then
-			assertThat(result).isNotNull();
-			verify(bookItemRepository).findById(id);
-			log.info("도서 아이템 단건 조회 테스트 성공");
-		}
+				// then
+				assertThat(result).isNotNull();
+				verify(bookItemRepository).findById(id);
+				log.info("도서 아이템 단건 조회 테스트 성공");
+			}
 
-		@Test
-		void getBookItemById_WhenNotExists_ShouldThrowException() {
-			// given
-			Integer id = 1;
-			given(bookItemRepository.findById(id)).willReturn(Optional.empty());
-			log.info("Mock 설정 완료: 존재하지 않는 도서 아이템");
+			@Test
+			void getBookItemById_WhenNotExists_ShouldThrowException() {
+				// given
+				Integer id = 1;
+				given(bookItemRepository.findById(id)).willReturn(Optional.empty());
+				log.info("Mock 설정 완료: 존재하지 않는 도서 아이템");
 
-			// when & then
-			assertThatThrownBy(() -> bookItemService.getBookItemById(id))
-				.isInstanceOf(BookItemException.class);
-			log.info("존재하지 않는 도서 아이템 조회 예외 테스트 성공");
+				// when & then
+				assertThatThrownBy(() -> bookItemService.getBookItemById(id))
+					.isInstanceOf(BookItemException.class);
+				log.info("존재하지 않는 도서 아이템 조회 예외 테스트 성공");
+			}
+
+			@Test
+			@DisplayName("존재하는 도서 아이템 삭제 시 성공")
+			void deleteBookItem_WhenExists_ShouldDeleteSuccessfully() {
+				// given
+				Integer id = 1;
+				BookItemEntity mockBookItem = BookItemEntity.builder()
+					.id(id)
+					.purchaseAt(LocalDateTime.now())
+					.bookStatus(BookStatus.AVAILABLE)
+					.deleted(false)
+					.build();
+
+				given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
+				log.info("Mock 설정 완료: 도서 아이템 삭제");
+
+				// when
+				bookItemService.deleteBookItem(id);
+				log.info("도서 아이템 삭제 실행");
+
+				// then
+				assertThat(mockBookItem.getDeleted()).isTrue();
+				verify(bookItemRepository).findById(id);
+				log.info("도서 아이템 삭제 테스트 성공");
+			}
+
+			@Test
+			@DisplayName("존재하지 않는 도서 아이템 삭제 시 예외 발생")
+			void deleteBookItem_WhenNotExists_ShouldThrowException() {
+				// given
+				Integer id = 1;
+				given(bookItemRepository.findById(id)).willReturn(Optional.empty());
+				log.info("Mock 설정 완료: 존재하지 않는 도서 아이템");
+
+				// when & then
+				assertThatThrownBy(() -> bookItemService.deleteBookItem(id))
+					.isInstanceOf(BookItemException.class);
+				verify(bookItemRepository).findById(id);
+				log.info("존재하지 않는 도서 아이템 삭제 예외 테스트 성공");
+			}
+
+			@Test
+			@DisplayName("이미 삭제된 도서 아이템 삭제 시 예외 발생")
+			void deleteBookItem_WhenAlreadyDeleted_ShouldThrowException() {
+				// given
+				Integer id = 1;
+				BookItemEntity mockBookItem = BookItemEntity.builder()
+					.id(id)
+					.purchaseAt(LocalDateTime.now())
+					.bookStatus(BookStatus.AVAILABLE)
+					.deleted(true)
+					.build();
+
+				given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
+				log.info("Mock 설정 완료: 이미 삭제된 도서 아이템");
+
+				// when & then
+				assertThatThrownBy(() -> bookItemService.deleteBookItem(id))
+					.isInstanceOf(BookItemException.class)
+					.hasFieldOrPropertyWithValue("errorCode", ErrorCode.BOOK_ALREADY_DELETED);
+				verify(bookItemRepository).findById(id);
+				log.info("이미 삭제된 도서 아이템 삭제 예외 테스트 성공");
+			}
 		}
 	}
 }

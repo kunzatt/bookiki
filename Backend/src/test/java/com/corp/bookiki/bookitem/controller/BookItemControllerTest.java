@@ -175,4 +175,64 @@ class BookItemControllerTest {
 			log.info("삭제된 도서 아이템 조회 테스트 성공");
 		}
 	}
+
+	@Nested
+	@DisplayName("도서 아이템 삭제 테스트")
+	class DeleteBookItem {
+		@Test
+		@WithMockUser
+		@DisplayName("정상적인 도서 아이템 삭제 시 성공")
+		void deleteBookItem_WhenValidRequest_ThenReturnsNoContent() throws Exception {
+			// given
+			Integer id = 1;
+			willDoNothing().given(bookItemService).deleteBookItem(id);
+			log.info("Mock 서비스 설정 완료: 도서 아이템 삭제");
+
+			// when & then
+			mockMvc.perform(delete("/api/books/search/qrcodes/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNoContent());
+
+			log.info("도서 아이템 삭제 테스트 성공");
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("존재하지 않는 도서 아이템 삭제 시 NotFound 반환")
+		void deleteBookItem_WhenNotFound_ThenReturnsNotFound() throws Exception {
+			// given
+			Integer id = 999;
+			willThrow(new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND))
+				.given(bookItemService).deleteBookItem(id);
+			log.info("Mock 서비스 설정 완료: 존재하지 않는 도서 아이템 삭제");
+
+			// when & then
+			mockMvc.perform(delete("/api/books/search/qrcodes/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNotFound());
+
+			log.info("존재하지 않는 도서 아이템 삭제 테스트 성공");
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("이미 삭제된 도서 아이템 삭제 시 에러 반환")
+		void deleteBookItem_WhenAlreadyDeleted_ThenReturnsBadRequest() throws Exception {
+			// given
+			Integer id = 1;
+			willThrow(new BookItemException(ErrorCode.BOOK_ALREADY_DELETED))
+				.given(bookItemService).deleteBookItem(id);
+			log.info("Mock 서비스 설정 완료: 이미 삭제된 도서 아이템");
+
+			// when & then
+			mockMvc.perform(delete("/api/books/search/qrcodes/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest());
+
+			log.info("이미 삭제된 도서 아이템 삭제 테스트 성공");
+		}
+	}
 }
