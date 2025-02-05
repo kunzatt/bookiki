@@ -3,6 +3,7 @@ package com.corp.bookiki.user.controller;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.user.dto.LoginRequest;
 import com.corp.bookiki.user.dto.LoginResponse;
+import com.corp.bookiki.user.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -10,9 +11,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @Tag(name = "인증 API", description = "사용자 로그인 및 인증 관련 API")
 public class LoginController {
+
+    private final AuthService authService;
 
     @Operation(
             summary = "로그인",
@@ -91,26 +98,22 @@ public class LoginController {
             )
     })
     @PostMapping("/login")
-    public void login(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "로그인 요청 정보",
-                    required = true,
-                    content = @Content(
-                            schema = @Schema(implementation = LoginRequest.class),
-                            examples = @ExampleObject(
-                                    value = """
-                            {
-                                "email": "test@example.com",
-                                "password": "password123"
-                            }
-                            """
-                            )
-                    )
-            )
-            @Valid @RequestBody LoginRequest loginRequest
-    ) {
-        // Spring Security의 Form Login이 처리하므로 메서드 본문은 비워둡니다.
-        // 인증 성공/실패는 각각 LoginSuccessHandler/LoginFailureHandler가 처리합니다.
-        log.debug("로그인 요청 - 이메일: {}", loginRequest.getEmail());
+    public ResponseEntity<?> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            HttpServletResponse response) {
+        try {
+            LoginResponse loginResponse = authService.login(
+                    loginRequest.getEmail(),
+                    loginRequest.getPassword(),
+                    response
+            );
+
+            return ResponseEntity.ok(loginResponse);
+
+        } catch (AuthenticationException e) {
+            log.error("인증 실패: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("유효하지 않은 이메일 또는 비밀번호 입니다.");
+
+        }
     }
 }
