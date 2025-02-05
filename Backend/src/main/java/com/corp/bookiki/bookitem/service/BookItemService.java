@@ -27,7 +27,7 @@ public class BookItemService {
 		Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
 		PageRequest pageRequest = PageRequest.of(page, size, sort);
 
-		Page<BookItemEntity> bookItem = bookItemRepository.findAll(pageRequest);
+		Page<BookItemEntity> bookItem = bookItemRepository.findByDeletedFalse(pageRequest);
 		return bookItem.map(BookItemResponse::new);
 	}
 
@@ -42,5 +42,17 @@ public class BookItemService {
 		}
 		return new BookItemResponse(bookItem);
 	}
+	@Transactional
+	public void deleteBookItem(Integer id) {
+		BookItemEntity bookItem = bookItemRepository.findById(id)
+			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+
+		if (bookItem.getDeleted()) {
+			throw new BookItemException(ErrorCode.BOOK_ALREADY_DELETED);
+		}
+
+		bookItem.delete();
+	}
+
 
 }

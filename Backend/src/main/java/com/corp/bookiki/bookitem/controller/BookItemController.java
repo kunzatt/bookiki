@@ -1,6 +1,8 @@
 package com.corp.bookiki.bookitem.controller;
 
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -85,5 +87,38 @@ public class BookItemController {
 	) {
 		log.info("도서 아이템 단건 조회: id={}", id);
 		return bookItemService.getBookItemById(id);
+	}
+
+	@Operation(summary = "도서 아이템 삭제", description = "ID를 통해 특정 도서 아이템을 삭제(soft delete)합니다.")
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "204",
+			description = "도서 아이템 삭제 성공"
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "도서 아이템을 찾을 수 없음",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+			)
+		),
+		@ApiResponse(
+			responseCode = "400",
+			description = "이미 삭제된 도서 아이템",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+			)
+		)
+	})
+	@DeleteMapping("/qrcodes/{id}")
+	public ResponseEntity<Void> deleteBookItem(
+		@Parameter(description = "삭제할 도서 아이템의 ID", required = true, example = "1")
+		@PathVariable Integer id
+	) {
+		log.info("도서 아이템 삭제: id={}", id);
+		bookItemService.deleteBookItem(id);
+		return ResponseEntity.noContent().build();
 	}
 }

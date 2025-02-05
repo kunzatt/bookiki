@@ -24,12 +24,15 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "book_items")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BookItemEntity {
 
 	@Id
@@ -87,6 +90,10 @@ public class BookItemEntity {
 		this.qrCode = qrCode;
 		this.deleted = deleted != null ? deleted : false;
 		this.bookHistories = bookHistories != null ? bookHistories : new ArrayList<>();
+	}
+
+	public void delete() {
+		this.deleted = true;
 	}
 
 }
