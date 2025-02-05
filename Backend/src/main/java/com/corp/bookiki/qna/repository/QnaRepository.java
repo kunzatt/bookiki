@@ -1,20 +1,23 @@
 package com.corp.bookiki.qna.repository;
 
 import com.corp.bookiki.qna.entity.QnaEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-
-import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface QnaRepository extends JpaRepository<QnaEntity, Integer> {
-    // 삭제되지 않은 문의사항을 생성일시 기준 내림차순으로 조회
-    List<QnaEntity> findByDeletedFalseOrderByCreatedAtDesc();
-
-    // 삭제되지 않은 문의사항 중 제목이나 내용에 검색어가 포함된 항목을 생성일시 기준 내림차순으로 조회
-    List<QnaEntity> findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(String title, String content);
-
-    // 특정 유형의 문의사항만 조회
-    List<QnaEntity> findByDeletedFalseAndQnaTypeOrderByCreatedAtDesc(String qnaType);
-
-    // 해당 사용자에 대한 문의사항만 조회
-    List<QnaEntity> findByAuthorIdAndDeletedFalseOrderByCreatedAtDesc(int authorId);
+    @Query("SELECT q FROM QnaEntity q " +
+            "WHERE q.deleted = false " +
+            "AND (:authorId IS NULL OR q.authorId = :authorId) " +
+            "AND (:qnaType IS NULL OR q.qnaType = :qnaType) " +
+            "AND (:keyword IS NULL OR q.title LIKE %:keyword% OR q.content LIKE %:keyword%) " +
+            "ORDER BY q.createdAt DESC")
+    Page<QnaEntity> findBySearchCriteria(
+            @Param("authorId") Integer authorId,
+            @Param("qnaType") String qnaType,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 }

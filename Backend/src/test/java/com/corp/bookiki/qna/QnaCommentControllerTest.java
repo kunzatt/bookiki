@@ -91,7 +91,7 @@ class QnaCommentControllerTest {
         when(qnaCommentService.createQnaComment(any(QnaCommentRequest.class), eq(1))).thenReturn(expectedId);
 
         // when & then
-        mockMvc.perform(post("/admin/qna")
+        mockMvc.perform(post("/api/admin/qna")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
@@ -111,7 +111,7 @@ class QnaCommentControllerTest {
         requestMap.put("content", "테스트 답변 내용");
 
         // when & then
-        mockMvc.perform(post("/admin/qna")
+        mockMvc.perform(post("/api/admin/qna")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
@@ -133,7 +133,7 @@ class QnaCommentControllerTest {
         doNothing().when(qnaCommentService).deleteQnaComment(eq(commentId));
 
         // when & then
-        mockMvc.perform(delete("/admin/qna/{id}", commentId))
+        mockMvc.perform(delete("/api/admin/qna/{id}", commentId))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -153,7 +153,7 @@ class QnaCommentControllerTest {
         doNothing().when(qnaCommentService).updateQnaComment(any(QnaCommentUpdate.class));
 
         // when & then
-        mockMvc.perform(put("/admin/qna")
+        mockMvc.perform(put("/api/admin/qna")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
