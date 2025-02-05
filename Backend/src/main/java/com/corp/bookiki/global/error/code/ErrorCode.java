@@ -86,7 +86,13 @@ public enum ErrorCode {
 	INVALID_CHAT_CONTENT(400, "잘못된 채팅 내용입니다"),
 
 	// 외부 API
-	EXTERNAL_API_ERROR(500, "외부 API 호출 중 오류가 발생했습니다");
+	EXTERNAL_API_ERROR(500, "외부 API 호출 중 오류가 발생했습니다"),
+
+	// Loan Policy
+	LOAN_POLICY_NOT_FOUND(404, "대출 정책을 찾을 수 없습니다"),
+	INVALID_LOAN_POLICY(400, "잘못된 대출 정책입니다"),
+	INVALID_MAX_BOOKS(400, "올바르지 않은 최대 대출 가능 권수입니다."),
+	INVALID_LOAN_PERIOD(400, "올바르지 않은 대출 기간입니다.");
 
 	private final int status;
 	private final String message;
