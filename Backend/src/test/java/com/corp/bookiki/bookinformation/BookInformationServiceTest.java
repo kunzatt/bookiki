@@ -13,9 +13,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -24,6 +29,9 @@ import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
 import com.corp.bookiki.bookinformation.service.BookInformationService;
 import com.corp.bookiki.global.error.exception.BookInformationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,6 +47,9 @@ class BookInformationServiceTest {
 
 	@Mock
 	private RestTemplate restTemplate;
+
+	@Mock
+	private ObjectMapper objectMapper;
 
 	@Nested
 	@DisplayName("도서 정보 추가 테스트")
@@ -60,16 +71,38 @@ class BookInformationServiceTest {
 		@Test
 		@DisplayName("외부 API를 통한 새로운 도서 정보 추가 성공")
 		void addBookInformation_WhenNotExists_ThenSuccess() {
+			// given
 			String isbn = "9788937460470";
 			String mockResponse = createMockApiResponse();
 
 			given(bookInformationRepository.findByIsbn(isbn)).willReturn(null);
-			given(restTemplate.getForEntity(anyString(), eq(String.class)))
-				.willReturn(ResponseEntity.ok(mockResponse));
 
-			assertDoesNotThrow(() ->
-				bookInformationService.addBookInformationByIsbn(isbn));
-			verify(bookInformationRepository).save(any());
+			ArgumentCaptor<HttpEntity<?>> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+
+			// ObjectMapper mock 설정 추가
+			try {
+				JsonNode mockJsonNode = new ObjectMapper().readTree(mockResponse);
+				given(objectMapper.readTree(anyString())).willReturn(mockJsonNode);
+			} catch (JsonProcessingException e) {
+				fail("Failed to parse mock response");
+			}
+
+			given(restTemplate.exchange(
+				anyString(),
+				eq(HttpMethod.GET),
+				entityCaptor.capture(),
+				eq(String.class)
+			)).willReturn(ResponseEntity.ok(mockResponse));
+
+			// when & then
+			assertDoesNotThrow(() -> bookInformationService.addBookInformationByIsbn(isbn));
+
+			// verify
+			verify(bookInformationRepository).save(any(BookInformationEntity.class));
+
+			HttpHeaders headers = entityCaptor.getValue().getHeaders();
+			assertNotNull(headers.get("X-Naver-Client-Id"));
+			assertNotNull(headers.get("X-Naver-Client-Secret"));
 		}
 	}
 
@@ -107,15 +140,26 @@ class BookInformationServiceTest {
 
 	private String createMockApiResponse() {
 		return """
-			{
-			    "TOTAL_COUNT": "1",
-			    "docs": [{
-			        "TITLE": "테스트 도서",
-			        "AUTHOR": "테스트 저자",
-			        "PUBLISHER": "테스트 출판사",
-			        "PUBLISH_PREDATE": "20240101"
-			    }]
-			}
-			""";
+        {
+            "lastBuildDate": "Mon, 05 Feb 2025 12:00:00 +0900",
+            "total": 1,
+            "start": 1,
+            "display": 1,
+            "items": [
+                {
+                    "title": "테스트 도서",
+                    "link": "http://book.naver.com/...",
+                    "image": "http://bookthumb.phinf.naver.net/...",
+                    "author": "테스트 작가",
+                    "price": "13500",
+                    "discount": "12150",
+                    "publisher": "테스트 출판사",
+                    "pubdate": "20240205",
+                    "isbn": "9788937460470",
+                    "description": "테스트 도서 설명"
+                }
+            ]
+        }
+        """;
 	}
 }
