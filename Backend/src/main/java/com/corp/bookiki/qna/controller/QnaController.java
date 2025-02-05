@@ -13,8 +13,6 @@ import com.corp.bookiki.qna.service.QnaService;
 import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -30,7 +28,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -119,32 +119,28 @@ public class QnaController {
             @RequestParam(required = false) String qnaType,
             @Parameter(description = "답변 여부", example = "true")
             @RequestParam(required = false) Boolean answered,
-            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "페이지 크기", example = "10")
-            @RequestParam(defaultValue = "10") int size,
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @CurrentUser AuthUser authUser
     ) {
-        log.info("문의사항 목록 조회 - 페이지: {}, 크기: {}", page, size);
+        log.info("문의사항 목록 조회 - 페이지: {}, 크기: {}", pageable.getPageNumber(), pageable.getPageSize());
 
-        PageHelper.startPage(page + 1, size); // PageHelper는 1부터 시작하므로 page + 1
-        List<QnaEntity> qnas = qnaService.selectQnas(keyword, qnaType, answered, authUser);
-        PageInfo<QnaEntity> pageInfo = new PageInfo<>(qnas);
+        Page<QnaEntity> qnaPage = qnaService.selectQnas(keyword, qnaType, answered, authUser, pageable);
+        List<QnaEntity> qnaList = qnaPage.getContent();
+        List<QnaListResponse> responseList = new ArrayList<>();
 
-        List<QnaListResponse> responses = new ArrayList<>();
-        for (QnaEntity qna : qnas) {
+        for (QnaEntity qna : qnaList) {
             try {
                 UserEntity author = userRepository.getReferenceById(qna.getAuthorId());
-                responses.add(new QnaListResponse(qna, author.getUserName()));
+                responseList.add(new QnaListResponse(qna, author.getUserName()));
             } catch (EntityNotFoundException ex) {
                 throw new UserException(ErrorCode.USER_NOT_FOUND);
             }
         }
 
         Page<QnaListResponse> responsePage = new PageImpl<>(
-                responses,
-                PageRequest.of(page, size),
-                pageInfo.getTotal()
+                responseList,
+                pageable,
+                qnaPage.getTotalElements()
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(responsePage);

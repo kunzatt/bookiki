@@ -43,8 +43,8 @@ public class QnaEntity {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-    private boolean deleted;
+    @Column(nullable = false)
+    private boolean deleted = false;
 
     @OneToMany(mappedBy = "qna", cascade = CascadeType.ALL)
     private List<QnaCommentEntity> comments = new ArrayList<>();
