@@ -24,6 +24,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 
 @Entity
@@ -70,5 +71,22 @@ public class BookItemEntity {
 			throw new BookItemException(ErrorCode.BOOK_ALREADY_BORROWED);
 		}
 		this.bookStatus = BookStatus.BORROWED;
+	}
+
+	@Builder
+	public BookItemEntity(BookInformationEntity bookInformation,
+		LocalDateTime purchaseAt,
+		BookStatus bookStatus,
+		LocalDateTime updatedAt) {
+		this.bookInformation = bookInformation;
+		this.purchaseAt = purchaseAt;
+		this.bookStatus = bookStatus != null ? bookStatus : BookStatus.AVAILABLE;
+		this.updatedAt = updatedAt;
+		this.bookHistories = new ArrayList<>();
+	}
+
+	protected BookItemEntity() {
+		this.bookStatus = BookStatus.AVAILABLE;
+		this.bookHistories = new ArrayList<>();
 	}
 }
