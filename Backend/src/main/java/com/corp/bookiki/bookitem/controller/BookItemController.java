@@ -59,7 +59,7 @@ public class BookItemController {
 		return bookItemService.getAllBookItems(page, size, sortBy, direction);
 	}
 
-	@Operation(summary = "도서 아이템 단건 조회", description = "ID를 통해 특정 도서 아이템을 조회합니다.")
+	@Operation(summary = "도서 아이템 ID로 조회", description = "ID를 통해 특정 도서 아이템을 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(
 			responseCode = "200",
