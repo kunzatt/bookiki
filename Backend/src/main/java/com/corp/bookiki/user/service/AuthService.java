@@ -1,12 +1,17 @@
 package com.corp.bookiki.user.service;
 
 import com.corp.bookiki.global.error.exception.JWTException;
+import com.corp.bookiki.jwt.properties.JwtProperties;
 import com.corp.bookiki.jwt.repository.RefreshTokenRepository;
 import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.dto.LoginResponse;
+import com.corp.bookiki.user.dto.OAuth2SignUpRequest;
+import com.corp.bookiki.user.entity.Provider;
+import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.user.security.CustomUserDetails;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +20,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -30,6 +38,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthenticationManager authenticationManager;
+    private final JwtProperties jwtProperties;
 
     @Value("${cookie.secure-flag:true}")
     private boolean secureCookie;
@@ -101,7 +110,7 @@ public class AuthService {
         response.addCookie(refreshTokenCookie);
     }
 
-     // 로그아웃 처리
+    // 로그아웃 처리
     @Transactional
     public void logout(String email, HttpServletResponse response) {
         // 1. Redis에서 Refresh Token 삭제
@@ -151,7 +160,7 @@ public class AuthService {
         // 1. Refresh Token에서 사용자 이메일 추출
         String email = jwtService.generateRefreshToken(refreshToken);
         // 2. Refresh Token 유효성 검증
-        if(!validateRefreshToken(email, refreshToken)) {
+        if (!validateRefreshToken(email, refreshToken)) {
             throw new JWTException("유효하지 않은 Refresh Token입니다.");
         }
         // 3. 새로운 Access Token 발급
@@ -189,5 +198,44 @@ public class AuthService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 
+    // OAuth2 회원가입 처리
+    @Transactional
+    public void completeOAuth2SignUp(String temporaryToken, OAuth2SignUpRequest request, HttpServletResponse response) {
+        // 1. 임시 토큰 검증 및 정보 추출
+        if (!jwtService.validateToken(temporaryToken)) {
+            throw new JWTException("유효하지 않은 임시 토큰입니다.");
+        }
+        Claims claims = jwtService.extractAllClaims(temporaryToken);
+        String email = claims.getSubject().replace(jwtProperties.getSubjectPrefix(), "");
+        Provider provider = Provider.valueOf(claims.get("provider", String.class));
 
+        // 2. 회원 정보 검증(추가 정보 입력)
+        if (userRepository.existsByCompanyId(request.getCompanyId())) {
+            throw new IllegalArgumentException("이미 사용 중인 사번입니다.");
+        }
+        // 3. 회원 정보 저장
+        UserEntity user = UserEntity.builder()
+                .email(email)
+                .userName(request.getUserName())
+                .companyId(request.getCompanyId())
+                .provider(provider)
+                .role(Role.USER)
+                .build();
+        userRepository.save(user);
+
+        // 4. JWT 토큰 발급
+        String accessToken = jwtService.generateAccessToken(
+                email,
+                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + Role.USER.name()))
+        );
+        String refreshToken = jwtService.generateRefreshToken(email);
+
+        // 5. Refresh Token Redis 저장
+        saveRefreshToken(email, refreshToken);
+
+        // 6. 쿠키에 토큰 저장
+        setTokenCookies(response, accessToken, refreshToken);
+
+        log.debug("OAuth2 회원가입 완료: {}", email);
+    }
 }

@@ -68,12 +68,11 @@ spring:
             enable: true
 jwt:
   secret: ${JWT_SECRET}
-  access-token:
-    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
-  refresh-token:
-    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
-  temporary-token:
-    expiration: ${JWT_TEMPORARY_TOKEN_EXPIRATION}
+  issuer: bookiki-auth
+  subject-prefix: bookiki
+  accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
+  refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+  temporaryTokenExpiration: ${JWT_TEMPORARY_TOKEN_EXPIRATION}
 
 cookie:
   secure-flag: false

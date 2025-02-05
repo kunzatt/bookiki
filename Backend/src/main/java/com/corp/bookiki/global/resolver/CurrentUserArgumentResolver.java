@@ -1,7 +1,7 @@
 package com.corp.bookiki.global.resolver;
 
 import com.corp.bookiki.global.annotation.CurrentUser;
-import com.corp.bookiki.jwt.service.JWTService;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.dto.AuthUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
@@ -16,7 +16,7 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @RequiredArgsConstructor
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final JWTService jwtService;
+    private final JwtService jwtService;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {

@@ -1,19 +1,20 @@
 package com.corp.bookiki.user.service;
 
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import com.corp.bookiki.user.entity.Provider;
-import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.dto.GoogleOAuth2Request;
 import com.corp.bookiki.user.dto.NaverOAuth2Request;
 import com.corp.bookiki.user.dto.OAuth2Request;
+import com.corp.bookiki.user.entity.Provider;
+import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.user.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
+    private final JwtService jwtService;
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
@@ -42,8 +44,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .orElse(null);
 
         if (user == null) {
-            // 신규 회원인 경우 추가 정보 입력이 필요함을 표시
-            throw new OAuth2AuthenticationException("Additional information required");
+            // 임시 토큰 생성
+            String temporaryToken = jwtService.generateTemporaryToken(email, provider);
+            throw new OAuth2AuthenticationException("Temporary token: " + temporaryToken);
         }
 
         return new CustomUserDetails(user);
@@ -55,7 +58,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else if ("naver".equals(registrationId)) {
             return new NaverOAuth2Request(oAuth2User.getAttributes());
         }
-        throw new OAuth2AuthenticationException("Unsupported OAuth2 provider");
+        throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 서비스입니다");
     }
 
     private Provider getProvider(String registrationId) {
@@ -64,6 +67,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else if ("naver".equals(registrationId)) {
             return Provider.NAVER;
         }
-        throw new OAuth2AuthenticationException("Unsupported OAuth2 provider");
+        throw new OAuth2AuthenticationException("지원하지 않는 OAuth2 서비스입니다");
     }
 }

@@ -6,6 +6,7 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import com.corp.bookiki.user.entity.Provider;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -50,6 +51,21 @@ public class JwtService {
         return Jwts.builder()
                 .setSubject(jwtProperties.getSubjectPrefix() + email)
                 .setIssuer(jwtProperties.getIssuer())
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey())
+                .compact();
+    }
+
+    // Temporary Token 생성
+    public String generateTemporaryToken(String email, Provider provider) {
+        Date now = new Date();
+        Date expiryDate = calculateExpirationDate(jwtProperties.getTemporaryTokenExpiration());
+
+        return Jwts.builder()
+                .setSubject(jwtProperties.getSubjectPrefix() + email)
+                .setIssuer(jwtProperties.getIssuer())
+                .claim("provider", provider.name())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(getSigningKey())

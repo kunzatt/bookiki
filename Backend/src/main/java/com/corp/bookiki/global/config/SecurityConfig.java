@@ -127,7 +127,7 @@ public class SecurityConfig {
 //				log.debug("CORS 설정 완료");
 //			})
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-//		log.info("보안 필터 체인 구성 완료");
+		log.info("보안 필터 체인 구성 완료");
 		return http.build();
 	}
 
