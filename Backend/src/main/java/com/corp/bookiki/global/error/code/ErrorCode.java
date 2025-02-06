@@ -33,6 +33,8 @@ public enum ErrorCode {
 	EXPIRED_EMAIL_VERIFICATION(401, "만료된 인증 토큰입니다"),
 	DUPLICATE_EMAIL(400, "이미 등록된 이메일입니다"),
 	FAIL_EMAIL_SEND(500, "이메일 발송에 실패했습니다"),
+	HAS_OVERDUE_BOOKS(400, "이미 연체된 도서가 있습니다"),
+	BORROW_LIMIT_EXCEEDED(400, "대출 한도가 초과했습니다."),
 
 	// OAuth2 관련 에러 코드들
 	OAUTH2_INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 OAuth2 토큰입니다."),

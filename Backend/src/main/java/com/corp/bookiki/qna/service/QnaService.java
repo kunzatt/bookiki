@@ -18,6 +18,9 @@ import com.corp.bookiki.user.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,52 +51,42 @@ public class QnaService {
 
     // 문의사항 조회
     @Transactional(readOnly = true)
-    public List<QnaEntity> selectQnas(String keyword, String qnaType, Boolean answered, AuthUser authUser) {
+    public Page<QnaEntity> selectQnas(String keyword, String qnaType, Boolean answered, AuthUser authUser, Pageable pageable) {
         try {
-            // 1. 기본 목록 가져오기
-            List<QnaEntity> filteredQnas;
-
-            // 관리자는 모든 문의사항을 볼 수 있고, 사용자는 자신의 문의사항만 볼 수 있음
-            if (authUser.getRole() == Role.ADMIN) {
-                filteredQnas = qnaRepository.findByDeletedFalseOrderByCreatedAtDesc();
-            } else {
-                filteredQnas = qnaRepository.findByAuthorIdAndDeletedFalseOrderByCreatedAtDesc(authUser.getId());
+            // 관리자가 아닌 경우에만 authorId 설정
+            Integer authorId = null;
+            if (authUser.getRole() != Role.ADMIN) {
+                authorId = authUser.getId();
             }
 
-            // 2. 답변 유무로 필터링
+            // 동적 쿼리로 기본 검색 수행
+            Page<QnaEntity> qnaPage = qnaRepository.findBySearchCriteria(
+                    authorId,
+                    qnaType,
+                    keyword,
+                    pageable
+            );
+
+            // answered 필터링이 필요한 경우
             if (answered != null) {
-                List<QnaEntity> answerFilteredQnas = new ArrayList<>();
-                for (QnaEntity qnaEntity : filteredQnas) {
-                    if (answered == checkHasComment(qnaEntity)) {
-                        answerFilteredQnas.add(qnaEntity);
+                List<QnaEntity> pageContent = qnaPage.getContent();
+                List<QnaEntity> filteredContent = new ArrayList<>();
+
+                for (QnaEntity qna : pageContent) {
+                    if (answered == checkHasComment(qna)) {
+                        filteredContent.add(qna);
                     }
                 }
-                filteredQnas = answerFilteredQnas;
+
+                // 필터링된 결과로 새로운 Page 객체 생성
+                return new PageImpl<>(
+                        filteredContent,
+                        pageable,
+                        filteredContent.size()
+                );
             }
 
-            // 3. 문의사항 유형으로 필터링
-            if (qnaType != null && !qnaType.isBlank()) {
-                List<QnaEntity> typeFilteredQnas = new ArrayList<>();
-                for (QnaEntity qnaEntity : filteredQnas) {
-                    if (qnaEntity.getQnaType().equals(qnaType)) {
-                        typeFilteredQnas.add(qnaEntity);
-                    }
-                }
-                filteredQnas = typeFilteredQnas;
-            }
-
-            // 4. 키워드로 검색
-            if (keyword != null && !keyword.isBlank()) {
-                List<QnaEntity> keywordFilteredQnas = new ArrayList<>();
-                for (QnaEntity qnaEntity : filteredQnas) {
-                    if (qnaEntity.getTitle().contains(keyword) || qnaEntity.getContent().contains(keyword)) {
-                        keywordFilteredQnas.add(qnaEntity);
-                    }
-                }
-                filteredQnas = keywordFilteredQnas;
-            }
-
-            return filteredQnas;
+            return qnaPage;
         } catch (Exception ex) {
             log.error("문의사항 목록 조회 실패: {}", ex.getMessage());
             throw new QnaException(ErrorCode.INTERNAL_SERVER_ERROR);
