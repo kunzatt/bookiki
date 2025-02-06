@@ -106,7 +106,6 @@ public class UserEntity {
 		this.activeAt = activeAt;
 	}
 
-
 	public void delete() {
 		this.deleted = true;
 	}
