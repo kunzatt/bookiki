@@ -1,5 +1,6 @@
 package com.corp.bookiki.bookitem.service;
 
+import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
@@ -42,9 +43,9 @@ class BookItemServiceTest {
 
 	@Nested
 	@DisplayName("도서 아이템 목록 조회 테스트")
-	class GetAllBookItems {
+	class selectBooksByKeyword {
 		@Test
-		void getAllBookItems_ShouldReturnPagedResults() {
+		void selectBooksByKeyword_ShouldReturnPagedResults() {
 			// given
 			int page = 0;
 			int size = 10;
@@ -53,16 +54,25 @@ class BookItemServiceTest {
 			String keyword = "test";
 
 			PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
+
+			BookInformationEntity bookInfo = BookInformationEntity.builder()
+					.title("Test Book")
+					.author("Test Author")
+					.isbn("1234567890")
+					.build();
+			ReflectionTestUtils.setField(bookInfo, "id", 1);
+
 			BookItemEntity mockEntity = BookItemEntity.builder()
 				.purchaseAt(LocalDateTime.now())
 				.bookStatus(BookStatus.AVAILABLE)
 				.deleted(false)
+				.bookInformation(bookInfo)
 				.build();
 			ReflectionTestUtils.setField(mockEntity, "id", 1);
 
 			Page<BookItemEntity> mockPage = new PageImpl<>(List.of(mockEntity));
 
-			given(bookItemRepository.findByDeletedFalse(pageRequest)).willReturn(mockPage);
+			given(bookItemRepository.findAllWithKeyword(keyword, pageRequest)).willReturn(mockPage);
 			log.info("Mock 설정 완료: 페이지네이션된 도서 아이템 목록");
 
 			// when
@@ -73,7 +83,7 @@ class BookItemServiceTest {
 			assertThat(result).isNotNull();
 			assertThat(result.getContent()).isNotEmpty();
 			// verify도 findByDeletedFalse()로 수정
-			verify(BookItemDisplayResponse).findAllWithKeyword(pageRequest);
+			verify(bookItemRepository).findAllWithKeyword(keyword, pageRequest);
 			log.info("도서 아이템 목록 조회 테스트 성공");
 		}
 

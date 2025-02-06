@@ -1,15 +1,18 @@
 package com.corp.bookiki.bookitem.controller;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
+import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
+import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
+import com.corp.bookiki.bookitem.dto.BookItemResponse;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.entity.BookStatus;
+import com.corp.bookiki.bookitem.service.BookItemService;
+import com.corp.bookiki.global.config.SecurityConfig;
+import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookItemException;
+import com.corp.bookiki.util.CookieUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -30,18 +33,16 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.corp.bookiki.bookitem.dto.BookItemResponse;
-import com.corp.bookiki.bookitem.entity.BookItemEntity;
-import com.corp.bookiki.bookitem.entity.BookStatus;
-import com.corp.bookiki.bookitem.service.BookItemService;
-import com.corp.bookiki.global.config.SecurityConfig;
-import com.corp.bookiki.global.config.TestSecurityBeansConfig;
-import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BookItemException;
-import com.corp.bookiki.util.CookieUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
+import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.BDDMockito.given;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
 @WebMvcTest(BookItemController.class)
@@ -79,14 +80,23 @@ class BookItemControllerTest {
 		@DisplayName("정상적인 도서 아이템 목록 조회 시 성공")
 		void getAllBookItems_WhenValidRequest_ThenReturnsOk() throws Exception {
 			// given
+			BookInformationEntity bookInfo = BookInformationEntity.builder()
+					.title("Test Book")
+					.author("Test Author")
+					.isbn("1234567890")
+					.build();
+			ReflectionTestUtils.setField(bookInfo, "id", 1);
+
 			BookItemEntity mockEntity = BookItemEntity.builder()
 				.purchaseAt(LocalDateTime.now())
 				.bookStatus(BookStatus.AVAILABLE)
 				.deleted(false)
+				.bookInformation(bookInfo)
 				.build();
+
 			ReflectionTestUtils.setField(mockEntity, "id", 1);
-			BookItemResponse mockResponse = BookItemResponse.from(mockEntity);
-			Page<BookItemResponse> mockPage = new PageImpl<>(List.of(mockResponse));
+			BookItemDisplayResponse mockResponse = BookItemDisplayResponse.from(mockEntity);
+			Page<BookItemDisplayResponse> mockPage = new PageImpl<>(List.of(mockResponse));
 
 			given(bookItemService.selectBooksByKeyword(anyInt(), anyInt(), anyString(), anyString(), anyString()))
 				.willReturn(mockPage);
@@ -99,6 +109,7 @@ class BookItemControllerTest {
 					.param("size", "10")
 					.param("sortBy", "id")
 					.param("direction", "desc")
+					.param("keyword", "test")
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk());
 
