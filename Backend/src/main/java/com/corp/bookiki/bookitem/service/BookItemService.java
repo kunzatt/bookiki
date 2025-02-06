@@ -6,6 +6,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
+import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
+import com.corp.bookiki.bookitem.dto.BookItemRequest;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BookItemService {
 
 	private final BookItemRepository bookItemRepository;
+	private final BookInformationRepository bookInformationRepository;
 
 	@Transactional
 	public Page<BookItemResponse> getAllBookItems(int page, int size, String sortBy, String direction) {
@@ -53,5 +57,20 @@ public class BookItemService {
 
 		bookItem.delete();
 		return BookItemResponse.from(bookItem);
+	}
+
+	@Transactional
+	public BookItemResponse addBookItem(BookItemRequest bookItemRequest) {
+		BookInformationEntity bookInformation = bookInformationRepository.findById(bookItemRequest.getBookInformationId())
+			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_INFO_NOT_FOUND));
+
+		BookItemEntity bookItem = BookItemEntity.builder()
+			.bookInformation(bookInformation)
+			.purchaseAt(bookItemRequest.getPurchaseAt())
+			.build();
+
+		BookItemEntity savedBookItem = bookItemRepository.save(bookItem);
+
+		return BookItemResponse.from(savedBookItem);
 	}
 }
