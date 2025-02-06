@@ -74,8 +74,8 @@ class BookBorrowServiceTest {
 			given(bookHistoryRepository.save(any(BookHistoryEntity.class)))
 				.willReturn(history);
 
-			LocalDateTime futureTime = LocalDateTime.now().plusDays(1);
-			when(user.getActiveAt()).thenReturn(futureTime);
+			LocalDateTime before = LocalDateTime.now().minusDays(1);
+			when(user.getActiveAt()).thenReturn(before);
 
 			log.info("테스트 데이터 설정 완료: userId={}, bookItemId={}",
 				request.getUserId(), request.getBookItemId());

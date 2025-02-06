@@ -38,7 +38,7 @@ public class BookBorrowService {
 			throw new BookHistoryException(ErrorCode.BOOK_ALREADY_BORROWED);
 		}
 
-		if (user.getActiveAt() != null && !user.getActiveAt().isAfter(LocalDateTime.now())) {
+		if (user.getActiveAt() != null && user.getActiveAt().isAfter(LocalDateTime.now())) {
 			throw new BookHistoryException(ErrorCode.USER_NOT_ACTIVE);
 		}
 
