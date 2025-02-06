@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
@@ -51,11 +52,11 @@ class BookItemServiceTest {
 
 			PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
 			BookItemEntity mockEntity = BookItemEntity.builder()
-				.id(1)
 				.purchaseAt(LocalDateTime.now())
 				.bookStatus(BookStatus.AVAILABLE)
 				.deleted(false)
 				.build();
+			ReflectionTestUtils.setField(mockEntity, "id", 1);
 
 			Page<BookItemEntity> mockPage = new PageImpl<>(List.of(mockEntity));
 
@@ -82,11 +83,12 @@ class BookItemServiceTest {
 				// given
 				Integer id = 1;
 				BookItemEntity mockBookItem = BookItemEntity.builder()
-					.id(id)
 					.purchaseAt(LocalDateTime.now())
 					.bookStatus(BookStatus.AVAILABLE)
 					.deleted(false)
 					.build();
+
+				ReflectionTestUtils.setField(mockBookItem, "id", 1);
 
 				given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
 				log.info("Mock 설정 완료: ID로 도서 아이템 조회");
@@ -120,11 +122,11 @@ class BookItemServiceTest {
 				// given
 				Integer id = 1;
 				BookItemEntity mockBookItem = BookItemEntity.builder()
-					.id(id)
 					.purchaseAt(LocalDateTime.now())
 					.bookStatus(BookStatus.AVAILABLE)
 					.deleted(false)
 					.build();
+				ReflectionTestUtils.setField(mockBookItem, "id", 1);
 
 				given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
 				log.info("Mock 설정 완료: 도서 아이템 삭제");
@@ -160,11 +162,11 @@ class BookItemServiceTest {
 				// given
 				Integer id = 1;
 				BookItemEntity mockBookItem = BookItemEntity.builder()
-					.id(id)
 					.purchaseAt(LocalDateTime.now())
 					.bookStatus(BookStatus.AVAILABLE)
 					.deleted(true)
 					.build();
+				ReflectionTestUtils.setField(mockBookItem, "id", 1);
 
 				given(bookItemRepository.findById(id)).willReturn(Optional.of(mockBookItem));
 				log.info("Mock 설정 완료: 이미 삭제된 도서 아이템");

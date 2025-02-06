@@ -43,7 +43,7 @@ public class BookItemService {
 		return new BookItemResponse(bookItem);
 	}
 	@Transactional
-	public void deleteBookItem(Integer id) {
+	public String deleteBookItem(Integer id) {
 		BookItemEntity bookItem = bookItemRepository.findById(id)
 			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
 
@@ -52,6 +52,7 @@ public class BookItemService {
 		}
 
 		bookItem.delete();
+		return "삭제 되었습니다.";
 	}
 
 

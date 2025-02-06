@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -78,14 +79,13 @@ class BookItemControllerTest {
 		@DisplayName("정상적인 도서 아이템 목록 조회 시 성공")
 		void getAllBookItems_WhenValidRequest_ThenReturnsOk() throws Exception {
 			// given
-			BookItemResponse mockResponse = new BookItemResponse(
-				BookItemEntity.builder()
-					.id(1)
-					.purchaseAt(LocalDateTime.now())
-					.bookStatus(BookStatus.AVAILABLE)
-					.deleted(false)
-					.build()
-			);
+			BookItemEntity mockEntity = BookItemEntity.builder()
+				.purchaseAt(LocalDateTime.now())
+				.bookStatus(BookStatus.AVAILABLE)
+				.deleted(false)
+				.build();
+			ReflectionTestUtils.setField(mockEntity, "id", 1);
+			BookItemResponse mockResponse = new BookItemResponse(mockEntity);
 			Page<BookItemResponse> mockPage = new PageImpl<>(List.of(mockResponse));
 
 			given(bookItemService.getAllBookItems(anyInt(), anyInt(), anyString(), anyString()))
@@ -116,14 +116,13 @@ class BookItemControllerTest {
 		void getBookItemById_WhenValidRequest_ThenReturnsOk() throws Exception {
 			// given
 			Integer id = 1;
-			BookItemResponse mockResponse = new BookItemResponse(
-				BookItemEntity.builder()
-					.id(id)
-					.purchaseAt(LocalDateTime.now())
-					.bookStatus(BookStatus.AVAILABLE)
-					.deleted(false)
-					.build()
-			);
+			BookItemEntity mockEntity = BookItemEntity.builder()
+				.purchaseAt(LocalDateTime.now())
+				.bookStatus(BookStatus.AVAILABLE)
+				.deleted(false)
+				.build();
+			ReflectionTestUtils.setField(mockEntity, "id", 1);
+			BookItemResponse mockResponse = new BookItemResponse(mockEntity);
 
 			given(bookItemService.getBookItemById(id)).willReturn(mockResponse);
 			log.info("Mock 서비스 설정 완료: 도서 아이템 단건 조회");
@@ -185,14 +184,15 @@ class BookItemControllerTest {
 		void deleteBookItem_WhenValidRequest_ThenReturnsNoContent() throws Exception {
 			// given
 			Integer id = 1;
-			willDoNothing().given(bookItemService).deleteBookItem(id);
+			when(bookItemService.deleteBookItem(id)).thenReturn("삭제 되었습니다.");
 			log.info("Mock 서비스 설정 완료: 도서 아이템 삭제");
 
 			// when & then
 			mockMvc.perform(delete("/api/books/search/qrcodes/{id}", id)
 					.with(csrf())
 					.contentType(MediaType.APPLICATION_JSON))
-				.andExpect(status().isNoContent());
+				.andExpect(status().isOk())
+				.andExpect(content().string("삭제 되었습니다."));
 
 			log.info("도서 아이템 삭제 테스트 성공");
 		}

@@ -113,12 +113,12 @@ public class BookItemController {
 		)
 	})
 	@DeleteMapping("/qrcodes/{id}")
-	public ResponseEntity<Void> deleteBookItem(
+	public ResponseEntity<String> deleteBookItem(
 		@Parameter(description = "삭제할 도서 아이템의 ID", required = true, example = "1")
 		@PathVariable Integer id
 	) {
 		log.info("도서 아이템 삭제: id={}", id);
-		bookItemService.deleteBookItem(id);
-		return ResponseEntity.noContent().build();
+		String result = bookItemService.deleteBookItem(id);
+		return ResponseEntity.ok(result);
 	}
 }
