@@ -140,6 +140,9 @@ dialogflow:
   client-email: ${DIALOGFLOW_CLIENT_EMAIL}
   private-key: ${DIALOGFLOW_PRIVATE_KEY}
   language-code: ko-KR
+  webhook:
+    enabled: true
+    secret: ${WEBHOOK_SECRET}  # Webhook 검증용 시크릿
 
 chatbot:
   context:

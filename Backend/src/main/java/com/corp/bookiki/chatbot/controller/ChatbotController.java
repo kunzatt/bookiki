@@ -1,5 +1,6 @@
 package com.corp.bookiki.chatbot.controller;
 
+import com.corp.bookiki.chatbot.dto.ChatbotFeedbackRequest;
 import com.corp.bookiki.chatbot.dto.ChatbotRequest;
 import com.corp.bookiki.chatbot.dto.ChatbotResponse;
 import com.corp.bookiki.chatbot.service.ChatbotService;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -73,7 +75,20 @@ public class ChatbotController {
             @Valid @RequestBody ChatbotRequest request
     ) {
         log.info("챗봇 메시지 수신 - 사용자: {}, 메시지: {}", user.getId(), request.getMessage());
-        ChatbotResponse response = chatbotService.processMessage(request, user);
-        return ResponseEntity.ok(response);
+
+        // 서비스 호출 및 응답 반환
+        ChatbotResponse response = chatbotService.createMessage(request, user);
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+
+    @PostMapping("/feedback")
+    @Operation(summary = "챗봇 피드백 전송", description = "사용자의 추가 문의사항을 처리합니다.")
+    public ResponseEntity<String> sendFeedback(
+            @Parameter(hidden = true) @CurrentUser AuthUser user,
+            @Valid @RequestBody ChatbotFeedbackRequest request
+    ) {
+        chatbotService.createFeedback(request, user);
+        return ResponseEntity.status(HttpStatus.OK).body("피드백이 입력되었습니다.");
+    }
+
 }
