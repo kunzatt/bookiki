@@ -28,7 +28,7 @@ public class BookItemService {
 		PageRequest pageRequest = PageRequest.of(page, size, sort);
 
 		Page<BookItemEntity> bookItem = bookItemRepository.findByDeletedFalse(pageRequest);
-		return bookItem.map(BookItemResponse::new);
+		return bookItem.map(BookItemResponse::from);
 	}
 
 	@Transactional
@@ -36,14 +36,14 @@ public class BookItemService {
 		BookItemEntity bookItem = bookItemRepository.findById(id)
 			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
 
-
 		if (bookItem.getDeleted()) {
 			throw new BookItemException(ErrorCode.BOOK_ALREADY_DELETED);
 		}
-		return new BookItemResponse(bookItem);
+		return BookItemResponse.from(bookItem);  // 여기도 수정
 	}
+
 	@Transactional
-	public String deleteBookItem(Integer id) {
+	public BookItemResponse deleteBookItem(Integer id) {
 		BookItemEntity bookItem = bookItemRepository.findById(id)
 			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
 
@@ -52,8 +52,6 @@ public class BookItemService {
 		}
 
 		bookItem.delete();
-		return "삭제 되었습니다.";
+		return BookItemResponse.from(bookItem);
 	}
-
-
 }

@@ -92,8 +92,12 @@ public class BookItemController {
 	@Operation(summary = "도서 아이템 삭제", description = "ID를 통해 특정 도서 아이템을 삭제(soft delete)합니다.")
 	@ApiResponses({
 		@ApiResponse(
-			responseCode = "204",
-			description = "도서 아이템 삭제 성공"
+			responseCode = "200",
+			description = "도서 아이템 삭제 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = BookItemResponse.class)
+			)
 		),
 		@ApiResponse(
 			responseCode = "404",
@@ -113,12 +117,12 @@ public class BookItemController {
 		)
 	})
 	@DeleteMapping("/qrcodes/{id}")
-	public ResponseEntity<String> deleteBookItem(
+	public ResponseEntity<BookItemResponse> deleteBookItem(
 		@Parameter(description = "삭제할 도서 아이템의 ID", required = true, example = "1")
 		@PathVariable Integer id
 	) {
 		log.info("도서 아이템 삭제: id={}", id);
-		String result = bookItemService.deleteBookItem(id);
-		return ResponseEntity.ok(result);
+		BookItemResponse response = bookItemService.deleteBookItem(id);
+		return ResponseEntity.ok(response);
 	}
 }
