@@ -23,7 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/admin/qna")
+@RequestMapping("/api/admin/qna")
 @RequiredArgsConstructor
 @Tag(name = "문의사항 답변 API", description = "관리자 문의사항 답변 관련 API")
 @PreAuthorize("hasRole('ADMIN')")

@@ -19,6 +19,10 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
@@ -96,20 +100,24 @@ class QnaServiceTest {
     void selectQnas_Admin() {
         // given
         AuthUser authUser = new AuthUser(TEST_ADMIN_ID, "admin@test.com", Role.ADMIN);
+        Pageable pageable = PageRequest.of(0, 10);
+
         List<QnaEntity> mockQnas = Arrays.asList(
                 createMockQna(1, "Question 1"),
                 createMockQna(2, "Question 2")
         );
+        Page<QnaEntity> mockPage = new PageImpl<>(mockQnas, pageable, mockQnas.size());
 
-        when(qnaRepository.findByDeletedFalseOrderByCreatedAtDesc())
-                .thenReturn(mockQnas);
+        when(qnaRepository.findBySearchCriteria(null, null, null, pageable))
+                .thenReturn(mockPage);
 
         // when
-        List<QnaEntity> result = qnaService.selectQnas(null, null, null, authUser);
+        Page<QnaEntity> result = qnaService.selectQnas(null, null, null, authUser, pageable);
 
         // then
-        assertThat(result).hasSize(2);
-        verify(qnaRepository).findByDeletedFalseOrderByCreatedAtDesc();
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getTotalElements()).isEqualTo(2);
+        verify(qnaRepository).findBySearchCriteria(null, null, null, pageable);
     }
 
     private QnaEntity createMockQna(int id, String title) {
