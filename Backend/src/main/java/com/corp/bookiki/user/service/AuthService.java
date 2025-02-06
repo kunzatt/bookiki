@@ -18,8 +18,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -70,28 +72,61 @@ public class AuthService {
     // 로그인 처리
     @Transactional
     public LoginResponse login(String username, String password, HttpServletResponse response) {
-        // 1. 인증 시도
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
-        );
-        // 2. Securitycontext에 인증 정보 저장
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        // 3. JWT 토큰 생성
-        String accessToken = jwtService.generateAccessToken(
-                authentication.getName(),
-                authentication.getAuthorities()
-        );
-        String refreshToken = jwtService.generateRefreshToken(
-                authentication.getName()
-        );
-        //4. RefreshToken Redis에 저장
-        saveRefreshToken(authentication.getName(), accessToken);
-        // 5. 쿠키 설정
-        setTokenCookies(response, accessToken, refreshToken);
-        // 6. 응답 생성
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        try {
+            log.info("Login attempt for user: {}", username);
 
-        return LoginResponse.from(userDetails);
+            // 1. 인증 시도
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+
+            // 2. 인증 실패 시 예외 발생 (authenticate 메서드가 실패하면 여기까지 오지 않음)
+            if (authentication == null || !authentication.isAuthenticated()) {
+                log.error("Authentication failed for user: {}", username);
+                throw new BadCredentialsException("Authentication failed");
+            }
+
+            log.debug("인증 성공 - user: {}, authorities: {}",
+                    authentication.getName(),
+                    authentication.getAuthorities());
+
+            // 3. SecurityContext에 인증 정보 저장
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            // 4. JWT 토큰 생성
+            String accessToken = jwtService.generateAccessToken(
+                    authentication.getName(),
+                    authentication.getAuthorities()
+            );
+            String refreshToken = jwtService.generateRefreshToken(
+                    authentication.getName()
+            );
+            log.debug("토큰 생성 완료 - access token length: {}", accessToken.length());
+
+            // 5. RefreshToken Redis에 저장
+            saveRefreshToken(authentication.getName(), accessToken);
+            log.debug("Redis에 refresh token 저장 완료");
+
+            // 6. 쿠키 설정
+            setTokenCookies(response, accessToken, refreshToken);
+            log.debug("쿠키 설정 완료");
+
+            // 7. 응답 생성
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            log.debug("로그인 프로세스 완료 - user: {}", userDetails.getUsername());
+
+            return LoginResponse.from(userDetails);
+
+        } catch (BadCredentialsException e) {
+            log.error("인증 실패 - 잘못된 자격증명: {}", username);
+            throw new BadCredentialsException("Invalid username or password");
+        } catch (AuthenticationException ex) {
+            log.error("인증 실패 - 인증 예외: {}", ex.getMessage());
+            throw new AuthenticationException("Authentication failed") {};
+        } catch (Exception ex) {
+            log.error("로그인 처리 중 예외 발생", ex);
+            throw new AuthenticationException("Login failed: " + ex.getMessage()) {};
+        }
     }
 
     // 로그인시 쿠키 설정
@@ -100,11 +135,13 @@ public class AuthService {
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setSecure(secureCookie);
         accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge(30 * 60);
 
         Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setSecure(secureCookie);
         accessTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(14 * 24 * 60 * 60);
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
@@ -124,7 +161,7 @@ public class AuthService {
     }
 
     // 쿠키 삭제 로직
-    public void deleteTokenCookies(HttpServletResponse response) {
+    private void deleteTokenCookies(HttpServletResponse response) {
         Cookie accessTokenCookie = new Cookie("access_token", "");
         accessTokenCookie.setMaxAge(0);
         accessTokenCookie.setPath("/");

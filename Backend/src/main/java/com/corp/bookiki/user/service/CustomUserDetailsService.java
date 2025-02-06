@@ -1,7 +1,8 @@
-package com.corp.bookiki.user.security;
+package com.corp.bookiki.user.service;
 
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
