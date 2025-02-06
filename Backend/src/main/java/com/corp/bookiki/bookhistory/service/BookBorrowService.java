@@ -1,5 +1,7 @@
 package com.corp.bookiki.bookhistory.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +36,10 @@ public class BookBorrowService {
 
 		if (!bookItem.isAvailable()) {
 			throw new BookHistoryException(ErrorCode.BOOK_ALREADY_BORROWED);
+		}
+
+		if (user.getActiveAt() != null && user.getActiveAt().isAfter(LocalDateTime.now())) {
+			throw new BookHistoryException(ErrorCode.USER_NOT_ACTIVE);
 		}
 
 		BookHistoryEntity history = BookHistoryEntity.createForBorrow(bookItem, user);
