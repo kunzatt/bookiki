@@ -61,6 +61,12 @@ public class BookHistoryResponse {
 	)
 	private String bookAuthor;
 
+	@Schema(
+		description = "연체 여부",
+		example = "1"
+	)
+	private Boolean overdue;
+
 	public static BookHistoryResponse from(BookHistoryEntity entity) {
 		return BookHistoryResponse.builder()
 			.id(entity.getId())
@@ -70,6 +76,7 @@ public class BookHistoryResponse {
 			.returnedAt(entity.getReturnedAt())
 			.bookTitle(entity.getBookItem().getBookInformation().getTitle())
 			.bookAuthor(entity.getBookItem().getBookInformation().getAuthor())
+			.overdue(entity.getOverdue())
 			.build();
 	}
 }
