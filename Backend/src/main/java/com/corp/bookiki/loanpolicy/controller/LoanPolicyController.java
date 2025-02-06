@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @RestController
-@RequestMapping("/api/loan-policy")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Tag(name = "대출 정책 API", description = "대출 정책 조회 및 수정 API")
 @Slf4j
@@ -37,7 +37,7 @@ public class LoanPolicyController {
 
 	private final LoanPolicyService loanPolicyService;
 
-	@GetMapping
+	@GetMapping("/loan-policy")
 	@Operation(summary = "현재 대출 정책 조회", description = "현재 설정된 대출 정책을 조회합니다.")
 	@ApiResponses({
 		@ApiResponse(
@@ -54,7 +54,7 @@ public class LoanPolicyController {
 		return ResponseEntity.ok(loanPolicyService.getCurrentPolicy());
 	}
 
-	@PatchMapping("/books")
+	@PatchMapping("/admin/loan-policy/books")
 	@Operation(summary = "최대 대출 가능 도서 수 수정", description = "최대로 대출할 수 있는 도서의 수를 수정합니다.")
 	@ApiResponses({
 		@ApiResponse(
@@ -91,7 +91,7 @@ public class LoanPolicyController {
 		return ResponseEntity.ok(loanPolicyService.updateMaxBooks(request));
 	}
 
-	@PatchMapping("/period")
+	@PatchMapping("/admin/loan-policy/period")
 	@Operation(summary = "대출 기간 수정", description = "도서 대출 가능 기간(일)을 수정합니다.")
 	@ApiResponses({
 		@ApiResponse(
@@ -128,7 +128,7 @@ public class LoanPolicyController {
 		return ResponseEntity.ok(loanPolicyService.updateLoanPeriod(request));
 	}
 
-	@PutMapping
+	@PutMapping("/admin/loan-policy")
 	@Operation(summary = "대출 정책 전체 수정", description = "대출 정책 전체(최대 대출 가능 도서 수, 대출 기간)를 수정합니다.")
 	@ApiResponses({
 		@ApiResponse(

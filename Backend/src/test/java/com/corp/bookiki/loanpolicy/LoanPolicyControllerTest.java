@@ -57,7 +57,7 @@ class LoanPolicyControllerTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(roles = "ADMIN")
 	@DisplayName("대출 정책 조회 성공")
 	void getCurrentPolicy_ReturnsOk() throws Exception {
 		// given
@@ -72,7 +72,7 @@ class LoanPolicyControllerTest {
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(roles = "ADMIN")
 	@DisplayName("대출 가능 도서 수 수정 성공")
 	void updateMaxBooks_WhenValid_ReturnsOk() throws Exception {
 		// given
@@ -83,14 +83,14 @@ class LoanPolicyControllerTest {
             """;
 
 		// when & then
-		mockMvc.perform(patch("/api/loan-policy/books")
+		mockMvc.perform(patch("/api/admin/loan-policy/books")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isOk());
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(roles = "ADMIN")
 	@DisplayName("대출 기간 수정 성공")
 	void updateLoanPeriod_WhenValid_ReturnsOk() throws Exception {
 		// given
@@ -101,14 +101,14 @@ class LoanPolicyControllerTest {
             """;
 
 		// when & then
-		mockMvc.perform(patch("/api/loan-policy/period")
+		mockMvc.perform(patch("/api/admin/loan-policy/period")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isOk());
 	}
 
 	@Test
-	@WithMockUser
+	@WithMockUser(roles = "ADMIN")
 	@DisplayName("전체 대출 정책 수정 성공")
 	void updatePolicy_WhenValid_ReturnsOk() throws Exception {
 		// given
@@ -120,7 +120,7 @@ class LoanPolicyControllerTest {
             """;
 
 		// when & then
-		mockMvc.perform(put("/api/loan-policy")
+		mockMvc.perform(put("/api/admin/loan-policy")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(requestBody))
 			.andExpect(status().isOk());
