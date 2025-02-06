@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
 
-// 스웨거 주소 : http://i12a206.p.ssafy.io:8088/api/swagger-ui/index.html#/
+// 스웨거 주소 : http://i12a206.p.ssafy.io:8088/swagger-ui/index.html#/
 
 @Configuration
 public class SwaggerConfig {
