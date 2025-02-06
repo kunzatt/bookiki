@@ -101,6 +101,8 @@ dependencies {
 
     // ChatBot
     implementation 'com.google.cloud:google-cloud-dialogflow:4.63.0'
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 tasks.named('test') {

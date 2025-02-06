@@ -37,13 +37,14 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: http://localhost:8088/api/login/oauth2/code/google
             scope:
               - email
               - profile
           naver:
             client-id: ${NAVER_CLIENT_ID}
             client-secret: ${NAVER_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/naver"
+            redirect-uri: http://localhost:8088/api/login/oauth2/code/naver
             authorization-grant-type: authorization_code
             scope:
               - name
@@ -68,12 +69,11 @@ spring:
             enable: true
 jwt:
   secret: ${JWT_SECRET}
-  access-token:
-    expiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
-  refresh-token:
-    expiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
-  temporary-token:
-    expiration: ${JWT_TEMPORARY_TOKEN_EXPIRATION}
+  issuer: bookiki-auth
+  subject-prefix: bookiki
+  accessTokenExpiration: ${JWT_ACCESS_TOKEN_EXPIRATION}
+  refreshTokenExpiration: ${JWT_REFRESH_TOKEN_EXPIRATION}
+  temporaryTokenExpiration: ${JWT_TEMPORARY_TOKEN_EXPIRATION}
 
 cookie:
   secure-flag: false
@@ -84,7 +84,7 @@ server:
     encoding:
       charset: UTF-8
       force: true
-    context-path: "/"
+    context-path: ""
 
 logging:
   level:
@@ -116,9 +116,9 @@ mybatis:
 
 springdoc:
   api-docs:
-    path: /api-docs
+    path: /api/api-docs
   swagger-ui:
-    path: /swagger-ui.html
+    path: /api/swagger-ui.html
     operations-sorter: method
 
 cache:
@@ -158,6 +158,7 @@ logging:
   level:
     com.corp.bookiki: DEBUG
     org.hibernate.SQL: DEBUG
+    org.springframework.security: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
     org.springframework.test: DEBUG
     org.springframework.transaction: DEBUG
