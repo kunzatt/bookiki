@@ -74,6 +74,8 @@ public class ChatbotService {
             DetectIntentResponse response = sessionsClient.detectIntent(detectIntentRequest);
             QueryResult queryResult = response.getQueryResult();
 
+            String faqCategory = handleFaqContext(queryResult, session);
+
             // 6. 신뢰도 검사
             if (queryResult.getIntentDetectionConfidence() < confidenceThreshold) {
                 return handleLowConfidence(queryResult);
@@ -101,37 +103,55 @@ public class ChatbotService {
     }
 
     private ChatbotResponse createEnhancedResponse(QueryResult queryResult, Map<String, Value> params) {
-        String intent = queryResult.getIntent().getDisplayName();
-        List<String> quickReplies = new ArrayList<>();
+        try {
+            String intent = queryResult.getIntent().getDisplayName();
+            List<String> quickReplies = new ArrayList<>();
 
-        // 1. Dialogflow의 기본 응답 처리
-        StringBuilder messageBuilder = new StringBuilder(queryResult.getFulfillmentText());
+            // 1. Dialogflow의 기본 응답 처리
+            StringBuilder messageBuilder = new StringBuilder(queryResult.getFulfillmentText());
 
-        // 2. 대화 흐름 확인
-        if (!queryResult.getAllRequiredParamsPresent()) {
-            // 필요한 정보가 더 있는 경우
-            messageBuilder.append("\n").append(queryResult.getDiagnosticInfo());
-        }
-
-        // 3. Dialogflow 제안 응답 추가
-        for (Intent.Message message : queryResult.getFulfillmentMessagesList()) {
-            if (message.hasQuickReplies()) {
-                Intent.Message.QuickReplies quickRepliesMessage = message.getQuickReplies();
-                quickReplies.addAll(quickRepliesMessage.getQuickRepliesList());
+            try {
+                // 2. 대화 흐름 확인
+                if (!queryResult.getAllRequiredParamsPresent()) {
+                    // 필요한 정보가 더 있는 경우
+                    messageBuilder.append("\n").append(queryResult.getDiagnosticInfo());
+                }
+            } catch (Exception e) {
+                log.error("대화 흐름 확인 중 오류 발생: {}", e.getMessage());
+                throw new ChatbotException(ErrorCode.CONTEXT_MANAGEMENT_ERROR);
             }
-        }
 
-        // 4. 기본 빠른 응답 추가
-        if (quickReplies.isEmpty()) {
-            quickReplies.addAll(selectDefaultQuickReplies());
-        }
+            try {
+                // 3. Dialogflow 제안 응답 추가
+                for (Intent.Message message : queryResult.getFulfillmentMessagesList()) {
+                    if (message.hasQuickReplies()) {
+                        Intent.Message.QuickReplies quickRepliesMessage = message.getQuickReplies();
+                        quickReplies.addAll(quickRepliesMessage.getQuickRepliesList());
+                    }
+                }
+            } catch (Exception e) {
+                log.error("Dialogflow 응답 처리 중 오류 발생: {}", e.getMessage());
+                throw new ChatbotException(ErrorCode.ENTITY_EXTRACTION_ERROR);
+            }
 
-        return ChatbotResponse.builder()
-                .message(messageBuilder.toString())
-                .quickReplies(quickReplies)
-                .allowFreeInput(shouldAllowFreeInput(intent))
-                .showAdminInquiryButton(shouldShowAdminInquiryButton(intent))
-                .build();
+            // 4. 기본 빠른 응답 추가
+            if (quickReplies.isEmpty()) {
+                quickReplies.addAll(selectDefaultQuickReplies());
+            }
+
+            return ChatbotResponse.builder()
+                    .message(messageBuilder.toString())
+                    .quickReplies(quickReplies)
+                    .allowFreeInput(shouldAllowFreeInput(intent))
+                    .showAdminInquiryButton(shouldShowAdminInquiryButton(intent))
+                    .build();
+
+        } catch (ChatbotException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("응답 생성 중 오류 발생: {}", e.getMessage());
+            throw new ChatbotException(ErrorCode.DIALOGFLOW_PROCESSING_ERROR);
+        }
     }
 
     private String buildFullMessage(QueryResult queryResult) {
@@ -261,4 +281,34 @@ public class ChatbotService {
         }
     }
 
+    private String handleFaqContext(QueryResult queryResult, SessionName session) {
+        try {
+            // faq_category 파라미터 가져오기
+            Value categoryValue = queryResult.getParameters().getFieldsOrDefault("faq_category", Value.getDefaultInstance());
+            String faqCategory = categoryValue.getStringValue();
+
+            if (faqCategory != null && !faqCategory.isEmpty()) {
+                // 카테고리 관련 후속 질문을 위한 컨텍스트 설정
+                Context context = Context.newBuilder()
+                        .setName(session.toString() + "/contexts/faq-follow-up")
+                        .setLifespanCount(2)
+                        .build();
+
+                // 컨텍스트 생성 요청
+                CreateContextRequest contextRequest = CreateContextRequest.newBuilder()
+                        .setParent(session.toString())
+                        .setContext(context)
+                        .build();
+
+                contextsClient.createContext(contextRequest);
+
+                return faqCategory;
+            }
+            return null;
+
+        } catch (Exception e) {
+            log.error("FAQ 컨텍스트 처리 중 오류 발생: {}", e.getMessage());
+            throw new ChatbotException(ErrorCode.CONTEXT_MANAGEMENT_ERROR);
+        }
+    }
 }
