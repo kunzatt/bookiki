@@ -88,7 +88,7 @@ class BookItemControllerTest {
 			BookItemResponse mockResponse = BookItemResponse.from(mockEntity);
 			Page<BookItemResponse> mockPage = new PageImpl<>(List.of(mockResponse));
 
-			given(bookItemService.getAllBookItems(anyInt(), anyInt(), anyString(), anyString()))
+			given(bookItemService.selectBooksByKeyword(anyInt(), anyInt(), anyString(), anyString(), anyString()))
 				.willReturn(mockPage);
 			log.info("Mock 서비스 설정 완료: 도서 아이템 목록");
 

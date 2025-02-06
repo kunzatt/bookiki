@@ -1,12 +1,13 @@
 package com.corp.bookiki.bookitem.service;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.BDDMockito.*;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
+import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
+import com.corp.bookiki.bookitem.dto.BookItemResponse;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.entity.BookStatus;
+import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookItemException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -20,14 +21,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.corp.bookiki.bookitem.dto.BookItemResponse;
-import com.corp.bookiki.bookitem.entity.BookItemEntity;
-import com.corp.bookiki.bookitem.entity.BookStatus;
-import com.corp.bookiki.bookitem.repository.BookItemRepository;
-import com.corp.bookiki.global.error.code.ErrorCode;
-import com.corp.bookiki.global.error.exception.BookItemException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
-import lombok.extern.slf4j.Slf4j;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.verify;
 
 @Slf4j
 @ExtendWith(MockitoExtension.class)
@@ -49,6 +50,7 @@ class BookItemServiceTest {
 			int size = 10;
 			String sortBy = "id";
 			String direction = "desc";
+			String keyword = "test";
 
 			PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.fromString(direction), sortBy));
 			BookItemEntity mockEntity = BookItemEntity.builder()
@@ -64,14 +66,14 @@ class BookItemServiceTest {
 			log.info("Mock 설정 완료: 페이지네이션된 도서 아이템 목록");
 
 			// when
-			Page<BookItemResponse> result = bookItemService.getAllBookItems(page, size, sortBy, direction);
+			Page<BookItemDisplayResponse> result = bookItemService.selectBooksByKeyword(page, size, sortBy, direction, keyword);
 			log.info("도서 아이템 목록 조회 결과: size={}", result.getContent().size());
 
 			// then
 			assertThat(result).isNotNull();
 			assertThat(result.getContent()).isNotEmpty();
 			// verify도 findByDeletedFalse()로 수정
-			verify(bookItemRepository).findByDeletedFalse(pageRequest);
+			verify(BookItemDisplayResponse).findAllWithKeyword(pageRequest);
 			log.info("도서 아이템 목록 조회 테스트 성공");
 		}
 

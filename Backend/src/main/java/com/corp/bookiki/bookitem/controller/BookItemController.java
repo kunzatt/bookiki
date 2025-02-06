@@ -1,18 +1,9 @@
 package com.corp.bookiki.bookitem.controller;
 
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,6 +13,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/books/search")
@@ -44,7 +38,7 @@ public class BookItemController {
 		)
 	})
 	@GetMapping("/list")
-	public Page<BookItemResponse> getAllBookItems(
+	public Page<BookItemDisplayResponse> selectBooksByKeyword(
 		@Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
 		@RequestParam(defaultValue = "0") int page,
 
@@ -55,10 +49,13 @@ public class BookItemController {
 		@RequestParam(defaultValue = "id") String sortBy,
 
 		@Parameter(description = "정렬 방향 (asc/desc)", example = "desc")
-		@RequestParam(defaultValue = "desc") String direction
+		@RequestParam(defaultValue = "desc") String direction,
+
+		@Parameter(description = "검색 키워드", example = "test")
+		@RequestParam String keyword
 	) {
-		log.info("도서 아이템 목록 조회: page={}, size={}, sortBy={}, direction={}", page, size, sortBy, direction);
-		return bookItemService.getAllBookItems(page, size, sortBy, direction);
+		log.info("도서 아이템 목록 조회: page={}, size={}, sortBy={}, direction={}, keyword={}", page, size, sortBy, direction, keyword);
+		return bookItemService.selectBooksByKeyword(page, size, sortBy, direction, keyword);
 	}
 
 	@Operation(summary = "도서 아이템 ID로 조회", description = "ID를 통해 특정 도서 아이템을 조회합니다.")
