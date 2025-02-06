@@ -1,11 +1,14 @@
 package com.corp.bookiki.global.resolver;
 
 import com.corp.bookiki.global.annotation.CurrentUser;
-import com.corp.bookiki.jwt.service.JWTService;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.dto.AuthUser;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -16,7 +19,8 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 @RequiredArgsConstructor
 public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final JWTService jwtService;
+    private final JwtService jwtService;
+    private final UserRepository userRepository;
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -29,10 +33,11 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
         try {
             String email = SecurityContextHolder.getContext().getAuthentication().getName();
-            return AuthUser.builder()
-                    .email(email)
-                    .build();
-        } catch (Exception e) {
+            UserEntity user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            return AuthUser.from(user);
+        } catch (Exception ex) {
             return null;
         }
     }
