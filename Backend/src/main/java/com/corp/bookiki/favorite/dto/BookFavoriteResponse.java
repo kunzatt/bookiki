@@ -18,6 +18,9 @@ public class BookFavoriteResponse {
 	@Schema(description = "도서 아이템 ID", example = "4")
 	private Integer bookItemId;
 
+	@Schema(description = "요청한 유저 ID", example = "2")
+	private Integer userId;
+
 	@Schema(description = "도서 제목", example = "초보자를 위한 Java 200제")
 	private String bookTitle;
 
@@ -31,6 +34,7 @@ public class BookFavoriteResponse {
 		return BookFavoriteResponse.builder()
 			.id(entity.getId())
 			.bookItemId(entity.getBookItem().getId())
+			.userId(entity.getUser().getId())
 			.bookTitle(entity.getBookItem().getBookInformation().getTitle())
 			.bookImage(entity.getBookItem().getBookInformation().getImage())
 			.createdAt(entity.getCreatedAt())

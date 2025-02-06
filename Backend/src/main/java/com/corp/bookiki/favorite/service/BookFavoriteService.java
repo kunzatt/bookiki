@@ -43,7 +43,6 @@ public class BookFavoriteService {
 	public int getBookFavoriteCount(Integer bookItemId) {
 		return favoriteRepository.countByBookItemId(bookItemId);
 	}
-	
 	// 특정 유저의 좋아요한 책의 개수 조회
 	@Transactional(readOnly = true)
 	public int getUserFavoriteCount(Integer userId) {
