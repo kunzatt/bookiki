@@ -1,4 +1,4 @@
-package com.corp.bookiki.bookhistory.bookborrow;
+package com.corp.bookiki.bookhistory.service;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -18,7 +18,6 @@ import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
 import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
-import com.corp.bookiki.bookhistory.service.BookBorrowService;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.user.entity.UserEntity;

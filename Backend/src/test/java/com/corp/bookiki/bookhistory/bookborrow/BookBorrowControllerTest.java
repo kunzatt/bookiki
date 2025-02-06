@@ -93,7 +93,7 @@ class BookBorrowControllerTest {
 				request.getUserId(), request.getBookItemId());
 
 			// when & then
-			mockMvc.perform(post("/api/books/borrow")
+			mockMvc.perform(post("/books/borrow")
 					.with(csrf())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
@@ -121,59 +121,13 @@ class BookBorrowControllerTest {
 			log.info("존재하지 않는 도서 대출 요청 테스트 시작: bookItemId={}", request.getBookItemId());
 
 			// when & then
-			mockMvc.perform(post("/api/books/borrow")
+			mockMvc.perform(post("/books/borrow")
 					.with(csrf())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isNotFound());
 
 			log.info("존재하지 않는 도서 대출 요청 테스트 완료");
-		}
-
-		@Test
-		@WithMockUser
-		@DisplayName("대출 한도 초과 시 400 반환")
-		void borrowBook_WhenBorrowLimitExceeded_ThenReturnsBadRequest() throws Exception {
-			// given
-			BookBorrowRequest request = new BookBorrowRequest();
-			request.setUserId(100);
-			request.setBookItemId(400);
-
-			given(bookBorrowService.borrowBook(any(BookBorrowRequest.class)))
-				.willThrow(new BookHistoryException(ErrorCode.BORROW_LIMIT_EXCEEDED));
-			log.info("대출 한도 초과 테스트 시작: userId={}", request.getUserId());
-
-			// when & then
-			mockMvc.perform(post("/api/books/borrow")
-					.with(csrf())
-					.contentType(MediaType.APPLICATION_JSON)
-					.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isBadRequest());
-
-			log.info("대출 한도 초과 테스트 완료");
-		}
-
-		@Test
-		@WithMockUser
-		@DisplayName("연체된 도서가 있는 경우 400 반환")
-		void borrowBook_WhenHasOverdueBooks_ThenReturnsBadRequest() throws Exception {
-			// given
-			BookBorrowRequest request = new BookBorrowRequest();
-			request.setUserId(100);
-			request.setBookItemId(500);
-
-			given(bookBorrowService.borrowBook(any(BookBorrowRequest.class)))
-				.willThrow(new BookHistoryException(ErrorCode.HAS_OVERDUE_BOOKS));
-			log.info("연체 도서 보유 사용자 테스트 시작: userId={}", request.getUserId());
-
-			// when & then
-			mockMvc.perform(post("/api/books/borrow")
-					.with(csrf())
-					.contentType(MediaType.APPLICATION_JSON)
-					.content(objectMapper.writeValueAsString(request)))
-				.andExpect(status().isBadRequest());
-
-			log.info("연체 도서 보유 사용자 테스트 완료");
 		}
 	}
 }

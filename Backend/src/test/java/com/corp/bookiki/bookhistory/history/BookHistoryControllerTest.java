@@ -31,12 +31,16 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.corp.bookiki.bookhistory.controller.BookHistoryController;
+import com.corp.bookiki.bookhistory.dto.BookHistoryRequest;
 import com.corp.bookiki.bookhistory.dto.BookHistoryResponse;
 import com.corp.bookiki.bookhistory.enitity.PeriodType;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.util.CookieUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,24 +60,29 @@ class BookHistoryControllerTest {
 	@MockBean
 	private BookHistoryService bookHistoryService;
 
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	@BeforeEach
 	void setup() {
 		mockMvc = MockMvcBuilders
 			.webAppContextSetup(context)
 			.apply(springSecurity())
 			.build();
+		log.info("MockMvc 설정이 완료되었습니다.");
 	}
 
 	@Nested
 	@DisplayName("도서 대출 기록 조회 API 테스트")
 	class GetBookHistories {
+
 		@Test
 		@WithMockUser
 		@DisplayName("기간 타입이 LAST_WEEK인 경우 정상 조회")
 		void getBookHistories_WhenPeriodTypeIsLastWeek_ThenReturnsOk() throws Exception {
 			// given
-			LocalDate endDate = LocalDate.now();
-			LocalDate startDate = endDate.minusWeeks(1);
+			BookHistoryRequest request = new BookHistoryRequest();
+			request.setPeriodType(PeriodType.LAST_WEEK);
 
 			BookHistoryResponse response = BookHistoryResponse.builder()
 				.id(1)
@@ -89,22 +98,23 @@ class BookHistoryControllerTest {
 				1
 			);
 
-			given(bookHistoryService.getBookHistories(
-				any(LocalDate.class),
-				any(LocalDate.class),
-				any(),
-				any(Pageable.class)
-			)).willReturn(page);
+			given(bookHistoryService.getBookHistories(any(BookHistoryRequest.class), any(Pageable.class)))
+				.willReturn(page);
+
+			log.info("테스트 요청 생성: periodType={}", request.getPeriodType());
 
 			// when & then
-			mockMvc.perform(get("/api/users/books")
-					.param("periodType", PeriodType.LAST_WEEK.toString()))
+			mockMvc.perform(get("/api/book-histories")
+					.param("periodType", request.getPeriodType().toString()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content[0].id").exists())
 				.andExpect(jsonPath("$.content[0].bookItemId").value(100))
 				.andExpect(jsonPath("$.content[0].userId").value(200))
 				.andExpect(jsonPath("$.content[0].borrowedAt").exists())
 				.andExpect(jsonPath("$.content[0].returnedAt").exists());
+
+			verify(bookHistoryService).getBookHistories(any(BookHistoryRequest.class), any(Pageable.class));
+			log.info("도서 대출 기록 조회 테스트 성공적으로 완료");
 		}
 
 		@Test
@@ -114,35 +124,52 @@ class BookHistoryControllerTest {
 			// given
 			LocalDate startDate = LocalDate.now().minusMonths(1);
 			LocalDate endDate = LocalDate.now();
-			String keyword = "Spring";
+
+			BookHistoryRequest request = new BookHistoryRequest();
+			request.setPeriodType(PeriodType.CUSTOM);
+			request.setStartDate(startDate);
+			request.setEndDate(endDate);
 
 			Page<BookHistoryResponse> page = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
 
-			given(bookHistoryService.getBookHistories(
-				any(LocalDate.class),
-				any(LocalDate.class),
-				eq(keyword),
-				any(Pageable.class)
-			)).willReturn(page);
+			given(bookHistoryService.getBookHistories(any(BookHistoryRequest.class), any(Pageable.class)))
+				.willReturn(page);
+
+			log.info("테스트 요청 생성: periodType={}, startDate={}, endDate={}",
+				request.getPeriodType(), startDate, endDate);
 
 			// when & then
-			mockMvc.perform(get("/api/users/books")
-					.param("periodType", PeriodType.CUSTOM.toString())
+			mockMvc.perform(get("/api/book-histories")
+					.param("periodType", request.getPeriodType().toString())
 					.param("startDate", startDate.toString())
-					.param("endDate", endDate.toString())
-					.param("keyword", keyword))
+					.param("endDate", endDate.toString()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content").isArray());
+
+			verify(bookHistoryService).getBookHistories(any(BookHistoryRequest.class), any(Pageable.class));
+			log.info("사용자 지정 기간 조회 테스트 성공적으로 완료");
 		}
 
 		@Test
 		@WithMockUser
 		@DisplayName("CUSTOM 타입에서 시작일/종료일 누락 시 실패")
 		void getBookHistories_WhenCustomPeriodWithoutDates_ThenReturnsBadRequest() throws Exception {
+			// given
+			BookHistoryRequest request = new BookHistoryRequest();
+			request.setPeriodType(PeriodType.CUSTOM);
+
+			given(bookHistoryService.getBookHistories(any(BookHistoryRequest.class), any(Pageable.class)))
+				.willThrow(new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE));
+
+			log.info("테스트 요청 생성: periodType={}, dates=null", request.getPeriodType());
+
 			// when & then
-			mockMvc.perform(get("/api/users/books")
-					.param("periodType", PeriodType.CUSTOM.toString()))
+			mockMvc.perform(get("/api/book-histories")
+					.param("periodType", request.getPeriodType().toString()))
 				.andExpect(status().isBadRequest());
+
+			log.info("날짜 누락 테스트 성공적으로 완료");
 		}
+
 	}
 }
