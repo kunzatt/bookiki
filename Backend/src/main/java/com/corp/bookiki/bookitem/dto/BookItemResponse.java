@@ -7,18 +7,25 @@ import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.qrcode.dto.QrCodeResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@NoArgsConstructor
+@Setter
 @Schema(description = "도서 아이템 응답 정보")
 public class BookItemResponse {
-	@Schema(description = "도서 아이템 고유 식별자", example = "1")
+	@Schema(
+		description = "도서 아이템 고유 식별자",
+		example = "1",
+		required = true
+	)
 	private Integer id;
 
-	@Schema(description = "도서 정보 고유 식별자", example = "1")
+	@Schema(
+		description = "도서 정보 고유 식별자",
+		example = "1",
+		required = true
+	)
 	private Integer bookInformationId;
 
 	@Schema(
@@ -29,38 +36,38 @@ public class BookItemResponse {
 	private LocalDateTime purchaseAt;
 
 	@Schema(
-		description = "도서 상태 (AVAILABLE: 대출 가능, UNAVAILABLE: 대출 불가, LOST: 분실, DAMAGED: 파손)",
-		example = "AVAILABLE"
+		description = "도서 상태",
+		example = "AVAILABLE",
+		required = true
 	)
 	private BookStatus bookStatus;
 
-	@Schema(description = "도서 정보 수정 일시", type = "string", format = "date-time")
+	@Schema(
+		description = "도서 정보 수정 일시",
+		example = "2024-02-03T10:30:00",
+		required = true
+	)
 	private LocalDateTime updatedAt;
 
-	@Schema(description = "QR 코드 정보")
+	@Schema(
+		description = "QR 코드 정보",
+		required = false
+	)
 	private QrCodeResponse qrCode;
 
-	@Builder
-	public BookItemResponse(Integer id, Integer bookInformationId, LocalDateTime purchaseAt,
-		BookStatus bookStatus, LocalDateTime updatedAt, QrCodeResponse qrCode) {
-		this.id = id;
-		this.bookInformationId = bookInformationId;
-		this.purchaseAt = purchaseAt;
-		this.bookStatus = bookStatus;
-		this.updatedAt = updatedAt;
-		this.qrCode = qrCode;
-	}
+	public BookItemResponse(BookItemEntity bookItem) {
+		this.id = bookItem.getId();
 
-	public static BookItemResponse from(BookItemEntity bookItem) {
-		return BookItemResponse.builder()
-			.id(bookItem.getId())
-			.bookInformationId(bookItem.getBookInformation() != null ?
-				bookItem.getBookInformation().getId() : null)
-			.purchaseAt(bookItem.getPurchaseAt())
-			.bookStatus(bookItem.getBookStatus())
-			.updatedAt(bookItem.getUpdatedAt())
-			.qrCode(bookItem.getQrCode() != null ?
-				new QrCodeResponse(bookItem.getQrCode()) : null)
-			.build();
+		if (bookItem.getBookInformation() != null) {
+			this.bookInformationId = bookItem.getBookInformation().getId();
+		}
+
+		this.purchaseAt = bookItem.getPurchaseAt();
+		this.bookStatus = bookItem.getBookStatus();
+		this.updatedAt = bookItem.getUpdatedAt();
+
+		if (bookItem.getQrCode() != null) {
+			this.qrCode = new QrCodeResponse(bookItem.getQrCode());
+		}
 	}
 }

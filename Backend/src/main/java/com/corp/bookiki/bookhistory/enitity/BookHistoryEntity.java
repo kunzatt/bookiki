@@ -1,10 +1,8 @@
 package com.corp.bookiki.bookhistory.enitity;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
-import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
 import com.corp.bookiki.user.entity.UserEntity;
 
 import jakarta.persistence.Column;
@@ -44,16 +42,12 @@ public class BookHistoryEntity {
 
 	private LocalDateTime returnedAt;
 
-	@Column(columnDefinition = "BOOLEAN DEFAULT FALSE")
-	private Boolean overdue = false;
-
 	@Builder
-	public BookHistoryEntity(BookItemEntity bookItem, UserEntity user, LocalDateTime borrowedAt, LocalDateTime returnedAt, Boolean overdue) {
+	public BookHistoryEntity(BookItemEntity bookItem, UserEntity user, LocalDateTime borrowedAt, LocalDateTime returnedAt) {
 		this.bookItem = bookItem;
 		this.user = user;
 		this.borrowedAt = borrowedAt;
 		this.returnedAt = returnedAt;
-		this.overdue = overdue;
 	}
 
 	public static BookHistoryEntity createForBorrow(BookItemEntity bookItem, UserEntity user) {
@@ -65,13 +59,7 @@ public class BookHistoryEntity {
 			.build();
 	}
 
-	public void returnBook(LoanPolicyEntity loanPolicy) {
+	public void returnBook() {
 		this.returnedAt = LocalDateTime.now();
-		checkAndSetOverdue(loanPolicy);
-	}
-
-	private void checkAndSetOverdue(LoanPolicyEntity loanPolicy) {
-		long daysBetween = ChronoUnit.DAYS.between(borrowedAt, returnedAt);
-		this.overdue = daysBetween > loanPolicy.getLoanPeriod();
 	}
 }

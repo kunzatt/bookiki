@@ -20,7 +20,6 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
-import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
 import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -42,7 +41,6 @@ class BookHistoryRepositoryTest {
 	private BookItemEntity bookItem;
 	private UserEntity user;
 	private BookHistoryEntity bookHistory;
-	private LoanPolicyEntity loanPolicy;
 	private LocalDateTime now;
 
 	@BeforeEach
@@ -79,10 +77,6 @@ class BookHistoryRepositoryTest {
 			.user(user)
 			.borrowedAt(now)
 			.returnedAt(null)
-			.build();
-
-		loanPolicy = LoanPolicyEntity.builder()
-			.loanPeriod(7)
 			.build();
 	}
 
@@ -155,7 +149,7 @@ class BookHistoryRepositoryTest {
 		entityManager.flush();
 
 		LocalDateTime overdueDate = now.minusDays(15);
-		bookHistory.returnBook(loanPolicy);
+		bookHistory.returnBook();
 		bookHistoryRepository.save(bookHistory);
 		entityManager.flush();
 		entityManager.clear();

@@ -7,6 +7,9 @@ import java.time.format.DateTimeFormatter;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,22 +21,29 @@ import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookInformationException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 // 주요 기능: 책 정보 추가, 책 정보 가져오기, 외부 API를 이용한 책 정보 가져오기
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookInformationService {
 
-	@Value("${api.nl.key}")
-	private String API_NL_KEY;
+	@Value("${naver.api.books-client-id}")
+	private String clientId;
 
-	private static final String API_URL = "https://www.nl.go.kr/seoji/SearchApi.do";
+	@Value("${naver.api.books-client-secret}")
+	private String clientSecret;
+
+	private static final String API_URL = "https://openapi.naver.com/v1/search/book.json";
 
 	private final RestTemplate restTemplate;
-
 	private final BookInformationRepository bookInformationRepository;
+	private final ObjectMapper objectMapper;
 
 	// 책 정보를 추가하는 메서드
 	@Transactional
@@ -44,7 +54,7 @@ public class BookInformationService {
 			return BookInformationResponse.from(bookInfo);
 		}
 		try {
-			BookInformationEntity newBookInfo = callExternalBookApi(isbn);
+			BookInformationEntity newBookInfo = callNaverBookApi(isbn);
 			bookInformationRepository.save(newBookInfo); // 새로운 BookInformation 저장
 			return BookInformationResponse.from(newBookInfo);
 		} catch (BookInformationException e) {
@@ -52,48 +62,72 @@ public class BookInformationService {
 		}
 	}
 
-	// 외부 API를 이용하여 책 정보 가져오는 메서드
-	private BookInformationEntity callExternalBookApi(String isbn) {
+	// 네이버 API를 이용하여 책 정보 가져오는 메서드
+	private BookInformationEntity callNaverBookApi(String isbn) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("X-Naver-Client-Id", clientId);
+		headers.set("X-Naver-Client-Secret", clientSecret);
+
 		String url = UriComponentsBuilder.fromHttpUrl(API_URL)
-			.queryParam("cert_key", API_NL_KEY)
-			.queryParam("result_style", "json")
-			.queryParam("page_no", 1)
-			.queryParam("page_size", 1)
-			.queryParam("isbn", isbn)
+			.queryParam("query", isbn)
+			.queryParam("display", 1)
 			.build()
 			.toString();
 
 		try {
-			ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-			JSONObject jsonResponse = new JSONObject(response.getBody());
+			ResponseEntity<String> response = restTemplate.exchange(
+				url,
+				HttpMethod.GET,
+				new HttpEntity<>(headers),
+				String.class
+			);
 
-			if (jsonResponse.has("ERR_CODE")) {
-				throw new BookInformationException(ErrorCode.EXTERNAL_API_ERROR);
+			// 디버깅을 위한 응답 출력
+			log.debug("Naver API Response: {}", response.getBody());
+
+			JsonNode root = objectMapper.readTree(response.getBody());
+			JsonNode items = root.get("items");
+
+			// 검색 결과 확인
+			if (items == null || items.isEmpty()) {
+				log.error("No items found for ISBN: {}", isbn);
+				throw new BookInformationException(ErrorCode.BOOK_INFO_NOT_FOUND);
 			}
 
-			if (jsonResponse.getString("TOTAL_COUNT").equals("0")) {
-				throw new BookInformationException(ErrorCode.INVALID_ISBN);
+			JsonNode bookData = items.get(0);
+
+			// ISBN 확인 로직 개선
+			String returnedIsbn = bookData.get("isbn").asText().replace(" ", "");
+			if (!returnedIsbn.contains(isbn)) {
+				log.error("ISBN mismatch. Requested: {}, Returned: {}", isbn, returnedIsbn);
+				throw new BookInformationException(ErrorCode.BOOK_INFO_NOT_FOUND);
 			}
 
-			JSONObject bookData = jsonResponse.getJSONArray("docs").getJSONObject(0);
-
-			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-			LocalDateTime publishedAt = LocalDate.parse(bookData.getString("PUBLISH_PREDATE"), formatter)
-				.atStartOfDay();
+			String pubdate = bookData.get("pubdate").asText();
+			LocalDateTime publishedAt;
+			try {
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+				publishedAt = LocalDate.parse(pubdate, formatter).atStartOfDay();
+			} catch (Exception e) {
+				log.error("Failed to parse publication date: {}", pubdate, e);
+				publishedAt = LocalDateTime.now(); // 또는 다른 기본값 설정
+			}
 
 			return BookInformationEntity.builder()
-				.title(bookData.getString("TITLE"))
-				.author(bookData.getString("AUTHOR"))
-				.publisher(StringUtils.defaultIfEmpty(bookData.optString("PUBLISHER"), null))
+				.title(bookData.get("title").asText().replaceAll("<[^>]*>", ""))
+				.author(bookData.get("author").asText().replaceAll("<[^>]*>", ""))
+				.publisher(StringUtils.defaultIfEmpty(bookData.get("publisher").asText(), null))
 				.isbn(isbn)
 				.publishedAt(publishedAt)
-				.image(StringUtils.defaultIfEmpty(bookData.optString("TITLE_URL"), null))
-				.description(StringUtils.defaultIfEmpty(bookData.optString("BOOK_INTRODUCTION"), null))
-				.category(StringUtils.defaultIfEmpty(bookData.optString("DDC"), null))
+				.image(StringUtils.defaultIfEmpty(bookData.get("image").asText(), null))
+				.description(StringUtils.defaultIfEmpty(bookData.get("description").asText().replaceAll("<[^>]*>", ""), null))
 				.build();
 
+		} catch (BookInformationException e) {
+			throw e;
 		} catch (Exception e) {
-			throw new BookInformationException(ErrorCode.INTERNAL_SERVER_ERROR);
+			log.error("Failed to call Naver Book API", e);
+			throw new BookInformationException(ErrorCode.EXTERNAL_API_ERROR);
 		}
 	}
 

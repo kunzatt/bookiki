@@ -24,15 +24,12 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "book_items")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BookItemEntity {
 
 	@Id
@@ -57,9 +54,6 @@ public class BookItemEntity {
 	@OneToOne(mappedBy = "bookItem")
 	private QrCodeEntity qrCode;
 
-	@Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-	private Boolean deleted = false;
-
 	@PreUpdate
 	protected void onUpdate() {
 		updatedAt = LocalDateTime.now();
@@ -80,20 +74,19 @@ public class BookItemEntity {
 	}
 
 	@Builder
-	public BookItemEntity(BookInformationEntity bookInformation, LocalDateTime purchaseAt,
-		BookStatus bookStatus, LocalDateTime updatedAt, QrCodeEntity qrCode, Boolean deleted,
-		List<BookHistoryEntity> bookHistories) {
+	public BookItemEntity(BookInformationEntity bookInformation,
+		LocalDateTime purchaseAt,
+		BookStatus bookStatus,
+		LocalDateTime updatedAt) {
 		this.bookInformation = bookInformation;
 		this.purchaseAt = purchaseAt;
 		this.bookStatus = bookStatus != null ? bookStatus : BookStatus.AVAILABLE;
 		this.updatedAt = updatedAt;
-		this.qrCode = qrCode;
-		this.deleted = deleted != null ? deleted : false;
-		this.bookHistories = bookHistories != null ? bookHistories : new ArrayList<>();
+		this.bookHistories = new ArrayList<>();
 	}
 
-	public void delete() {
-		this.deleted = true;
+	protected BookItemEntity() {
+		this.bookStatus = BookStatus.AVAILABLE;
+		this.bookHistories = new ArrayList<>();
 	}
-
 }

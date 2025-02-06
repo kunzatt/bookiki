@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -73,9 +72,6 @@ class BookBorrowServiceTest {
 				.willReturn(Optional.of(user));
 			given(bookHistoryRepository.save(any(BookHistoryEntity.class)))
 				.willReturn(history);
-
-			LocalDateTime before = LocalDateTime.now().minusDays(1);
-			when(user.getActiveAt()).thenReturn(before);
 
 			log.info("테스트 데이터 설정 완료: userId={}, bookItemId={}",
 				request.getUserId(), request.getBookItemId());

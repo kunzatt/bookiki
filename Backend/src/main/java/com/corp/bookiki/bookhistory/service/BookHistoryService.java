@@ -97,10 +97,4 @@ public class BookHistoryService {
 	public boolean isBookCurrentlyBorrowed(BookItemEntity bookItem) {
 		return bookHistoryRepository.findCurrentBorrowByBookItem(bookItem).isPresent();
 	}
-
-	public boolean isOverdue(Integer bookHistoryId) {
-		return bookHistoryRepository.findById(bookHistoryId)
-			.map(BookHistoryEntity::getOverdue)
-			.orElseThrow(() -> new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND));
-	}
 }

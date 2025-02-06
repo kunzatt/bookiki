@@ -69,7 +69,7 @@ class ShelfControllerTest {
         when(shelfService.selectAllShelf()).thenReturn(responses);
 
         // when & then
-        mockMvc.perform(get("/admin/shelf/categories")
+        mockMvc.perform(get("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -92,7 +92,7 @@ class ShelfControllerTest {
         when(shelfService.createShelf(any(ShelfCreateRequest.class))).thenReturn(1);
 
         // when & then
-        mockMvc.perform(post("/admin/shelf/categories")
+        mockMvc.perform(post("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -114,7 +114,7 @@ class ShelfControllerTest {
                 .thenThrow(new ShelfException(ErrorCode.INVALID_SHELF_NUMBER));
 
         // when & then
-        mockMvc.perform(post("/admin/shelf/categories")
+        mockMvc.perform(post("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -136,7 +136,7 @@ class ShelfControllerTest {
         doNothing().when(shelfService).updateShelf(any(ShelfUpdateRequest.class));
 
         // when & then
-        mockMvc.perform(put("/admin/shelf/categories")
+        mockMvc.perform(put("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -158,7 +158,7 @@ class ShelfControllerTest {
                 .when(shelfService).updateShelf(any(ShelfUpdateRequest.class));
 
         // when & then
-        mockMvc.perform(put("/admin/shelf/categories")
+        mockMvc.perform(put("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
@@ -175,7 +175,7 @@ class ShelfControllerTest {
         doNothing().when(shelfService).deleteShelf(id);
 
         // when & then
-        mockMvc.perform(delete("/admin/shelf/categories/{id}", id)  // URL 패턴 수정
+        mockMvc.perform(delete("/api/admin/shelf/categories/{id}", id)  // URL 패턴 수정
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())  // 실패 시 결과를 상세히 출력
                 .andExpect(status().isNoContent());
@@ -193,7 +193,7 @@ class ShelfControllerTest {
                 .when(shelfService).deleteShelf(id);
 
         // when & then
-        mockMvc.perform(delete("/admin/shelf/categories/{id}", id)
+        mockMvc.perform(delete("/api/admin/shelf/categories/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isNotFound())
@@ -210,7 +210,7 @@ class ShelfControllerTest {
                 .when(shelfService).deleteShelf(id);
 
         // when & then
-        mockMvc.perform(delete("/admin/shelf/categories/{id}", id)
+        mockMvc.perform(delete("/api/admin/shelf/categories/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
