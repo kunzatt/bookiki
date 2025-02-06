@@ -1,8 +1,10 @@
 package com.corp.bookiki.bookitem.service;
 
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
+import com.corp.bookiki.bookitem.dto.BookItemListResponse;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
@@ -28,6 +30,13 @@ public class BookItemService {
 
 		Page<BookItemEntity> bookItems = bookItemRepository.findAllWithKeyword(keyword, pageRequest);
 		return bookItems.map(BookItemDisplayResponse::from);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<BookItemListResponse> selectBooks(SearchType type, String keyword, int page, int size) {
+		PageRequest pageRequest = PageRequest.of(page, size);
+		Page<BookItemEntity> books = bookItemRepository.searchBooks(type.name(), keyword, pageRequest);
+		return books.map(BookItemListResponse::from);
 	}
 
 	@Transactional

@@ -19,7 +19,7 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
     AND (:keyword IS NULL OR LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) 
     OR LOWER(info.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
     """,
-			countQuery = """
+	countQuery = """
     SELECT COUNT(item) FROM BookItemEntity item 
     JOIN item.bookInformation info 
     WHERE item.deleted = false 
@@ -27,6 +27,22 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
     OR LOWER(info.description) LIKE LOWER(CONCAT('%', :keyword, '%')))
     """)
 	Page<BookItemEntity> findAllWithKeyword(
+			@Param("keyword") String keyword,
+			Pageable pageable
+	);
+
+	@Query(value = """
+    SELECT item FROM BookItemEntity item 
+    JOIN FETCH item.bookInformation info 
+    WHERE item.deleted = false 
+    AND (:type = 'TITLE' AND LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR :type = 'AUTHOR' AND LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR :type = 'PUBLISHER' AND LOWER(info.publisher) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR :type = 'KEYWORD' AND (LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) 
+    OR LOWER(info.description) LIKE LOWER(CONCAT('%', :keyword, '%'))))
+    """)
+	Page<BookItemEntity> searchBooks(
+			@Param("type") String type,
 			@Param("keyword") String keyword,
 			Pageable pageable
 	);

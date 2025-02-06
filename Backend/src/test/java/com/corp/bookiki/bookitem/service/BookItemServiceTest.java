@@ -2,9 +2,11 @@ package com.corp.bookiki.bookitem.service;
 
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
+import com.corp.bookiki.bookitem.dto.BookItemListResponse;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
+import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
@@ -85,6 +87,68 @@ class BookItemServiceTest {
 			// verify도 findByDeletedFalse()로 수정
 			verify(bookItemRepository).findAllWithKeyword(keyword, pageRequest);
 			log.info("도서 아이템 목록 조회 테스트 성공");
+		}
+
+		@Nested
+		@DisplayName("도서 아이템 검색 테스트")
+		class SearchBooks {
+			@Test
+			void searchBooks_ShouldReturnPagedResults() {
+				// given
+				SearchType type = SearchType.TITLE;
+				String keyword = "test";
+				int page = 0;
+				int size = 10;
+				PageRequest pageRequest = PageRequest.of(page, size);
+
+				BookInformationEntity bookInfo = BookInformationEntity.builder()
+						.title("Test Book")
+						.author("Test Author")
+						.isbn("1234567890")
+						.build();
+				ReflectionTestUtils.setField(bookInfo, "id", 1);
+
+				BookItemEntity mockEntity = BookItemEntity.builder()
+						.bookInformation(bookInfo)
+						.purchaseAt(LocalDateTime.now())
+						.bookStatus(BookStatus.AVAILABLE)
+						.deleted(false)
+						.build();
+				ReflectionTestUtils.setField(mockEntity, "id", 1);
+
+				Page<BookItemEntity> mockPage = new PageImpl<>(List.of(mockEntity));
+
+				given(bookItemRepository.searchBooks(type.name(), keyword, pageRequest))
+						.willReturn(mockPage);
+
+				// when
+				Page<BookItemListResponse> result = bookItemService.selectBooks(type, keyword, page, size);
+
+				// then
+				assertThat(result).isNotNull();
+				assertThat(result.getContent()).hasSize(1);
+				assertThat(result.getContent().get(0).getTitle()).isEqualTo("Test Book");
+				verify(bookItemRepository).searchBooks(type.name(), keyword, pageRequest);
+			}
+
+			@Test
+			void searchBooks_WithEmptyResult_ShouldReturnEmptyPage() {
+				// given
+				SearchType type = SearchType.TITLE;
+				String keyword = "nonexistent";
+				PageRequest pageRequest = PageRequest.of(0, 10);
+
+				given(bookItemRepository.searchBooks(type.name(), keyword, pageRequest))
+						.willReturn(new PageImpl<>(List.of()));
+
+				// when
+				Page<BookItemListResponse> result = bookItemService.selectBooks(type, keyword, 0, 10);
+
+				// then
+				assertThat(result).isNotNull();
+				assertThat(result.getContent()).isEmpty();
+				verify(bookItemRepository).searchBooks(type.name(), keyword, pageRequest);
+			}
 		}
 
 		@Nested

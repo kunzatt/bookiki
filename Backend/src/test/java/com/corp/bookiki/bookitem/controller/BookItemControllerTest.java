@@ -2,9 +2,11 @@ package com.corp.bookiki.bookitem.controller;
 
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
+import com.corp.bookiki.bookitem.dto.BookItemListResponse;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
+import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
@@ -36,8 +38,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -116,6 +117,74 @@ class BookItemControllerTest {
 			log.info("도서 아이템 목록 조회 테스트 성공");
 		}
 
+	}
+
+	@Nested
+	@DisplayName("도서 아이템 검색 테스트")
+	class SearchBooks {
+		@Test
+		@WithMockUser
+		@DisplayName("정상적인 도서 아이템 검색 시 성공")
+		void searchBooks_WhenValidRequest_ThenReturnsOk() throws Exception {
+			// given
+			BookInformationEntity bookInfo = BookInformationEntity.builder()
+					.title("Test Book")
+					.author("Test Author")
+					.isbn("1234567890")
+					.build();
+			ReflectionTestUtils.setField(bookInfo, "id", 1);
+
+			BookItemEntity mockEntity = BookItemEntity.builder()
+					.bookInformation(bookInfo)
+					.purchaseAt(LocalDateTime.now())
+					.bookStatus(BookStatus.AVAILABLE)
+					.deleted(false)
+					.build();
+			ReflectionTestUtils.setField(mockEntity, "id", 1);
+
+			BookItemListResponse mockResponse = BookItemListResponse.from(mockEntity);
+			Page<BookItemListResponse> mockPage = new PageImpl<>(List.of(mockResponse));
+
+			given(bookItemService.selectBooks(any(SearchType.class), anyString(), anyInt(), anyInt()))
+					.willReturn(mockPage);
+
+			// when & then
+			mockMvc.perform(get("/api/books")
+							.with(csrf())
+							.param("page", "0")
+							.param("size", "10")
+							.param("type", "TITLE")
+							.param("keyword", "test")
+							.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isOk());
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("잘못된 SearchType으로 요청 시 실패")
+		void searchBooks_WhenInvalidSearchType_ThenReturnsBadRequest() throws Exception {
+			mockMvc.perform(get("/api/books")
+							.with(csrf())
+							.param("page", "0")
+							.param("size", "10")
+							.param("type", "INVALID_TYPE")
+							.param("keyword", "test")
+							.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isBadRequest());
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("키워드 없이 요청 시 실패")
+		void searchBooks_WhenNoKeyword_ThenReturnsBadRequest() throws Exception {
+			mockMvc.perform(get("/api/books")
+							.with(csrf())
+							.param("page", "0")
+							.param("size", "10")
+							.param("type", "TITLE")
+							.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isBadRequest());
+		}
 	}
 
 	@Nested

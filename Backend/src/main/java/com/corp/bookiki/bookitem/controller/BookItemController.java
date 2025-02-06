@@ -1,7 +1,9 @@
 package com.corp.bookiki.bookitem.controller;
 
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
+import com.corp.bookiki.bookitem.dto.BookItemListResponse;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
+import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,28 @@ import org.springframework.web.bind.annotation.*;
 public class BookItemController {
 
 	private final BookItemService bookItemService;
+
+	@Operation(summary = "도서 아이템 목록 검색", description = "검색 타입과 키워드로 도서 아이템 목록을 조회합니다.")
+	@ApiResponses({
+			@ApiResponse(
+					responseCode = "200",
+					description = "도서 아이템 목록 검색 조회 성공",
+					content = @Content(
+							mediaType = "application/json",
+							schema = @Schema(implementation = BookItemListResponse.class)
+					)
+			)
+	})
+	@GetMapping
+	public ResponseEntity<?> selectBooks(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam SearchType type,
+			@RequestParam String keyword
+	) {
+		Page<BookItemListResponse> books = bookItemService.selectBooks(type, keyword, page, size);
+		return ResponseEntity.ok(books);
+	}
 
 	@Operation(summary = "도서 아이템 목록 조회", description = "페이지네이션과 정렬 조건을 통해 도서 아이템 목록을 조회합니다.")
 	@ApiResponses({
