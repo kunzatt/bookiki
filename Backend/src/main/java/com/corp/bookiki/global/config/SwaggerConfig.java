@@ -40,11 +40,12 @@ public class SwaggerConfig {
 				new Server().url("").description("Local server")
 			))
 			.components(new Components()
-					.addSecuritySchemes("cookieAuth",
-							new SecurityScheme()
-									.type(SecurityScheme.Type.APIKEY)
-									.in(SecurityScheme.In.COOKIE)
-									.name("access_token")))
-			.addSecurityItem(new SecurityRequirement().addList("cookieAuth"));
+				.addSecuritySchemes("bearerAuth",
+					new SecurityScheme()
+						.type(SecurityScheme.Type.HTTP)
+						.scheme("bearer")
+						.bearerFormat("JWT")
+						.in(SecurityScheme.In.HEADER)))
+			.addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
 	}
 }
