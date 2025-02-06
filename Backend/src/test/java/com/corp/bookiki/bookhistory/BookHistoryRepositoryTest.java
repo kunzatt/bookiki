@@ -81,9 +81,7 @@ class BookHistoryRepositoryTest {
 			.returnedAt(null)
 			.build();
 
-		loanPolicy = LoanPolicyEntity.builder()
-			.loanPeriod(7)
-			.build();
+		loanPolicy = LoanPolicyEntity.builder().loanPeriod(7).build();
 	}
 
 	@Test
@@ -102,14 +100,12 @@ class BookHistoryRepositoryTest {
 		String keyword = "Spring";
 		PageRequest pageRequest = PageRequest.of(0, 10);
 
-		Page<BookHistoryEntity> result = bookHistoryRepository.searchBookHistoryWithCount(
-			startDate, endDate, keyword, pageRequest);
+		Page<BookHistoryEntity> result = bookHistoryRepository.searchBookHistoryWithCount(startDate, endDate, keyword,
+			pageRequest);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getContent()).isNotEmpty();
-		assertThat(result.getContent().get(0).getBorrowedAt())
-			.isAfterOrEqualTo(startDate)
-			.isBeforeOrEqualTo(endDate);
+		assertThat(result.getContent().get(0).getBorrowedAt()).isAfterOrEqualTo(startDate).isBeforeOrEqualTo(endDate);
 	}
 
 	@Test
@@ -201,8 +197,8 @@ class BookHistoryRepositoryTest {
 		String keyword = "Spring";
 		PageRequest pageRequest = PageRequest.of(0, 10);
 
-		Page<BookHistoryEntity> result = bookHistoryRepository.searchUserBookHistoryWithCount(
-			user.getId(), startDate, endDate, keyword, pageRequest);
+		Page<BookHistoryEntity> result = bookHistoryRepository.searchUserBookHistoryWithCount(user.getId(), startDate,
+			endDate, keyword, pageRequest);
 
 		assertThat(result).isNotNull();
 		assertThat(result.getContent()).isNotEmpty();
@@ -227,8 +223,91 @@ class BookHistoryRepositoryTest {
 		List<BookHistoryEntity> result = bookHistoryRepository.findByBorrowedAtBetween(startDate, endDate, limit);
 
 		assertThat(result).isNotEmpty();
-		assertThat(result.get(0).getBorrowedAt())
-			.isAfterOrEqualTo(startDate)
-			.isBeforeOrEqualTo(endDate);
+		assertThat(result.get(0).getBorrowedAt()).isAfterOrEqualTo(startDate).isBeforeOrEqualTo(endDate);
+	}
+
+	@Test
+	void findAllForAdmin() {
+		entityManager.persist(bookInformation);
+		entityManager.persist(user);
+		entityManager.persist(bookItem);
+
+		bookHistory = BookHistoryEntity.builder()
+			.bookItem(bookItem)
+			.user(user)
+			.borrowedAt(now)
+			.returnedAt(null)
+			.overdue(false)
+			.build();
+
+		entityManager.persist(bookHistory);
+
+		entityManager.flush();
+		entityManager.clear();
+
+		LocalDateTime startDate = now.minusMinutes(1);
+		LocalDateTime endDate = now.plusMinutes(1);
+		PageRequest pageRequest = PageRequest.of(0, 10);
+
+		Page<BookHistoryEntity> result = bookHistoryRepository.findAllForAdmin(startDate, endDate, user.getUserName(),
+			user.getCompanyId(), false, pageRequest);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getContent()).isNotEmpty();
+	}
+
+	@Test
+	void findAllForUser() {
+		entityManager.persist(bookInformation);
+		entityManager.persist(user);
+		entityManager.persist(bookItem);
+
+		bookHistory = BookHistoryEntity.builder()
+			.bookItem(bookItem)
+			.user(user)
+			.borrowedAt(now)
+			.returnedAt(null)
+			.overdue(false)
+			.build();
+
+		bookHistoryRepository.save(bookHistory);
+		entityManager.flush();
+		entityManager.clear();
+
+		LocalDateTime startDate = now.minusMinutes(1);
+		LocalDateTime endDate = now.plusMinutes(1);
+		PageRequest pageRequest = PageRequest.of(0, 10);
+
+		Page<BookHistoryEntity> result = bookHistoryRepository.findAllForUser(user.getEmail(), startDate, endDate,
+			false, pageRequest);
+
+		assertThat(result).isNotNull();
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getContent().get(0).getUser().getEmail()).isEqualTo(user.getEmail());
+	}
+
+	@Test
+	void findCurrentBorrowsByUserEmail() {
+		entityManager.persist(bookInformation);
+		entityManager.persist(user);
+		entityManager.persist(bookItem);
+
+		bookHistory = BookHistoryEntity.builder()
+			.bookItem(bookItem)
+			.user(user)
+			.borrowedAt(now)
+			.returnedAt(null)
+			.overdue(false)
+			.build();
+
+		bookHistory = bookHistoryRepository.save(bookHistory);
+		entityManager.flush();
+		entityManager.clear();
+
+		List<BookHistoryEntity> result = bookHistoryRepository.findCurrentBorrowsByUserEmail(user.getEmail(), null);
+
+		assertThat(result).isNotEmpty();
+		assertThat(result.get(0).getUser().getEmail()).isEqualTo(user.getEmail());
+		assertThat(result.get(0).getReturnedAt()).isNull();
 	}
 }

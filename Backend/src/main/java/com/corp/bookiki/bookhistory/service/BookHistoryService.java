@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 @Slf4j
 public class BookHistoryService {
 	private final BookHistoryRepository bookHistoryRepository;
@@ -49,16 +49,16 @@ public class BookHistoryService {
 		}
 	}
 
-	public List<BookHistoryResponse> getCurrentBorrowedBooks(AuthUser authUser, Boolean onlyOverdue) {
+	public List<BookHistoryResponse> getCurrentBorrowedBooks(AuthUser authUser, Boolean overdue) {
 		try {
 			if (authUser == null || authUser.getEmail() == null) {
 				throw new UserException(ErrorCode.UNAUTHORIZED);
 			}
 
-			log.debug("현재 대출 중인 도서 조회 시작 - 사용자 email: {}, 연체만 조회: {}", authUser.getEmail(), onlyOverdue);
+			log.debug("현재 대출 중인 도서 조회 시작 - 사용자 email: {}, 연체만 조회: {}", authUser.getEmail(), overdue);
 
 			List<BookHistoryEntity> currentBorrows = bookHistoryRepository.findCurrentBorrowsByUserEmail(
-				authUser.getEmail(), onlyOverdue);
+				authUser.getEmail(), overdue);
 
 			log.debug("현재 대출 중인 도서 조회 완료 - 사용자 email: {}, 총 {} 건", authUser.getEmail(), currentBorrows.size());
 

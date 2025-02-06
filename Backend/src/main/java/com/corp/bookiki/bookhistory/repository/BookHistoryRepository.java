@@ -172,10 +172,10 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		JOIN FETCH bi.bookInformation
 		WHERE bh.user.email = :userEmail
 		AND bh.returnedAt IS NULL
-		AND (:onlyOverdue IS NULL OR (:onlyOverdue = true AND bh.overdue = true))
+		AND (:overdue IS NULL OR (:overdue = true AND bh.overdue = true))
 		ORDER BY bh.borrowedAt DESC
 		""")
 	List<BookHistoryEntity> findCurrentBorrowsByUserEmail(@Param("userEmail") String userEmail,
-		@Param("onlyOverdue") Boolean onlyOverdue);
+		@Param("overdue") Boolean overdue);
 
 }

@@ -27,6 +27,8 @@ import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
+import com.corp.bookiki.global.error.exception.UserException;
+import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -43,12 +45,14 @@ class BookHistoryServiceTest {
 	@DisplayName("도서 대출 기록 조회 테스트")
 	class GetBookHistories {
 		@Test
-		@DisplayName("정상적인 기간 조회 시 성공")
-		void getBookHistories_Success() {
+		@DisplayName("관리자용 대출 기록 조회 성공")
+		void getAdminBookHistories_Success() {
 			// given
 			LocalDate startDate = LocalDate.now().minusDays(7);
 			LocalDate endDate = LocalDate.now();
-			String keyword = "Spring";
+			String userName = "Test User";
+			String companyId = "EMP001";
+			Boolean isOverdue = false;
 			Pageable pageable = PageRequest.of(0, 10);
 
 			BookInformationEntity bookInfo = BookInformationEntity.builder()
@@ -77,46 +81,59 @@ class BookHistoryServiceTest {
 
 			Page<BookHistoryEntity> page = new PageImpl<>(List.of(entity));
 
-			given(bookHistoryRepository.searchBookHistoryWithCount(
-				startDate.atStartOfDay(),
-				endDate.atTime(23, 59, 59),
-				keyword,
-				pageable
+			given(bookHistoryRepository.findAllForAdmin(
+				any(LocalDateTime.class),
+				any(LocalDateTime.class),
+				eq(userName),
+				eq(companyId),
+				eq(isOverdue),
+				eq(pageable)
 			)).willReturn(page);
 
 			// when
-			Page<BookHistoryResponse> result = bookHistoryService.getBookHistories(
-				startDate, endDate, keyword, pageable);
+			Page<BookHistoryResponse> result = bookHistoryService.getAdminBookHistories(
+				startDate, endDate, userName, companyId, isOverdue, pageable);
 
 			// then
 			assertThat(result).isNotNull();
 			assertThat(result.getContent()).hasSize(1);
-			verify(bookHistoryRepository).searchBookHistoryWithCount(
+			verify(bookHistoryRepository).findAllForAdmin(
 				any(LocalDateTime.class),
 				any(LocalDateTime.class),
-				eq(keyword),
+				eq(userName),
+				eq(companyId),
+				eq(isOverdue),
 				eq(pageable)
 			);
 		}
 
 		@Test
-		@DisplayName("repository 예외 발생 시 BookHistoryException 발생")
-		void getBookHistories_WhenRepositoryThrowsException_ThenThrowBookHistoryException() {
+		@DisplayName("관리자 대출 기록 조회 중 오류 발생 시 BookHistoryException 발생")
+		void getAdminBookHistories_RepositoryError() {
 			// given
 			LocalDate startDate = LocalDate.now().minusDays(7);
 			LocalDate endDate = LocalDate.now();
 			Pageable pageable = PageRequest.of(0, 10);
 
-			given(bookHistoryRepository.searchBookHistoryWithCount(
+			given(bookHistoryRepository.findAllForAdmin(
 				any(LocalDateTime.class),
 				any(LocalDateTime.class),
 				any(),
-				any()
+				any(),
+				any(),
+				eq(pageable)
 			)).willThrow(new RuntimeException("Database error"));
 
 			// when & then
 			assertThatThrownBy(() ->
-				bookHistoryService.getBookHistories(startDate, endDate, null, pageable)
+				bookHistoryService.getAdminBookHistories(
+					startDate,
+					endDate,
+					null,
+					null,
+					null,
+					pageable
+				)
 			).isInstanceOf(BookHistoryException.class);
 		}
 	}
@@ -125,13 +142,15 @@ class BookHistoryServiceTest {
 	@DisplayName("사용자별 대출 기록 조회 테스트")
 	class GetUserBookHistories {
 		@Test
-		@DisplayName("사용자별 대출 기록 정상 조회")
+		@DisplayName("사용자 대출 기록 조회 성공")
 		void getUserBookHistories_Success() {
 			// given
-			Integer userId = 1;
+			AuthUser authUser = mock(AuthUser.class);
+			when(authUser.getEmail()).thenReturn("test@bookiki.com");
+
 			LocalDate startDate = LocalDate.now().minusDays(7);
 			LocalDate endDate = LocalDate.now();
-			String keyword = "Spring";
+			Boolean overdue = false;
 			Pageable pageable = PageRequest.of(0, 10);
 
 			BookInformationEntity bookInfo = BookInformationEntity.builder()
@@ -160,17 +179,17 @@ class BookHistoryServiceTest {
 
 			Page<BookHistoryEntity> page = new PageImpl<>(List.of(entity));
 
-			given(bookHistoryRepository.searchUserBookHistoryWithCount(
-				eq(userId),
+			given(bookHistoryRepository.findAllForUser(
+				eq(authUser.getEmail()),
 				any(LocalDateTime.class),
 				any(LocalDateTime.class),
-				eq(keyword),
+				eq(overdue),
 				eq(pageable)
 			)).willReturn(page);
 
 			// when
 			Page<BookHistoryResponse> result = bookHistoryService.getUserBookHistories(
-				userId, startDate, endDate, keyword, pageable);
+				authUser, startDate, endDate, overdue, pageable);
 
 			// then
 			assertThat(result).isNotNull();
@@ -199,20 +218,14 @@ class BookHistoryServiceTest {
 	}
 
 	@Nested
-	@DisplayName("사용자 현재 대출 목록 조회 테스트")
-	class GetCurrentBorrowsByUser {
+	@DisplayName("현재 대출 목록 조회 테스트")
+	class GetCurrentBorrowedBooks {
 		@Test
-		@DisplayName("사용자 현재 대출 목록 조회 성공")
-		void getCurrentBorrowsByUser_Success() {
+		@DisplayName("사용자의 현재 대출 목록 조회 성공")
+		void getCurrentBorrowedBooks_Success() {
 			// given
-			UserEntity user = UserEntity.builder()
-				.email("test@bookiki.com")
-				.password("password")
-				.companyId("EMP001")
-				.userName("Test User")
-				.role(Role.USER)
-				.provider(Provider.BOOKIKI)
-				.build();
+			AuthUser authUser = mock(AuthUser.class);
+			when(authUser.getEmail()).thenReturn("test@bookiki.com");
 
 			BookInformationEntity bookInfo = BookInformationEntity.builder()
 				.title("Spring Boot in Action")
@@ -221,22 +234,103 @@ class BookHistoryServiceTest {
 				.build();
 
 			BookItemEntity bookItem = mock(BookItemEntity.class);
-			when(bookItem.getId()).thenReturn(1);
 			when(bookItem.getBookInformation()).thenReturn(bookInfo);
+
+			UserEntity user = UserEntity.builder()
+				.email("test@bookiki.com")
+				.userName("Test User")
+				.companyId("EMP001")
+				.role(Role.USER)
+				.provider(Provider.BOOKIKI)
+				.build();
 
 			BookHistoryEntity history = mock(BookHistoryEntity.class);
 			when(history.getBookItem()).thenReturn(bookItem);
 			when(history.getUser()).thenReturn(user);
 			when(history.getBorrowedAt()).thenReturn(LocalDateTime.now());
+			when(history.getReturnedAt()).thenReturn(null);
 
-			given(bookHistoryRepository.findCurrentBorrowsByUser(user))
-				.willReturn(List.of(history));
+			given(bookHistoryRepository.findCurrentBorrowsByUserEmail(
+				eq("test@bookiki.com"),
+				isNull()
+			)).willReturn(List.of(history));
 
 			// when
-			List<BookHistoryResponse> result = bookHistoryService.getCurrentBorrowsByUser(user);
+			List<BookHistoryResponse> result = bookHistoryService.getCurrentBorrowedBooks(authUser, null);
 
 			// then
 			assertThat(result).hasSize(1);
+			verify(bookHistoryRepository).findCurrentBorrowsByUserEmail(
+				eq("test@bookiki.com"),
+				isNull()
+			);
+		}
+
+		@Test
+		@DisplayName("인증되지 않은 사용자의 경우 UserException 발생")
+		void getCurrentBorrowedBooks_Unauthorized() {
+			// given
+			AuthUser authUser = null;
+
+			// when & then
+			assertThatThrownBy(() ->
+				bookHistoryService.getCurrentBorrowedBooks(authUser, null)
+			).isInstanceOf(UserException.class);
+		}
+
+		@Test
+		@DisplayName("대출 목록 조회 중 오류 발생 시 BookHistoryException 발생")
+		void getCurrentBorrowedBooks_RepositoryError() {
+			// given
+			AuthUser authUser = mock(AuthUser.class);
+			when(authUser.getEmail()).thenReturn("test@bookiki.com");
+
+			given(bookHistoryRepository.findCurrentBorrowsByUserEmail(
+				eq("test@bookiki.com"),
+				isNull()
+			)).willThrow(new RuntimeException("Database error"));
+
+			// when & then
+			assertThatThrownBy(() ->
+				bookHistoryService.getCurrentBorrowedBooks(authUser, null)
+			).isInstanceOf(BookHistoryException.class);
+		}
+	}
+
+	@Nested
+	@DisplayName("연체 상태 확인 테스트")
+	class IsOverdue {
+		@Test
+		@DisplayName("특정 대출 기록의 연체 상태 확인")
+		void isOverdue_Success() {
+			// given
+			Integer bookHistoryId = 1;
+			BookHistoryEntity history = mock(BookHistoryEntity.class);
+			when(history.getOverdue()).thenReturn(true);
+
+			given(bookHistoryRepository.findById(bookHistoryId))
+				.willReturn(Optional.of(history));
+
+			// when
+			boolean result = bookHistoryService.isOverdue(bookHistoryId);
+
+			// then
+			assertThat(result).isTrue();
+		}
+
+		@Test
+		@DisplayName("존재하지 않는 대출 기록 조회 시 예외 발생")
+		void isOverdue_NotFound() {
+			// given
+			Integer bookHistoryId = 1;
+
+			given(bookHistoryRepository.findById(bookHistoryId))
+				.willReturn(Optional.empty());
+
+			// when & then
+			assertThatThrownBy(() ->
+				bookHistoryService.isOverdue(bookHistoryId)
+			).isInstanceOf(BookHistoryException.class);
 		}
 	}
 }

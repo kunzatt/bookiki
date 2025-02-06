@@ -23,7 +23,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,6 +35,7 @@ import com.corp.bookiki.bookhistory.enitity.PeriodType;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.util.CookieUtil;
 
 import lombok.extern.slf4j.Slf4j;
@@ -89,11 +89,13 @@ class BookHistoryControllerTest {
 				1
 			);
 
-			given(bookHistoryService.getBookHistories(
-				any(LocalDate.class),
-				any(LocalDate.class),
-				any(),
-				any(Pageable.class)
+			given(bookHistoryService.getAdminBookHistories(
+				startDate,
+				endDate,
+				null,
+				null,
+				null,
+				PageRequest.of(0, 20)
 			)).willReturn(page);
 
 			// when & then
@@ -118,11 +120,12 @@ class BookHistoryControllerTest {
 
 			Page<BookHistoryResponse> page = new PageImpl<>(List.of(), PageRequest.of(0, 20), 0);
 
-			given(bookHistoryService.getBookHistories(
-				any(LocalDate.class),
-				any(LocalDate.class),
-				eq(keyword),
-				any(Pageable.class)
+			given(bookHistoryService.getUserBookHistories(
+				any(AuthUser.class),
+				startDate,
+				endDate,
+				null,
+				PageRequest.of(0, 20)
 			)).willReturn(page);
 
 			// when & then
