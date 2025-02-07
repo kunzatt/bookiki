@@ -1,6 +1,7 @@
 package com.corp.bookiki.bookhistory.history;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,7 +52,8 @@ import com.corp.bookiki.util.CookieUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @WebMvcTest(BookHistoryController.class)
-@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class, CurrentUserArgumentResolver.class, WebMvcConfig.class})
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class,
+	CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
 @DisplayName("도서 대출 기록 컨트롤러 테스트")
 @Slf4j
@@ -74,6 +76,7 @@ class BookHistoryControllerTest {
 	private Authentication userAuth;
 	private UserEntity userEntity;
 	private UserEntity adminEntity;
+
 	@Autowired
 	private CurrentUserArgumentResolver currentUserArgumentResolver;
 
@@ -96,7 +99,6 @@ class BookHistoryControllerTest {
 			.build();
 		ReflectionTestUtils.setField(adminEntity, "id", 1);
 
-		// UserRepository 모킹
 		Mockito.when(userRepository.findByEmail(userEntity.getEmail())).thenReturn(Optional.of(userEntity));
 		Mockito.when(userRepository.findByEmail(adminEntity.getEmail())).thenReturn(Optional.of(adminEntity));
 
@@ -114,7 +116,10 @@ class BookHistoryControllerTest {
 
 		pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "borrowedAt"));
 
-		Mockito.when(currentUserArgumentResolver.supportsParameter(any())).thenReturn(true);
+		Mockito.lenient().when(currentUserArgumentResolver.resolveArgument(any(), any(), any(), any()))
+			.thenReturn(userEntity);
+
+		Mockito.lenient().when(currentUserArgumentResolver.supportsParameter(any())).thenReturn(true);
 	}
 
 	@Test
@@ -137,8 +142,8 @@ class BookHistoryControllerTest {
 
 		Page<BookHistoryResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-		Mockito.when(bookHistoryService.getAdminBookHistories(any(), any(), any(), any(), any(), any()))
-			.thenReturn(page);
+		given(bookHistoryService.getAdminBookHistories(any(), any(), any(), any(), any(), any()))
+			.willReturn(page);
 
 		mockMvc.perform(get("/api/admin/book-histories")
 				.param("periodType", PeriodType.LAST_MONTH.name())
@@ -159,9 +164,6 @@ class BookHistoryControllerTest {
 	@WithMockUser
 	@DisplayName("일반 사용자의 도서 대출 기록 조회 성공")
 	void getUserBookHistories_WhenValidRequest_ThenReturnsOk() throws Exception {
-		Mockito.when(currentUserArgumentResolver.resolveArgument(any(), any(), any(), any()))
-			.thenReturn(userEntity);
-
 		BookHistoryResponse response = BookHistoryResponse.builder()
 			.id(1)
 			.bookItemId(100)
@@ -175,10 +177,9 @@ class BookHistoryControllerTest {
 
 		Page<BookHistoryResponse> page = new PageImpl<>(List.of(response), pageable, 1);
 
-		Mockito.when(bookHistoryService.getUserBookHistories(any(), any(), any(), any(), any()))
-			.thenReturn(page);
+		given(bookHistoryService.getUserBookHistories(any(), any(), any(), any(), any()))
+			.willReturn(page);
 
-		// Perform test
 		mockMvc.perform(get("/api/user/book-histories")
 				.param("page", "0")
 				.param("size", "20")
@@ -197,9 +198,6 @@ class BookHistoryControllerTest {
 	@WithMockUser
 	@DisplayName("현재 대출 중인 도서 목록 조회 성공")
 	void getCurrentBorrowedBooks_WhenValidRequest_ThenReturnsOk() throws Exception {
-		Mockito.when(currentUserArgumentResolver.resolveArgument(any(), any(), any(), any()))
-			.thenReturn(userEntity);
-
 		BookHistoryResponse response = BookHistoryResponse.builder()
 			.id(1)
 			.bookItemId(100)
@@ -212,8 +210,8 @@ class BookHistoryControllerTest {
 
 		List<BookHistoryResponse> responses = List.of(response);
 
-		Mockito.when(bookHistoryService.getCurrentBorrowedBooks(any(), any()))
-			.thenReturn(responses);
+		given(bookHistoryService.getCurrentBorrowedBooks(any(), any()))
+			.willReturn(responses);
 
 		mockMvc.perform(get("/api/user/book-histories/current")
 				.param("onlyOverdue", "false")
@@ -229,9 +227,6 @@ class BookHistoryControllerTest {
 	@WithMockUser
 	@DisplayName("권한 없는 사용자의 관리자 API 접근 시 실패")
 	void getAdminBookHistories_WhenUnauthorized_ThenReturnsForbidden() throws Exception {
-		Mockito.when(currentUserArgumentResolver.resolveArgument(any(), any(), any(), any()))
-			.thenReturn(userEntity);
-
 		mockMvc.perform(get("/api/admin/book-histories")
 				.param("periodType", PeriodType.LAST_MONTH.name())
 				.contentType(MediaType.APPLICATION_JSON)
@@ -244,9 +239,6 @@ class BookHistoryControllerTest {
 	@WithMockUser
 	@DisplayName("잘못된 기간 타입으로 조회 시 실패")
 	void getUserBookHistories_WhenInvalidPeriodType_ThenReturnsBadRequest() throws Exception {
-		Mockito.when(currentUserArgumentResolver.resolveArgument(any(), any(), any(), any()))
-			.thenReturn(userEntity);
-
 		mockMvc.perform(get("/api/user/book-histories")
 				.param("periodType", "INVALID_PERIOD")
 				.contentType(MediaType.APPLICATION_JSON)

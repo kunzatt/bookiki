@@ -249,7 +249,7 @@ class BookHistoryRepositoryTest {
 		LocalDateTime endDate = now.plusMinutes(1);
 		PageRequest pageRequest = PageRequest.of(0, 10);
 
-		Page<BookHistoryEntity> result = bookHistoryRepository.findAllForAdmin(startDate, endDate, user.getUserName(),
+		Page<BookHistoryEntity> result = bookHistoryRepository.findAllBookHistoriesForAdmin(startDate, endDate, user.getUserName(),
 			user.getCompanyId(), false, pageRequest);
 
 		assertThat(result).isNotNull();
@@ -278,7 +278,7 @@ class BookHistoryRepositoryTest {
 		LocalDateTime endDate = now.plusMinutes(1);
 		PageRequest pageRequest = PageRequest.of(0, 10);
 
-		Page<BookHistoryEntity> result = bookHistoryRepository.findAllForUser(user.getEmail(), startDate, endDate,
+		Page<BookHistoryEntity> result = bookHistoryRepository.findAllForUser(user.getId(), startDate, endDate,
 			false, pageRequest);
 
 		assertThat(result).isNotNull();
@@ -287,7 +287,7 @@ class BookHistoryRepositoryTest {
 	}
 
 	@Test
-	void findCurrentBorrowsByUserEmail() {
+	void findCurrentBorrowsByUserId() {
 		entityManager.persist(bookInformation);
 		entityManager.persist(user);
 		entityManager.persist(bookItem);
@@ -304,7 +304,7 @@ class BookHistoryRepositoryTest {
 		entityManager.flush();
 		entityManager.clear();
 
-		List<BookHistoryEntity> result = bookHistoryRepository.findCurrentBorrowsByUserEmail(user.getEmail(), null);
+		List<BookHistoryEntity> result = bookHistoryRepository.findCurrentBorrowsByUserId(user.getId(), null);
 
 		assertThat(result).isNotEmpty();
 		assertThat(result.get(0).getUser().getEmail()).isEqualTo(user.getEmail());
