@@ -7,13 +7,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "chatbot_feedback")
+@Table(name = "chatbot_feedbacks")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@EntityListeners(AuditingEntityListener.class)
 public class ChatbotFeedbackEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,15 +38,15 @@ public class ChatbotFeedbackEntity {
     private FeedbackStatus status;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
-    private boolean deleted; // false가 0으로, true가 1로 자동 변환
+    private boolean deleted;
 
     @Builder
     public ChatbotFeedbackEntity(int userId, String originalIntent,
@@ -54,8 +56,6 @@ public class ChatbotFeedbackEntity {
         this.feedbackMessage = feedbackMessage;
         this.category = category;
         this.status = FeedbackStatus.PENDING;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
         this.deleted = false;
     }
 

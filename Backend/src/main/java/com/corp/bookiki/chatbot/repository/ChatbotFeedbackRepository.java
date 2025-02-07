@@ -12,15 +12,15 @@ import java.util.List;
 @Repository
 public interface ChatbotFeedbackRepository extends JpaRepository<ChatbotFeedbackEntity, Integer>, JpaSpecificationExecutor<ChatbotFeedbackEntity> {
 
-    // 상태로 검색
-    List<ChatbotFeedbackEntity> findByStatus(FeedbackStatus status);
+    // 상태로 검색 (삭제되지 않은 것만)
+    List<ChatbotFeedbackEntity> findByStatusAndDeletedFalseOrderByIdDesc(FeedbackStatus status);
 
-    // 카테고리로 검색
-    List<ChatbotFeedbackEntity> findByCategory(String category);
+    // 카테고리로 검색 (삭제되지 않은 것만)
+    List<ChatbotFeedbackEntity> findByCategoryAndDeletedFalseOrderByIdDesc(String category);
 
-    // 날짜 범위로 검색
-    List<ChatbotFeedbackEntity> findByCreatedAtBetween(LocalDateTime startDate, LocalDateTime endDate);
+    // 날짜 범위로 검색 (삭제되지 않은 것만)
+    List<ChatbotFeedbackEntity> findByCreatedAtBetweenAndDeletedFalseOrderByIdDesc(LocalDateTime startDate, LocalDateTime endDate);
 
-    // 사용자 ID로 검색
-    List<ChatbotFeedbackEntity> findByUserIdOrderByIdDesc(int userId);
+    // 사용자 ID로 검색 (삭제되지 않은 것만)
+    List<ChatbotFeedbackEntity> findByUserIdAndDeletedFalseOrderByIdDesc(int userId);
 }

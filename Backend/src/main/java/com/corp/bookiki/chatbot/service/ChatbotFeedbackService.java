@@ -1,10 +1,12 @@
 package com.corp.bookiki.chatbot.service;
 
+import com.corp.bookiki.chatbot.dto.ChatbotFeedbackResponse;
 import com.corp.bookiki.chatbot.entity.ChatbotFeedbackEntity;
 import com.corp.bookiki.chatbot.entity.FeedbackStatus;
 import com.corp.bookiki.chatbot.repository.ChatbotFeedbackRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.ChatbotException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -12,6 +14,7 @@ import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -28,7 +31,7 @@ public class ChatbotFeedbackService {
     private final ChatbotFeedbackRepository chatbotFeedbackRepository;
 
     // 모든 피드백 조회 (페이지네이션, 필터링 적용)
-    public Page<ChatbotFeedbackEntity> selectAllFeedbacks(
+    public Page<ChatbotFeedbackResponse> selectAllFeedbacks(
             FeedbackStatus status,
             String category,
             LocalDateTime startDate,
@@ -44,17 +47,16 @@ public class ChatbotFeedbackService {
 
                     List<Predicate> predicates = new ArrayList<>();
 
-                    // 상태 필터
+                    predicates.add(criteriaBuilder.equal(root.get("deleted"), false));
+
                     if (status != null) {
                         predicates.add(criteriaBuilder.equal(root.get("status"), status));
                     }
 
-                    // 카테고리 필터
                     if (category != null && !category.isEmpty()) {
                         predicates.add(criteriaBuilder.equal(root.get("category"), category));
                     }
 
-                    // 날짜 범위 필터
                     if (startDate != null && endDate != null) {
                         predicates.add(criteriaBuilder.between(root.get("createdAt"), startDate, endDate));
                     }
@@ -65,7 +67,13 @@ public class ChatbotFeedbackService {
                 }
             };
 
-            return chatbotFeedbackRepository.findAll(spec, pageable);
+            Page<ChatbotFeedbackEntity> entityPage = chatbotFeedbackRepository.findAll(spec, pageable);
+            return new PageImpl<>(
+                    convertToResponseList(entityPage.getContent()),
+                    pageable,
+                    entityPage.getTotalElements()
+            );
+
         } catch (Exception e) {
             log.error("피드백 목록 조회 중 오류 발생: {}", e.getMessage());
             throw new ChatbotException(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -73,13 +81,10 @@ public class ChatbotFeedbackService {
     }
 
     // 특정 피드백 조회
-    public ChatbotFeedbackEntity selectFeedbackById(Integer id) {
+    public ChatbotFeedbackResponse selectFeedbackById(Integer id) {
         try {
-            ChatbotFeedbackEntity feedback = chatbotFeedbackRepository.getReferenceById(id);
-            if (feedback == null) {
-                throw new ChatbotException(ErrorCode.CONTEXT_NOT_FOUND);
-            }
-            return feedback;
+            ChatbotFeedbackEntity entity = selectFeedbackEntity(id);
+            return ChatbotFeedbackResponse.from(entity);
         } catch (ChatbotException e) {
             throw e;
         } catch (Exception e) {
@@ -90,11 +95,12 @@ public class ChatbotFeedbackService {
 
     // 피드백 상태 업데이트
     @Transactional
-    public ChatbotFeedbackEntity updateFeedbackStatus(Integer id, FeedbackStatus newStatus) {
+    public ChatbotFeedbackResponse updateFeedbackStatus(Integer id, FeedbackStatus newStatus) {
         try {
-            ChatbotFeedbackEntity feedback = selectFeedbackById(id);
-            feedback.updateStatus(newStatus);
-            return chatbotFeedbackRepository.save(feedback);
+            ChatbotFeedbackEntity entity = selectFeedbackEntity(id);
+            entity.updateStatus(newStatus);
+            ChatbotFeedbackEntity savedEntity = chatbotFeedbackRepository.save(entity);
+            return ChatbotFeedbackResponse.from(savedEntity);
         } catch (ChatbotException e) {
             throw e;
         } catch (Exception e) {
@@ -105,12 +111,36 @@ public class ChatbotFeedbackService {
     }
 
     // 특정 사용자의 피드백 내역 조회
-    public List<ChatbotFeedbackEntity> selectFeedbackByUserId(int userId) {
+    public List<ChatbotFeedbackResponse> selectFeedbackByUserId(int userId) {
         try {
-            return chatbotFeedbackRepository.findByUserIdOrderByIdDesc(userId);
+            List<ChatbotFeedbackEntity> entityList = chatbotFeedbackRepository
+                    .findByUserIdAndDeletedFalseOrderByIdDesc(userId);
+            return convertToResponseList(entityList);
         } catch (Exception e) {
             log.error("사용자 피드백 조회 중 오류 발생 - 사용자 ID: {}, 에러: {}", userId, e.getMessage());
             throw new ChatbotException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    // 내부용 메서드 - 엔티티 조회
+    private ChatbotFeedbackEntity selectFeedbackEntity(Integer id) {
+        try {
+            ChatbotFeedbackEntity entity = chatbotFeedbackRepository.getReferenceById(id);
+            if (entity.isDeleted()) {
+                throw new ChatbotException(ErrorCode.CONTEXT_NOT_FOUND);
+            }
+            return entity;
+        } catch (EntityNotFoundException e) {
+            throw new ChatbotException(ErrorCode.CONTEXT_NOT_FOUND);
+        }
+    }
+
+    // Entity 리스트를 Response 리스트로 변환
+    private List<ChatbotFeedbackResponse> convertToResponseList(List<ChatbotFeedbackEntity> entityList) {
+        List<ChatbotFeedbackResponse> responseList = new ArrayList<>();
+        for (ChatbotFeedbackEntity entity : entityList) {
+            responseList.add(ChatbotFeedbackResponse.from(entity));
+        }
+        return responseList;
     }
 }
