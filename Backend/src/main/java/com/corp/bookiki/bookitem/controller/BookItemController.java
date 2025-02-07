@@ -30,21 +30,29 @@ public class BookItemController {
 
 	@Operation(summary = "도서 아이템 목록 검색", description = "검색 타입과 키워드로 도서 아이템 목록을 조회합니다.")
 	@ApiResponses({
-			@ApiResponse(
-					responseCode = "200",
-					description = "도서 아이템 목록 검색 조회 성공",
-					content = @Content(
-							mediaType = "application/json",
-							schema = @Schema(implementation = BookItemListResponse.class)
-					)
-			)
+		@ApiResponse(
+				responseCode = "200",
+				description = "도서 아이템 목록 검색 조회 성공",
+				content = @Content(
+						mediaType = "application/json",
+						schema = @Schema(implementation = BookItemListResponse.class)
+				)
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "도서 아이템 조회 결과가 없습니다.",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+				)
+		)
 	})
 	@GetMapping
 	public ResponseEntity<?> selectBooks(
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size,
 			@RequestParam SearchType type,
-			@RequestParam String keyword
+			@RequestParam(required = false) String keyword
 	) {
 		Page<BookItemListResponse> books = bookItemService.selectBooks(type, keyword, page, size);
 		return ResponseEntity.ok(books);
@@ -58,6 +66,14 @@ public class BookItemController {
 			content = @Content(
 				mediaType = "application/json",
 				schema = @Schema(implementation = BookItemResponse.class)
+			)
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "도서 아이템 조회 결과가 없습니다.",
+			content = @Content(
+					mediaType = "application/json",
+					schema = @Schema(implementation = ErrorResponse.class)
 			)
 		)
 	})
@@ -76,7 +92,7 @@ public class BookItemController {
 		@RequestParam(defaultValue = "desc") String direction,
 
 		@Parameter(description = "검색 키워드", example = "test")
-		@RequestParam String keyword
+		@RequestParam(required = false) String keyword
 	) {
 		log.info("도서 아이템 목록 조회: page={}, size={}, sortBy={}, direction={}, keyword={}", page, size, sortBy, direction, keyword);
 		return bookItemService.selectBooksByKeyword(page, size, sortBy, direction, keyword);

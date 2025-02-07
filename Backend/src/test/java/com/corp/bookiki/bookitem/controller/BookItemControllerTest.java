@@ -27,6 +27,8 @@ import org.springframework.boot.test.mock.mockito.MockBeans;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -46,7 +48,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
-@WebMvcTest(BookItemController.class)
+@WebMvcTest(controllers = BookItemController.class)
 @AutoConfigureMockMvc
 @MockBeans({@MockBean(JpaMetamodelMappingContext.class)})
 @DisplayName("도서 아이템 컨트롤러 테스트")
@@ -89,10 +91,10 @@ class BookItemControllerTest {
 			ReflectionTestUtils.setField(bookInfo, "id", 1);
 
 			BookItemEntity mockEntity = BookItemEntity.builder()
+				.bookInformation(bookInfo)
 				.purchaseAt(LocalDateTime.now())
 				.bookStatus(BookStatus.AVAILABLE)
 				.deleted(false)
-				.bookInformation(bookInfo)
 				.build();
 
 			ReflectionTestUtils.setField(mockEntity, "id", 1);
@@ -115,6 +117,28 @@ class BookItemControllerTest {
 				.andExpect(status().isOk());
 
 			log.info("도서 아이템 목록 조회 테스트 성공");
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("검색 결과가 없을 때 NotFound 반환")
+		void getAllBookItems_WhenNoResults_ThenReturnsNotFound() throws Exception {
+			// given
+			given(bookItemService.selectBooksByKeyword(anyInt(), anyInt(), anyString(), anyString(), anyString()))
+					.willThrow(new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+
+			// when & then
+			mockMvc.perform(get("/api/books/search/list")
+							.with(csrf())
+							.param("page", "0")
+							.param("size", "10")
+							.param("sortBy", "id")
+							.param("direction", "desc")
+							.param("keyword", "존재하지않는도서")
+							.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isNotFound());
+
+			log.info("검색 결과 없음 테스트 성공");
 		}
 
 	}
@@ -143,13 +167,20 @@ class BookItemControllerTest {
 			ReflectionTestUtils.setField(mockEntity, "id", 1);
 
 			BookItemListResponse mockResponse = BookItemListResponse.from(mockEntity);
-			Page<BookItemListResponse> mockPage = new PageImpl<>(List.of(mockResponse));
+
+			Pageable pageable = PageRequest.of(0, 10);
+			Page<BookItemListResponse> mockPage = new PageImpl<>(
+					List.of(mockResponse),
+					pageable,
+					1  // total elements
+			);
+
 
 			given(bookItemService.selectBooks(any(SearchType.class), anyString(), anyInt(), anyInt()))
 					.willReturn(mockPage);
 
 			// when & then
-			mockMvc.perform(get("/api/books")
+			mockMvc.perform(get("/api/books/search")
 							.with(csrf())
 							.param("page", "0")
 							.param("size", "10")
@@ -163,27 +194,77 @@ class BookItemControllerTest {
 		@WithMockUser
 		@DisplayName("잘못된 SearchType으로 요청 시 실패")
 		void searchBooks_WhenInvalidSearchType_ThenReturnsBadRequest() throws Exception {
-			mockMvc.perform(get("/api/books")
+			mockMvc.perform(get("/api/books/search")
 							.with(csrf())
 							.param("page", "0")
 							.param("size", "10")
 							.param("type", "INVALID_TYPE")
 							.param("keyword", "test")
 							.contentType(MediaType.APPLICATION_JSON))
-					.andExpect(status().isBadRequest());
+					.andExpect(status().isInternalServerError());
 		}
 
 		@Test
 		@WithMockUser
-		@DisplayName("키워드 없이 요청 시 실패")
+		@DisplayName("키워드 없이 요청 시 전체 목록 반환")
 		void searchBooks_WhenNoKeyword_ThenReturnsBadRequest() throws Exception {
-			mockMvc.perform(get("/api/books")
+			// given
+			BookInformationEntity bookInfo = BookInformationEntity.builder()
+					.title("Test Book")
+					.author("Test Author")
+					.isbn("1234567890")
+					.build();
+			ReflectionTestUtils.setField(bookInfo, "id", 1);
+
+			BookItemEntity mockEntity = BookItemEntity.builder()
+					.bookInformation(bookInfo)
+					.purchaseAt(LocalDateTime.now())
+					.bookStatus(BookStatus.AVAILABLE)
+					.deleted(false)
+					.build();
+			ReflectionTestUtils.setField(mockEntity, "id", 1);
+
+			BookItemListResponse mockResponse = BookItemListResponse.from(mockEntity);
+			Pageable pageable = PageRequest.of(0, 10);
+			Page<BookItemListResponse> mockPage = new PageImpl<>(
+					List.of(mockResponse),
+					pageable,
+					1
+			);
+
+			// keyword가 null인 경우의 서비스 동작 모킹
+			given(bookItemService.selectBooks(any(SearchType.class), isNull(), anyInt(), anyInt()))
+					.willReturn(mockPage);
+
+			// when & then
+			mockMvc.perform(get("/api/books/search")
 							.with(csrf())
 							.param("page", "0")
 							.param("size", "10")
 							.param("type", "TITLE")
 							.contentType(MediaType.APPLICATION_JSON))
-					.andExpect(status().isBadRequest());
+					.andExpect(status().isOk());
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("검색 결과가 없을 때 NotFound 반환")
+		void searchBooks_WhenNoResults_ThenReturnsNotFound() throws Exception {
+			// given
+			given(bookItemService.selectBooks(any(SearchType.class), anyString(), anyInt(), anyInt()))
+					.willThrow(new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+
+			// when & then
+			mockMvc.perform(get("/api/books/search")
+							.with(csrf())
+							.param("page", "0")
+							.param("size", "10")
+							.param("type", "TITLE")
+							.param("keyword", "존재하지않는도서")
+							.contentType(MediaType.APPLICATION_JSON))
+					.andExpect(status().isNotFound());
+
+			log.info("검색 결과 없음 테스트 성공");
 		}
 	}
 

@@ -28,14 +28,30 @@ public class BookItemService {
 		Sort sort = Sort.by(Sort.Direction.fromString(direction), sortBy);
 		PageRequest pageRequest = PageRequest.of(page, size, sort);
 
-		Page<BookItemEntity> bookItems = bookItemRepository.findAllWithKeyword(keyword, pageRequest);
-		return bookItems.map(BookItemDisplayResponse::from);
+		Page<BookItemEntity> books = bookItemRepository.findAllWithKeyword(keyword, pageRequest);
+
+		if(books.isEmpty()){
+			throw new BookItemException(ErrorCode.BOOK_SEARCH_NOT_FOUND);
+		}
+		return books.map(BookItemDisplayResponse::from);
 	}
 
 	@Transactional(readOnly = true)
 	public Page<BookItemListResponse> selectBooks(SearchType type, String keyword, int page, int size) {
 		PageRequest pageRequest = PageRequest.of(page, size);
-		Page<BookItemEntity> books = bookItemRepository.searchBooks(type.name(), keyword, pageRequest);
+		Page<BookItemEntity> books;
+
+		// keyword가 없으면 전체 목록 조회
+		if (keyword == null || keyword.trim().isEmpty()) {
+			books = bookItemRepository.findAll(pageRequest);
+		} else {
+			books = bookItemRepository.searchBooks(type.name(), keyword, pageRequest);
+		}
+
+		if(books.isEmpty()){
+			throw new BookItemException(ErrorCode.BOOK_SEARCH_NOT_FOUND);
+		}
+
 		return books.map(BookItemListResponse::from);
 	}
 

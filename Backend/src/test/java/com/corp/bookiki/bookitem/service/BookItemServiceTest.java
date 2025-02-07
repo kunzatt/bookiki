@@ -132,7 +132,7 @@ class BookItemServiceTest {
 			}
 
 			@Test
-			void searchBooks_WithEmptyResult_ShouldReturnEmptyPage() {
+			void searchBooks_WithEmptyResult_ShouldThrowException() {
 				// given
 				SearchType type = SearchType.TITLE;
 				String keyword = "nonexistent";
@@ -141,12 +141,11 @@ class BookItemServiceTest {
 				given(bookItemRepository.searchBooks(type.name(), keyword, pageRequest))
 						.willReturn(new PageImpl<>(List.of()));
 
-				// when
-				Page<BookItemListResponse> result = bookItemService.selectBooks(type, keyword, 0, 10);
+				// when & then
+				assertThatThrownBy(() -> bookItemService.selectBooks(type, keyword, 0, 10))
+						.isInstanceOf(BookItemException.class)
+						.hasFieldOrPropertyWithValue("errorCode", ErrorCode.BOOK_SEARCH_NOT_FOUND);
 
-				// then
-				assertThat(result).isNotNull();
-				assertThat(result.getContent()).isEmpty();
 				verify(bookItemRepository).searchBooks(type.name(), keyword, pageRequest);
 			}
 		}
