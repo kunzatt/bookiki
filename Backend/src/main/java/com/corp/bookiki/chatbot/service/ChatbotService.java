@@ -15,9 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -97,15 +95,12 @@ public class ChatbotService {
         // 신뢰도가 낮은 경우의 처리
         return ChatbotResponse.builder()
                 .message("죄송합니다. 질문을 더 자세히 말씀해 주시겠어요?")
-                .allowFreeInput(true)
-                .quickReplies(selectDefaultQuickReplies())
                 .build();
     }
 
     private ChatbotResponse createEnhancedResponse(QueryResult queryResult, Map<String, Value> params) {
         try {
             String intent = queryResult.getIntent().getDisplayName();
-            List<String> quickReplies = new ArrayList<>();
 
             // 1. Dialogflow의 기본 응답 처리
             StringBuilder messageBuilder = new StringBuilder(queryResult.getFulfillmentText());
@@ -113,7 +108,6 @@ public class ChatbotService {
             try {
                 // 2. 대화 흐름 확인
                 if (!queryResult.getAllRequiredParamsPresent()) {
-                    // 필요한 정보가 더 있는 경우
                     messageBuilder.append("\n").append(queryResult.getDiagnosticInfo());
                 }
             } catch (Exception e) {
@@ -121,28 +115,8 @@ public class ChatbotService {
                 throw new ChatbotException(ErrorCode.CONTEXT_MANAGEMENT_ERROR);
             }
 
-            try {
-                // 3. Dialogflow 제안 응답 추가
-                for (Intent.Message message : queryResult.getFulfillmentMessagesList()) {
-                    if (message.hasQuickReplies()) {
-                        Intent.Message.QuickReplies quickRepliesMessage = message.getQuickReplies();
-                        quickReplies.addAll(quickRepliesMessage.getQuickRepliesList());
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Dialogflow 응답 처리 중 오류 발생: {}", e.getMessage());
-                throw new ChatbotException(ErrorCode.ENTITY_EXTRACTION_ERROR);
-            }
-
-            // 4. 기본 빠른 응답 추가
-            if (quickReplies.isEmpty()) {
-                quickReplies.addAll(selectDefaultQuickReplies());
-            }
-
             return ChatbotResponse.builder()
                     .message(messageBuilder.toString())
-                    .quickReplies(quickReplies)
-                    .allowFreeInput(shouldAllowFreeInput(intent))
                     .showAdminInquiryButton(shouldShowAdminInquiryButton(intent))
                     .build();
 
@@ -170,46 +144,6 @@ public class ChatbotService {
         }
     }
 
-
-    // 빠른 응답: intent에 따른 사용자 선택지 제공
-    private List<String> createQuickReplies(QueryResult queryResult) {
-        try {
-            // Dialogflow  자체 기능이 아닌 클라이언트 측에서 추가하는 기능
-            List<String> quickReplies = new ArrayList<>();
-            String intent = queryResult.getIntent().getDisplayName();
-
-            // intent에 따른 빠른 응답 옵션 생성
-            // 추가 필요
-            switch (intent) {
-                case "qr_troubleshooting":
-                    quickReplies.addAll(Arrays.asList(
-                            "QR 오류 신고하기",
-                            "관리자 호출",
-                            "다른 방법으로 대출하기"
-                    ));
-                    break;
-                case "led_troubleshooting":
-                    quickReplies.addAll(Arrays.asList(
-                            "LED 문제 신고",
-                            "책 위치 다시 찾기",
-                            "관리자 호출하기"
-                    ));
-                    break;
-                case "book_category_guide":
-                    quickReplies.addAll(Arrays.asList(
-                            "책 위치 찾기",
-                            "대출 방법 안내",
-                            "도서 추천 받기"
-                    ));
-                    break;
-            }
-            return quickReplies;
-        } catch (Exception e) {
-            log.error("빠른 응답 생성 중 오류 발생: {}", e.getMessage());
-            throw new ChatbotException(ErrorCode.ENTITY_EXTRACTION_ERROR);
-        }
-    }
-
     private String createFollowUpMessage(String intent) {
         try {
             // 특정 intent에 대해 추가 안내 메시지 제공
@@ -227,19 +161,6 @@ public class ChatbotService {
         }
     }
 
-    private boolean shouldAllowFreeInput(String intent) {
-        try {
-            // 자유 입력을 제한할 특정 intent들을 정의
-            return !Arrays.asList(
-                    "final_confirmation",
-                    "simple_selection"
-            ).contains(intent);
-        } catch (Exception e) {
-            log.error("입력 허용 여부 확인 중 오류 발생: {}", e.getMessage());
-            throw new ChatbotException(ErrorCode.INTENT_PROCESSING_ERROR);
-        }
-    }
-
     private boolean shouldShowAdminInquiryButton(String intent) {
         try {
             // 관리자 문의가 필요할 수 있는 상황들
@@ -252,14 +173,6 @@ public class ChatbotService {
             log.error("관리자 문의 버튼 표시 여부 확인 중 오류 발생: {}", e.getMessage());
             throw new ChatbotException(ErrorCode.INTENT_PROCESSING_ERROR);
         }
-    }
-
-    private List<String> selectDefaultQuickReplies() {
-        List<String> defaultReplies = new ArrayList<>();
-        defaultReplies.add("도서 검색");
-        defaultReplies.add("도서관 이용안내");
-        defaultReplies.add("관리자 문의");
-        return defaultReplies;
     }
 
     // 관리자에게 추가 문의 처리 로직
