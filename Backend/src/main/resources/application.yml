@@ -10,6 +10,11 @@ spring:
       - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration
       - io.awspring.cloud.autoconfigure.s3.S3AutoConfiguration
       - org.springframework.boot.autoconfigure.websocket.servlet.WebSocketServletAutoConfiguration
+
+  file:
+    upload:
+      path: ${FILE_STORAGE_PATH}
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
