@@ -1,8 +1,16 @@
 package com.corp.bookiki.bookitem.controller;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
 import com.corp.bookiki.bookitem.dto.BookItemListResponse;
+import com.corp.bookiki.bookitem.dto.BookItemRequest;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
@@ -10,6 +18,7 @@ import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
 import com.corp.bookiki.util.CookieUtil;
@@ -40,24 +49,17 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @Slf4j
-@WebMvcTest(controllers = BookItemController.class)
-@AutoConfigureMockMvc
-@MockBeans({@MockBean(JpaMetamodelMappingContext.class)})
+@WebMvcTest(BookItemController.class)
+@Import({WebMvcConfig.class, SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
+@MockBean(JpaMetamodelMappingContext.class)
 @DisplayName("도서 아이템 컨트롤러 테스트")
-@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
 class BookItemControllerTest {
 
 	@Autowired
 	private WebApplicationContext context;
 
+	@Autowired
 	private MockMvc mockMvc;
 
 	@MockBean

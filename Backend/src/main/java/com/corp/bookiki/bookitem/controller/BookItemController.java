@@ -2,6 +2,7 @@ package com.corp.bookiki.bookitem.controller;
 
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
 import com.corp.bookiki.bookitem.dto.BookItemListResponse;
+import com.corp.bookiki.bookitem.dto.BookItemRequest;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.service.BookItemService;
@@ -47,7 +48,7 @@ public class BookItemController {
 				)
 		)
 	})
-	@GetMapping
+	@GetMapping("/books/search")
 	public ResponseEntity<?> selectBooks(
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "10") int size,
@@ -77,7 +78,7 @@ public class BookItemController {
 			)
 		)
 	})
-	@GetMapping("/list")
+	@GetMapping("/books/search/list")
 	public Page<BookItemDisplayResponse> selectBooksByKeyword(
 		@Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
 		@RequestParam(defaultValue = "0") int page,

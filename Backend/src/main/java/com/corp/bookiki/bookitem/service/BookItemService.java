@@ -1,7 +1,10 @@
 package com.corp.bookiki.bookitem.service;
 
+import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
+import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
 import com.corp.bookiki.bookitem.dto.BookItemListResponse;
+import com.corp.bookiki.bookitem.dto.BookItemRequest;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.enums.SearchType;
