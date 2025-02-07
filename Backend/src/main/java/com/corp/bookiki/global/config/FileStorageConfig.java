@@ -11,7 +11,7 @@ import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class FileStorageConfig {
-	@Value("${file.upload.path}")
+	@Value("${spring.file.upload.path}")
 	private String uploadPath;
 
 	@PostConstruct
