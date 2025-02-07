@@ -1,9 +1,10 @@
-package com.corp.bookiki.bookhistory.service;
+package com.corp.bookiki.bookhistory.bookborrow;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +19,7 @@ import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
 import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
+import com.corp.bookiki.bookhistory.service.BookBorrowService;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -71,6 +73,9 @@ class BookBorrowServiceTest {
 				.willReturn(Optional.of(user));
 			given(bookHistoryRepository.save(any(BookHistoryEntity.class)))
 				.willReturn(history);
+
+			LocalDateTime before = LocalDateTime.now().minusDays(1);
+			when(user.getActiveAt()).thenReturn(before);
 
 			log.info("테스트 데이터 설정 완료: userId={}, bookItemId={}",
 				request.getUserId(), request.getBookItemId());

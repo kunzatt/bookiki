@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -48,9 +49,9 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 
 	// 특정 도서의 현재 대출 상태 확인
 	@Query("""
-        SELECT bh 
-        FROM BookHistoryEntity bh 
-        WHERE bh.bookItem = :bookItem 
+        SELECT bh
+        FROM BookHistoryEntity bh
+        WHERE bh.bookItem = :bookItem
         AND bh.returnedAt IS NULL
         """
 	)
@@ -58,11 +59,11 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 
 	// 특정 사용자의 현재 대출 목록 조회
 	@Query("""
-        SELECT bh 
-        FROM BookHistoryEntity bh 
-        JOIN FETCH bh.bookItem bi 
+        SELECT bh
+        FROM BookHistoryEntity bh
+        JOIN FETCH bh.bookItem bi
         JOIN FETCH bi.bookInformation
-        WHERE bh.user = :user 
+        WHERE bh.user = :user
         AND bh.returnedAt IS NULL
         """
 	)
@@ -70,12 +71,12 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 
 	// 연체 도서 목록 조회 (반납일이 지났지만 반납되지 않은 도서)
 	@Query("""
-        SELECT bh 
-        FROM BookHistoryEntity bh 
-        JOIN FETCH bh.bookItem bi 
+        SELECT bh
+        FROM BookHistoryEntity bh
+        JOIN FETCH bh.bookItem bi
         JOIN FETCH bi.bookInformation
         JOIN FETCH bh.user
-        WHERE bh.borrowedAt < :overdueDate 
+        WHERE bh.borrowedAt < :overdueDate
         AND bh.returnedAt IS NULL
         """
 	)
@@ -83,11 +84,11 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 
 	// 특정 기간 내 가장 많이 대출된 도서 순위
 	@Query("""
-        SELECT bi.bookInformation.id, COUNT(bh) as borrowCount 
-        FROM BookHistoryEntity bh 
+        SELECT bi.bookInformation.id, COUNT(bh) as borrowCount
+        FROM BookHistoryEntity bh
         JOIN bh.bookItem bi
-        WHERE bh.borrowedAt BETWEEN :startDate AND :endDate 
-        GROUP BY bi.bookInformation.id 
+        WHERE bh.borrowedAt BETWEEN :startDate AND :endDate
+        GROUP BY bi.bookInformation.id
         ORDER BY borrowCount DESC
         """
 	)
@@ -98,26 +99,26 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 	);
 
 	@Query(value = """
-        SELECT bh 
-        FROM BookHistoryEntity bh 
-        JOIN FETCH bh.bookItem bi 
+        SELECT bh
+        FROM BookHistoryEntity bh
+        JOIN FETCH bh.bookItem bi
         JOIN FETCH bi.bookInformation bi_info
         JOIN FETCH bh.user u
         WHERE bh.user.id = :userId
         AND bh.borrowedAt BETWEEN :startDate AND :endDate
-        AND (:keyword IS NULL 
-            OR bi_info.title LIKE %:keyword% 
+        AND (:keyword IS NULL
+            OR bi_info.title LIKE %:keyword%
             OR bi_info.author LIKE %:keyword%)
         """,
 		countQuery = """
-        SELECT COUNT(bh) 
-        FROM BookHistoryEntity bh 
-        JOIN bh.bookItem bi 
+        SELECT COUNT(bh)
+        FROM BookHistoryEntity bh
+        JOIN bh.bookItem bi
         JOIN bi.bookInformation bi_info
         WHERE bh.user.id = :userId
         AND bh.borrowedAt BETWEEN :startDate AND :endDate
-        AND (:keyword IS NULL 
-            OR bi_info.title LIKE %:keyword% 
+        AND (:keyword IS NULL
+            OR bi_info.title LIKE %:keyword%
             OR bi_info.author LIKE %:keyword%)
         """
 	)
@@ -127,5 +128,18 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		@Param("endDate") LocalDateTime endDate,
 		@Param("keyword") String keyword,
 		Pageable pageable
+	);
+
+	@Query("""
+    SELECT bh 
+    FROM BookHistoryEntity bh 
+    JOIN FETCH bh.bookItem bi 
+    JOIN FETCH bi.bookInformation 
+    WHERE bh.borrowedAt BETWEEN :startDateTime AND :endDateTime
+""")
+	List<BookHistoryEntity> findByBorrowedAtBetween(
+		@Param("startDateTime") LocalDateTime startDateTime,
+		@Param("endDateTime") LocalDateTime endDateTime,
+		Limit limit
 	);
 }
