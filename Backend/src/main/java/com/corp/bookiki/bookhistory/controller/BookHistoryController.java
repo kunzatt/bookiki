@@ -121,7 +121,6 @@ public class BookHistoryController {
 	})
 	@GetMapping("/admin/book-histories")
 	public ResponseEntity<Page<BookHistoryResponse>> getAdminBookHistories(
-		@CurrentUser AuthUser authUser,
 		@Parameter(description = "조회 기간 타입") @RequestParam PeriodType periodType,
 		@Parameter(description = "시작일 (YYYY-MM-DD, CUSTOM 타입일 때 필수)")
 		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
@@ -132,9 +131,6 @@ public class BookHistoryController {
 		@Parameter(description = "연체 여부") @RequestParam(required = false) Boolean overdue,
 		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
 	) {
-		if (authUser == null || authUser.getRole() != Role.ADMIN) {
-			throw new UserException(ErrorCode.UNAUTHORIZED);
-		}
 
 		LocalDate start = getStartDate(periodType, startDate);
 		LocalDate end = getEndDate(periodType, endDate);
@@ -211,10 +207,6 @@ public class BookHistoryController {
 		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
 	) {
 
-		if (authUser == null || authUser.getRole() == null) {
-			throw new UserException(ErrorCode.UNAUTHORIZED);
-		}
-
 		LocalDate start = getStartDate(periodType, startDate);
 		LocalDate end = getEndDate(periodType, endDate);
 
@@ -249,24 +241,6 @@ public class BookHistoryController {
 			)
 		),
 		@ApiResponse(
-			responseCode = "401",
-			description = "인증되지 않은 사용자",
-			content = @Content(
-				mediaType = "application/json",
-				schema = @Schema(implementation = ErrorResponse.class),
-				examples = @ExampleObject(
-					value = """
-                {
-                    "timestamp": "2024-02-04T10:00:00",
-                    "status": 401,
-                    "message": "인증되지 않은 사용자입니다",
-                    "errors": []
-                }
-                """
-				)
-			)
-		),
-		@ApiResponse(
 			responseCode = "404",
 			description = "대출 기록을 찾을 수 없음",
 			content = @Content(
@@ -290,11 +264,6 @@ public class BookHistoryController {
 		@CurrentUser AuthUser authUser,
 		@Parameter(description = "연체 도서만 조회") @RequestParam(required = false) Boolean onlyOverdue
 	) {
-
-		if (authUser == null || authUser.getRole() == null) {
-			throw new UserException(ErrorCode.UNAUTHORIZED);
-		}
-
 		return ResponseEntity.ok(
 			bookHistoryService.getCurrentBorrowedBooks(authUser.getId(), onlyOverdue)
 		);
