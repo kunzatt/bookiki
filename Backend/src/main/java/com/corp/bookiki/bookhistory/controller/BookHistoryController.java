@@ -132,7 +132,7 @@ public class BookHistoryController {
 		@Parameter(description = "연체 여부") @RequestParam(required = false) Boolean overdue,
 		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
 	) {
-		if (authUser.getRole() != Role.ADMIN) {
+		if (authUser == null || authUser.getRole() != Role.ADMIN) {
 			throw new UserException(ErrorCode.UNAUTHORIZED);
 		}
 
@@ -219,7 +219,7 @@ public class BookHistoryController {
 		LocalDate end = getEndDate(periodType, endDate);
 
 		return ResponseEntity.ok(
-			bookHistoryService.getUserBookHistories(authUser, start, end, overdue, pageable)
+			bookHistoryService.getUserBookHistories(authUser.getId(), start, end, overdue, pageable)
 		);
 	}
 
@@ -296,7 +296,7 @@ public class BookHistoryController {
 		}
 
 		return ResponseEntity.ok(
-			bookHistoryService.getCurrentBorrowedBooks(authUser, onlyOverdue)
+			bookHistoryService.getCurrentBorrowedBooks(authUser.getId(), onlyOverdue)
 		);
 	}
 
