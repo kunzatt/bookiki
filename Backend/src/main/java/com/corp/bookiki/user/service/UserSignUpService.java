@@ -1,10 +1,5 @@
 package com.corp.bookiki.user.service;
 
-import java.time.LocalDateTime;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.UserSignUpRequest;
@@ -12,8 +7,12 @@ import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
-
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 // 주요 기능: 이메일 중복 확인, 사번 중복 확인, 사용자 등록
 @Service
@@ -21,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class UserSignUpService {
 
 	private final UserRepository userRepository;
+	private final PasswordEncoder passwordEncoder;
 
 	// 회원가입 메서드
 	@Transactional
@@ -33,7 +33,7 @@ public class UserSignUpService {
 		// UserEntity 빌더를 사용해 새 사용자 객체 생성
 		UserEntity user = UserEntity.builder()
 			.email(request.getEmail())
-			.password(request.getPassword())
+			.password(passwordEncoder.encode(request.getPassword()))
 			.userName(request.getUserName())
 			.companyId(request.getCompanyId())
 			.provider(Provider.BOOKIKI)

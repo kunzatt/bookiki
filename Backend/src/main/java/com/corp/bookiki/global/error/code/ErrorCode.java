@@ -26,6 +26,7 @@ public enum ErrorCode {
 	INVALID_PROFILE_IMAGE(400, "잘못된 프로필 이미지 형식입니다"),
 	LOGIN_BAD_CREDENTIALS(HttpStatus.UNAUTHORIZED.value(), "이메일 또는 비밀번호가 일치하지 않습니다."),
 	LOGIN_FAILED(HttpStatus.UNAUTHORIZED.value(), "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."),
+	USER_NOT_ACTIVE(400, "대출 가능 기한이 아니므로 대출이 불가능합니다"),
 	// 사용자 관련 에러
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다."),
 	USER_SEARCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "사용자 정보 조회 중 오류가 발생했습니다."),
@@ -88,7 +89,13 @@ public enum ErrorCode {
 	INVALID_CHAT_CONTENT(400, "잘못된 채팅 내용입니다"),
 
 	// 외부 API
-	EXTERNAL_API_ERROR(500, "외부 API 호출 중 오류가 발생했습니다");
+	EXTERNAL_API_ERROR(500, "외부 API 호출 중 오류가 발생했습니다"),
+
+	// Loan Policy
+	LOAN_POLICY_NOT_FOUND(404, "대출 정책을 찾을 수 없습니다"),
+	INVALID_LOAN_POLICY(400, "잘못된 대출 정책입니다"),
+	INVALID_MAX_BOOKS(400, "올바르지 않은 최대 대출 가능 권수입니다."),
+	INVALID_LOAN_PERIOD(400, "올바르지 않은 대출 기간입니다.");
 
 	private final int status;
 	private final String message;
