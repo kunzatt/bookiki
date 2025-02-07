@@ -40,6 +40,8 @@ public class BookHistoryRequest {
 	@JsonFormat(pattern = "yyyy-MM-dd")
 	private LocalDate endDate;
 
+	private String userName;
+
 	public void validate() {
 		if (periodType == PeriodType.CUSTOM) {
 			if (startDate == null || endDate == null) {

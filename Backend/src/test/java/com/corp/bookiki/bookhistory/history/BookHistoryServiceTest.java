@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.corp.bookiki.bookhistory.dto.BookHistoryResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
@@ -26,7 +28,10 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.entity.BookStatus;
+import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
+import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -39,204 +44,304 @@ class BookHistoryServiceTest {
 	@Mock
 	private BookHistoryRepository bookHistoryRepository;
 
+	private UserEntity testUser;
+	private BookItemEntity testBookItem;
+	private BookHistoryEntity testBookHistory;
+	private AuthUser testAuthUser;
+	private Pageable testPageable;
+	private LocalDateTime now;
+
+	@BeforeEach
+	void setUp() {
+		now = LocalDateTime.now();
+
+		BookInformationEntity bookInfo = BookInformationEntity.builder()
+			.title("Test Book")
+			.author("Test Author")
+			.isbn("1234567890")
+			.build();
+
+		testBookItem = BookItemEntity.builder()
+			.bookInformation(bookInfo)
+			.bookStatus(BookStatus.AVAILABLE)
+			.build();
+		ReflectionTestUtils.setField(testBookItem,"id", 1);
+
+		testUser = UserEntity.builder()
+			.email("test@example.com")
+			.userName("Test User")
+			.companyId("CORP001")
+			.role(Role.USER)
+			.provider(Provider.BOOKIKI)
+			.build();
+		ReflectionTestUtils.setField(testUser,"id", 23232);
+
+		testBookHistory = BookHistoryEntity.builder()
+			.bookItem(testBookItem)
+			.user(testUser)
+			.borrowedAt(now)
+			.returnedAt(null)
+			.overdue(false)
+			.build();
+		ReflectionTestUtils.setField(testBookHistory,"id", 1);
+
+		testAuthUser = AuthUser.builder()
+			.id(testUser.getId())
+			.email(testUser.getEmail())
+			.role(testUser.getRole())
+			.build();
+
+		testPageable = PageRequest.of(0, 20);
+	}
+
 	@Nested
-	@DisplayName("도서 대출 기록 조회 테스트")
-	class GetBookHistories {
+	@DisplayName("관리자용 대출 기록 조회 테스트")
+	class AdminBookHistoriesTest {
 		@Test
-		@DisplayName("정상적인 기간 조회 시 성공")
-		void getBookHistories_Success() {
-			// given
-			LocalDate startDate = LocalDate.now().minusDays(7);
-			LocalDate endDate = LocalDate.now();
-			String keyword = "Spring";
-			Pageable pageable = PageRequest.of(0, 10);
+		@DisplayName("성공적인 대출 기록 조회")
+		void getAdminBookHistories_Success() {
+			// Given
+			LocalDate startDate = now.toLocalDate().minusDays(7);
+			LocalDate endDate = now.toLocalDate();
 
-			BookInformationEntity bookInfo = BookInformationEntity.builder()
-				.title("Spring Boot in Action")
-				.author("Craig Walls")
-				.isbn("978-1617292545")
-				.build();
+			Page<BookHistoryEntity> mockPage = new PageImpl<>(List.of(testBookHistory));
 
-			BookItemEntity bookItem = mock(BookItemEntity.class);
-			when(bookItem.getId()).thenReturn(1);
-			when(bookItem.getBookInformation()).thenReturn(bookInfo);
+			given(bookHistoryRepository.findAllBookHistoriesForAdmin(
+				any(LocalDateTime.class),
+				any(LocalDateTime.class),
+				any(),
+				any(),
+				any(),
+				eq(testPageable)
+			)).willReturn(mockPage);
 
-			UserEntity user = UserEntity.builder()
-				.email("test@bookiki.com")
-				.password("password")
-				.companyId("EMP001")
-				.userName("Test User")
-				.role(Role.USER)
-				.provider(Provider.BOOKIKI)
-				.build();
+			// When
+			Page<BookHistoryResponse> result = bookHistoryService.getAdminBookHistories(
+				startDate, endDate,
+				testUser.getUserName(),
+				testUser.getCompanyId(),
+				false,
+				testPageable
+			);
 
-			BookHistoryEntity entity = mock(BookHistoryEntity.class);
-			when(entity.getBookItem()).thenReturn(bookItem);
-			when(entity.getUser()).thenReturn(user);
-			when(entity.getBorrowedAt()).thenReturn(LocalDateTime.now());
-
-			Page<BookHistoryEntity> page = new PageImpl<>(List.of(entity));
-
-			given(bookHistoryRepository.searchBookHistoryWithCount(
-				startDate.atStartOfDay(),
-				endDate.atTime(23, 59, 59),
-				keyword,
-				pageable
-			)).willReturn(page);
-
-			// when
-			Page<BookHistoryResponse> result = bookHistoryService.getBookHistories(
-				startDate, endDate, keyword, pageable);
-
-			// then
+			// Then
 			assertThat(result).isNotNull();
 			assertThat(result.getContent()).hasSize(1);
-			verify(bookHistoryRepository).searchBookHistoryWithCount(
+			assertThat(result.getContent().get(0).getUserId()).isEqualTo(testUser.getId());
+
+			verify(bookHistoryRepository).findAllBookHistoriesForAdmin(
 				any(LocalDateTime.class),
 				any(LocalDateTime.class),
-				eq(keyword),
-				eq(pageable)
+				eq(testUser.getUserName()),
+				eq(testUser.getCompanyId()),
+				eq(false),
+				eq(testPageable)
 			);
 		}
 
 		@Test
-		@DisplayName("repository 예외 발생 시 BookHistoryException 발생")
-		void getBookHistories_WhenRepositoryThrowsException_ThenThrowBookHistoryException() {
-			// given
-			LocalDate startDate = LocalDate.now().minusDays(7);
-			LocalDate endDate = LocalDate.now();
-			Pageable pageable = PageRequest.of(0, 10);
+		@DisplayName("대출 기록 조회 중 리포지토리 오류 발생")
+		void getAdminBookHistories_RepositoryError() {
+			// Given
+			LocalDate startDate = now.toLocalDate().minusDays(7);
+			LocalDate endDate = now.toLocalDate();
 
-			given(bookHistoryRepository.searchBookHistoryWithCount(
+			given(bookHistoryRepository.findAllBookHistoriesForAdmin(
 				any(LocalDateTime.class),
 				any(LocalDateTime.class),
 				any(),
-				any()
+				any(),
+				any(),
+				eq(testPageable)
 			)).willThrow(new RuntimeException("Database error"));
 
-			// when & then
+			// When & Then
 			assertThatThrownBy(() ->
-				bookHistoryService.getBookHistories(startDate, endDate, null, pageable)
-			).isInstanceOf(BookHistoryException.class);
+				bookHistoryService.getAdminBookHistories(
+					startDate, endDate, null, null, null, testPageable
+				)
+			)
+				.isInstanceOf(BookHistoryException.class)
+				.hasMessageContaining(ErrorCode.HISTORY_NOT_FOUND.getMessage());
 		}
 	}
 
 	@Nested
-	@DisplayName("사용자별 대출 기록 조회 테스트")
-	class GetUserBookHistories {
+	@DisplayName("사용자 대출 기록 조회 테스트")
+	class UserBookHistoriesTest {
 		@Test
-		@DisplayName("사용자별 대출 기록 정상 조회")
+		@DisplayName("성공적인 사용자 대출 기록 조회")
 		void getUserBookHistories_Success() {
-			// given
-			Integer userId = 1;
-			LocalDate startDate = LocalDate.now().minusDays(7);
-			LocalDate endDate = LocalDate.now();
-			String keyword = "Spring";
-			Pageable pageable = PageRequest.of(0, 10);
+			// Given
+			LocalDate startDate = now.toLocalDate().minusDays(7);
+			LocalDate endDate = now.toLocalDate();
 
-			BookInformationEntity bookInfo = BookInformationEntity.builder()
-				.title("Spring Boot in Action")
-				.author("Craig Walls")
-				.isbn("978-1617292545")
-				.build();
+			Page<BookHistoryEntity> mockPage = new PageImpl<>(List.of(testBookHistory));
 
-			BookItemEntity bookItem = mock(BookItemEntity.class);
-			when(bookItem.getId()).thenReturn(1);
-			when(bookItem.getBookInformation()).thenReturn(bookInfo);
-
-			UserEntity user = UserEntity.builder()
-				.email("test@bookiki.com")
-				.password("password")
-				.companyId("EMP001")
-				.userName("Test User")
-				.role(Role.USER)
-				.provider(Provider.BOOKIKI)
-				.build();
-
-			BookHistoryEntity entity = mock(BookHistoryEntity.class);
-			when(entity.getBookItem()).thenReturn(bookItem);
-			when(entity.getUser()).thenReturn(user);
-			when(entity.getBorrowedAt()).thenReturn(LocalDateTime.now());
-
-			Page<BookHistoryEntity> page = new PageImpl<>(List.of(entity));
-
-			given(bookHistoryRepository.searchUserBookHistoryWithCount(
-				eq(userId),
+			given(bookHistoryRepository.findAllForUser(
+				eq(testUser.getId()),
 				any(LocalDateTime.class),
 				any(LocalDateTime.class),
-				eq(keyword),
-				eq(pageable)
-			)).willReturn(page);
+				eq(false),
+				eq(testPageable)
+			)).willReturn(mockPage);
 
-			// when
+			// When
 			Page<BookHistoryResponse> result = bookHistoryService.getUserBookHistories(
-				userId, startDate, endDate, keyword, pageable);
+				testUser.getId(), startDate, endDate, false, testPageable
+			);
 
-			// then
+			// Then
 			assertThat(result).isNotNull();
 			assertThat(result.getContent()).hasSize(1);
+			assertThat(result.getContent().get(0).getUserId()).isEqualTo(testUser.getId());
+
+			verify(bookHistoryRepository).findAllForUser(
+				eq(testUser.getId()),
+				any(LocalDateTime.class),
+				any(LocalDateTime.class),
+				eq(false),
+				eq(testPageable)
+			);
+		}
+
+		@Test
+		@DisplayName("사용자 대출 기록 조회 중 리포지토리 오류 발생")
+		void getUserBookHistories_RepositoryError() {
+			// Given
+			LocalDate startDate = now.toLocalDate().minusDays(7);
+			LocalDate endDate = now.toLocalDate();
+
+			given(bookHistoryRepository.findAllForUser(
+				eq(testUser.getId()),
+				any(LocalDateTime.class),
+				any(LocalDateTime.class),
+				eq(false),
+				eq(testPageable)
+			)).willThrow(new RuntimeException("Database error"));
+
+			// When & Then
+			assertThatThrownBy(() ->
+				bookHistoryService.getUserBookHistories(
+					testUser.getId(), startDate, endDate, false, testPageable
+				)
+			)
+				.isInstanceOf(BookHistoryException.class)
+				.hasMessageContaining(ErrorCode.HISTORY_NOT_FOUND.getMessage());
 		}
 	}
 
 	@Nested
-	@DisplayName("현재 대출 상태 확인 테스트")
-	class IsBookCurrentlyBorrowed {
+	@DisplayName("현재 대출 중인 도서 조회 테스트")
+	class CurrentBorrowedBooksTest {
 		@Test
-		@DisplayName("도서 대출 상태 확인 성공")
+		@DisplayName("성공적인 현재 대출 도서 조회")
+		void getCurrentBorrowedBooks_Success() {
+			// Given
+			given(bookHistoryRepository.findCurrentBorrowsByUserId(
+				eq(testUser.getId()),
+				isNull()
+			)).willReturn(List.of(testBookHistory));
+
+			// When
+			List<BookHistoryResponse> result = bookHistoryService.getCurrentBorrowedBooks(
+				testUser.getId(), null
+			);
+
+			// Then
+			assertThat(result).hasSize(1);
+			assertThat(result.get(0).getUserId()).isEqualTo(testUser.getId());
+
+			verify(bookHistoryRepository).findCurrentBorrowsByUserId(
+				eq(testUser.getId()),
+				isNull()
+			);
+		}
+
+		@Test
+		@DisplayName("현재 대출 도서 조회 중 리포지토리 오류 발생")
+		void getCurrentBorrowedBooks_RepositoryError() {
+			// Given
+			given(bookHistoryRepository.findCurrentBorrowsByUserId(
+				eq(testUser.getId()),
+				isNull()
+			)).willThrow(new RuntimeException("Database error"));
+
+			// When & Then
+			assertThatThrownBy(() ->
+				bookHistoryService.getCurrentBorrowedBooks(
+					testUser.getId(), null
+				)
+			)
+				.isInstanceOf(BookHistoryException.class)
+				.hasMessageContaining(ErrorCode.HISTORY_NOT_FOUND.getMessage());
+		}
+	}
+
+	@Nested
+	@DisplayName("도서 대출 상태 확인 테스트")
+	class BookBorrowStatusTest {
+		@Test
+		@DisplayName("특정 도서 대출 상태 확인 - 대출 중")
 		void isBookCurrentlyBorrowed_Success() {
-			// given
-			BookItemEntity bookItem = mock(BookItemEntity.class);
-			BookHistoryEntity history = mock(BookHistoryEntity.class);
-			given(bookHistoryRepository.findCurrentBorrowByBookItem(bookItem))
-				.willReturn(Optional.of(history));
+			// Given
+			given(bookHistoryRepository.findCurrentBorrowByBookItem(testBookItem))
+				.willReturn(Optional.of(testBookHistory));
 
-			// when
-			boolean result = bookHistoryService.isBookCurrentlyBorrowed(bookItem);
+			// When
+			boolean result = bookHistoryService.isBookCurrentlyBorrowed(testBookItem);
 
-			// then
+			// Then
 			assertThat(result).isTrue();
 		}
+
+		@Test
+		@DisplayName("특정 도서 대출 상태 확인 - 대출 중 아님")
+		void isBookCurrentlyBorrowed_NotBorrowed() {
+			// Given
+			given(bookHistoryRepository.findCurrentBorrowByBookItem(testBookItem))
+				.willReturn(Optional.empty());
+
+			// When
+			boolean result = bookHistoryService.isBookCurrentlyBorrowed(testBookItem);
+
+			// Then
+			assertThat(result).isFalse();
+		}
 	}
 
 	@Nested
-	@DisplayName("사용자 현재 대출 목록 조회 테스트")
-	class GetCurrentBorrowsByUser {
+	@DisplayName("연체 상태 확인 테스트")
+	class OverdueStatusTest {
 		@Test
-		@DisplayName("사용자 현재 대출 목록 조회 성공")
-		void getCurrentBorrowsByUser_Success() {
-			// given
-			UserEntity user = UserEntity.builder()
-				.email("test@bookiki.com")
-				.password("password")
-				.companyId("EMP001")
-				.userName("Test User")
-				.role(Role.USER)
-				.provider(Provider.BOOKIKI)
+		@DisplayName("특정 대출 기록의 연체 상태 확인 - 연체")
+		void isOverdue_Success() {
+			// Given
+			testBookHistory = BookHistoryEntity.builder()
+				.overdue(true)
 				.build();
 
-			BookInformationEntity bookInfo = BookInformationEntity.builder()
-				.title("Spring Boot in Action")
-				.author("Craig Walls")
-				.isbn("978-1617292545")
-				.build();
+			given(bookHistoryRepository.findById(1))
+				.willReturn(Optional.of(testBookHistory));
 
-			BookItemEntity bookItem = mock(BookItemEntity.class);
-			when(bookItem.getId()).thenReturn(1);
-			when(bookItem.getBookInformation()).thenReturn(bookInfo);
+			// When
+			boolean result = bookHistoryService.isOverdue(1);
 
-			BookHistoryEntity history = mock(BookHistoryEntity.class);
-			when(history.getBookItem()).thenReturn(bookItem);
-			when(history.getUser()).thenReturn(user);
-			when(history.getBorrowedAt()).thenReturn(LocalDateTime.now());
+			// Then
+			assertThat(result).isTrue();
+		}
 
-			given(bookHistoryRepository.findCurrentBorrowsByUser(user))
-				.willReturn(List.of(history));
+		@Test
+		@DisplayName("특정 대출 기록의 연체 상태 확인 - 대출 기록 없음")
+		void isOverdue_NotFound() {
+			// Given
+			given(bookHistoryRepository.findById(1))
+				.willReturn(Optional.empty());
 
-			// when
-			List<BookHistoryResponse> result = bookHistoryService.getCurrentBorrowsByUser(user);
-
-			// then
-			assertThat(result).hasSize(1);
+			// When & Then
+			assertThatThrownBy(() -> bookHistoryService.isOverdue(1))
+				.isInstanceOf(BookHistoryException.class)
+				.hasMessageContaining(ErrorCode.HISTORY_NOT_FOUND.getMessage());
 		}
 	}
 }
