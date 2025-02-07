@@ -16,7 +16,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -42,6 +41,7 @@ import com.corp.bookiki.bookhistory.enitity.PeriodType;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -51,9 +51,8 @@ import com.corp.bookiki.util.CookieUtil;
 import lombok.extern.slf4j.Slf4j;
 
 @WebMvcTest(BookHistoryController.class)
-@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class, CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
-@AutoConfigureMockMvc(addFilters = false)
 @DisplayName("도서 대출 기록 컨트롤러 테스트")
 @Slf4j
 class BookHistoryControllerTest {
@@ -67,9 +66,6 @@ class BookHistoryControllerTest {
 	@MockBean
 	private BookHistoryService bookHistoryService;
 
-	@MockBean
-	private CurrentUserArgumentResolver currentUserArgumentResolver;
-
 	@Autowired
 	private UserRepository userRepository;
 
@@ -78,6 +74,8 @@ class BookHistoryControllerTest {
 	private Authentication userAuth;
 	private UserEntity userEntity;
 	private UserEntity adminEntity;
+	@Autowired
+	private CurrentUserArgumentResolver currentUserArgumentResolver;
 
 	@BeforeEach
 	void setup() {
