@@ -335,4 +335,134 @@ class BookItemControllerTest {
 			log.info("삭제된 도서 아이템 조회 테스트 성공");
 		}
 	}
+
+	@Nested
+	@DisplayName("도서 아이템 삭제 테스트")
+	class DeleteBookItem {
+		@Test
+		@WithMockUser
+		@DisplayName("정상적인 도서 아이템 삭제 시 성공")
+		void deleteBookItem_WhenValidRequest_ThenReturnsOk() throws Exception {
+			// given
+			Integer id = 1;
+			BookItemEntity mockEntity = BookItemEntity.builder()
+				.purchaseAt(LocalDateTime.now())
+				.bookStatus(BookStatus.AVAILABLE)
+				.deleted(true)
+				.build();
+			ReflectionTestUtils.setField(mockEntity, "id", id);
+			BookItemResponse mockResponse = BookItemResponse.from(mockEntity);
+
+			given(bookItemService.deleteBookItem(id)).willReturn(mockResponse);
+			log.info("Mock 서비스 설정 완료: 도서 아이템 삭제");
+
+			// when & then
+			mockMvc.perform(delete("/api/books/search/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isOk());
+
+			log.info("도서 아이템 삭제 테스트 성공");
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("존재하지 않는 도서 아이템 삭제 시 NotFound 반환")
+		void deleteBookItem_WhenNotFound_ThenReturnsNotFound() throws Exception {
+			// given
+			Integer id = 999;
+			given(bookItemService.deleteBookItem(id))
+				.willThrow(new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+			log.info("Mock 서비스 설정 완료: 존재하지 않는 도서 아이템 삭제");
+
+			// when & then
+			mockMvc.perform(delete("/api/books/search/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isNotFound());
+
+			log.info("존재하지 않는 도서 아이템 삭제 테스트 성공");
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("이미 삭제된 도서 아이템 삭제 시 에러 반환")
+		void deleteBookItem_WhenAlreadyDeleted_ThenReturnsBadRequest() throws Exception {
+			// given
+			Integer id = 1;
+			given(bookItemService.deleteBookItem(id))
+				.willThrow(new BookItemException(ErrorCode.BOOK_ALREADY_DELETED));
+			log.info("Mock 서비스 설정 완료: 이미 삭제된 도서 아이템");
+
+			// when & then
+			mockMvc.perform(delete("/api/books/search/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON))
+				.andExpect(status().isBadRequest());
+
+			log.info("이미 삭제된 도서 아이템 삭제 테스트 성공");
+		}
+	}
+
+	@Nested
+	@DisplayName("도서 아이템 등록 테스트")
+	class AddBookItem {
+		@Test
+		@WithMockUser
+		@DisplayName("정상적인 도서 아이템 등록 시 성공")
+		void addBookItem_WhenValidRequest_ThenReturnsOk() throws Exception {
+			// given
+			Integer id = 1;
+			LocalDateTime purchaseAt = LocalDateTime.now();
+			BookItemRequest request = BookItemRequest.builder()
+				.bookInformationId(id)
+				.purchaseAt(purchaseAt)
+				.build();
+
+			BookItemEntity mockEntity = BookItemEntity.builder()
+				.purchaseAt(purchaseAt)
+				.bookStatus(BookStatus.AVAILABLE)
+				.deleted(false)
+				.build();
+			ReflectionTestUtils.setField(mockEntity, "id", id);
+			BookItemResponse mockResponse = BookItemResponse.from(mockEntity);
+
+			given(bookItemService.addBookItem(any(BookItemRequest.class))).willReturn(mockResponse);
+			log.info("Mock 서비스 설정 완료: 도서 아이템 등록");
+
+			// when & then
+			mockMvc.perform(post("/api/admin/books/search/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isOk());
+
+			log.info("도서 아이템 등록 테스트 성공");
+		}
+
+		@Test
+		@WithMockUser
+		@DisplayName("도서 정보를 찾을 수 없을 때 에러 반환")
+		void addBookItem_WhenBookInfoNotFound_ThenReturnsBadRequest() throws Exception {
+			// given
+			Integer id = 999;
+			BookItemRequest request = BookItemRequest.builder()
+				.bookInformationId(id)
+				.purchaseAt(LocalDateTime.now())
+				.build();
+
+			given(bookItemService.addBookItem(any(BookItemRequest.class)))
+				.willThrow(new BookItemException(ErrorCode.BOOK_INFO_NOT_FOUND));
+			log.info("Mock 서비스 설정 완료: 존재하지 않는 도서 정보");
+
+			// when & then
+			mockMvc.perform(post("/api/admin/books/search/{id}", id)
+					.with(csrf())
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(objectMapper.writeValueAsString(request)))
+				.andExpect(status().isNotFound());
+
+			log.info("존재하지 않는 도서 정보로 도서 아이템 등록 테스트 성공");
+		}
+	}
 }

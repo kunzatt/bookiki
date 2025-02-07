@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookItemService {
 
 	private final BookItemRepository bookItemRepository;
+	private final BookInformationRepository bookInformationRepository;
 
 	@Transactional
 	public Page<BookItemDisplayResponse> selectBooksByKeyword(int page, int size, String sortBy, String direction, String keyword) {
@@ -77,5 +78,20 @@ public class BookItemService {
 
 		bookItem.delete();
 		return BookItemResponse.from(bookItem);
+	}
+
+	@Transactional
+	public BookItemResponse addBookItem(BookItemRequest bookItemRequest) {
+		BookInformationEntity bookInformation = bookInformationRepository.findById(bookItemRequest.getBookInformationId())
+			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_INFO_NOT_FOUND));
+
+		BookItemEntity bookItem = BookItemEntity.builder()
+			.bookInformation(bookInformation)
+			.purchaseAt(bookItemRequest.getPurchaseAt())
+			.build();
+
+		BookItemEntity savedBookItem = bookItemRepository.save(bookItem);
+
+		return BookItemResponse.from(savedBookItem);
 	}
 }

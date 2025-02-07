@@ -26,6 +26,7 @@ import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookInformationException;
+import com.corp.bookiki.user.service.CustomUserDetailsService;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
