@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.UserSignUpRequest;
@@ -24,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 class UserSignUpServiceTest {
 	@InjectMocks
 	private UserSignUpService userSignUpService;
+
+	@Mock
+	private PasswordEncoder passwordEncoder;
 
 	@Mock
 	private UserRepository userRepository;

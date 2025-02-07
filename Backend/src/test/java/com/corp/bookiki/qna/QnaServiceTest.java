@@ -44,9 +44,6 @@ class QnaServiceTest {
     @Mock
     private QnaCommentRepository qnaCommentRepository;
 
-    @Mock
-    private UserRepository userRepository;
-
     @InjectMocks
     private QnaService qnaService;
 
@@ -99,7 +96,13 @@ class QnaServiceTest {
     @DisplayName("관리자의 전체 문의사항 조회 테스트")
     void selectQnas_Admin() {
         // given
-        AuthUser authUser = new AuthUser(TEST_ADMIN_ID, "admin@test.com", Role.ADMIN);
+        // new AuthUser(TEST_ADMIN_ID, "admin@test.com", Role.ADMIN);
+        AuthUser authUser = AuthUser
+            .builder()
+            .id(TEST_ADMIN_ID)
+            .email("admin@corp.com")
+            .role(Role.ADMIN)
+            .build();
         Pageable pageable = PageRequest.of(0, 10);
 
         List<QnaEntity> mockQnas = Arrays.asList(

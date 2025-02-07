@@ -65,7 +65,7 @@ class QnaControllerTest {
     @MockBean
     private QnaService qnaService;
 
-    @MockBean
+    @Autowired
     private UserRepository userRepository;
 
     @MockBean
