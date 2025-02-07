@@ -8,12 +8,32 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 
+import com.corp.bookiki.jwt.service.JwtService;
+import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.service.AuthService;
+import com.corp.bookiki.user.service.CustomOAuth2UserService;
+import com.corp.bookiki.user.service.CustomUserDetailsService;
+
 @TestConfiguration
 public class TestSecurityBeansConfig {
 
 	@MockBean
-	private UserDetailsService userDetailsService;
+	private JwtService jwtService;
 
+	// @MockBean
+	// private UserRepository userRepository;
+
+	@MockBean
+	private CustomUserDetailsService customUserDetailsService;
+
+	@MockBean
+	private UserRepository userRepository;
+
+	@MockBean
+	private CustomOAuth2UserService customOAuth2UserService;
+
+	@MockBean
+	private AuthService authService;
 
 	@MockBean
 	private ClientRegistrationRepository clientRegistrationRepository;
