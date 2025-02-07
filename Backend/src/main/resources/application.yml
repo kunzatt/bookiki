@@ -135,6 +135,10 @@ naver:
     books-client-id: ${BOOKS_NAVER_CLIENT_ID}
     books-client-secret: ${BOOKS_NAVER_CLIENT_SECRET}
 
+file:
+  storage:
+    path: ${FILE_STORAGE_PATH}
+    default-image: ${FILE_STORAGE_PATH}/default-profile.png
 ---
 # test 프로필
 spring:
