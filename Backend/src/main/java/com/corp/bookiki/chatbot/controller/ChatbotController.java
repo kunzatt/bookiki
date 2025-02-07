@@ -77,7 +77,8 @@ public class ChatbotController {
         log.info("챗봇 메시지 수신 - 사용자: {}, 메시지: {}", user.getId(), request.getMessage());
 
         // 서비스 호출 및 응답 반환
-        ChatbotResponse response = chatbotService.createMessage(request, user);
+        Integer userId = user.getId();
+        ChatbotResponse response = chatbotService.createMessage(request, userId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -87,7 +88,8 @@ public class ChatbotController {
             @Parameter(hidden = true) @CurrentUser AuthUser user,
             @Valid @RequestBody ChatbotFeedbackRequest request
     ) {
-        chatbotService.createFeedback(request, user);
+        Integer userId = user.getId();
+        chatbotService.createFeedback(request, userId);
         return ResponseEntity.status(HttpStatus.OK).body("피드백이 입력되었습니다.");
     }
 

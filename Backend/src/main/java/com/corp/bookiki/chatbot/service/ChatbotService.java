@@ -36,11 +36,11 @@ public class ChatbotService {
     @org.springframework.beans.factory.annotation.Value("${dialogflow.language-code}")
     private String languageCode;
 
-    public ChatbotResponse createMessage(ChatbotRequest request, AuthUser user) {
+    public ChatbotResponse createMessage(ChatbotRequest request, Integer userId) {
         try {
             // 1. 세션 설정
             // 각 사용자별 대화 컨텍스트 관리
-            SessionName session = SessionName.of(projectId, user.getId().toString());
+            SessionName session = SessionName.of(projectId, userId.toString());
 
             // 사용자 입력 설정
             // 사용자 입력을 Dialogflow 형식으로 변환
@@ -176,12 +176,12 @@ public class ChatbotService {
     }
 
     // 관리자에게 추가 문의 처리 로직
-    public void createFeedback(ChatbotFeedbackRequest request, AuthUser user) {
+    public void createFeedback(ChatbotFeedbackRequest request, Integer userId) {
         try {
             log.info("사용자 피드백 접수 - 사용자: {}, Intent: {}, 카테고리: {}",
-                    user.getId(), request.getOriginalIntent(), request.getCategory());
+                     userId, request.getOriginalIntent(), request.getCategory());
             ChatbotFeedbackEntity feedback = ChatbotFeedbackEntity.builder()
-                    .userId(user.getId())
+                    .userId(userId)
                     .originalIntent(request.getOriginalIntent())
                     .feedbackMessage(request.getFeedbackMessage())
                     .category(request.getCategory())
