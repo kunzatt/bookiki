@@ -77,7 +77,6 @@ public class ChatbotFeedbackController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
             @Parameter(description = "조회 종료일", example = "2024-02-07T23:59:59")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate,
-            @Parameter(description = "페이지네이션 정보", example = "size=20&page=0&sort=id,desc")
             @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
 
         log.info("피드백 목록 조회: status={}, category={}", status, category);
