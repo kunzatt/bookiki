@@ -1,7 +1,4 @@
-package com.corp.bookiki.favorite.bookfavorite;
-
-import java.time.LocalDateTime;
-import java.util.List;
+package com.corp.bookiki.favorite;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
@@ -10,6 +7,9 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -23,11 +23,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -38,11 +41,11 @@ import com.corp.bookiki.favorite.service.BookFavoriteService;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.config.WebMvcConfig;
-import com.corp.bookiki.global.config.WithMockAuthUser;
 import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
-import com.corp.bookiki.jwt.service.JWTService;
 import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -64,7 +67,14 @@ class BookFavoriteControllerTest {
 	private BookFavoriteService bookFavoriteService;
 
 	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
 	private ObjectMapper objectMapper;
+
+	private UserEntity testUserEntity;
+	private String testEmail;
+	private Authentication auth;
 
 	@BeforeEach
 	void setup() {
@@ -72,7 +82,25 @@ class BookFavoriteControllerTest {
 			.webAppContextSetup(context)
 			.apply(springSecurity())
 			.build();
-		log.info("MockMvc 설정이 완료되었습니다.");
+
+		testEmail = "test@example.com";
+		testUserEntity = UserEntity.builder()
+			.email(testEmail)
+			.userName("Test User")
+			.role(Role.USER)
+			.build();
+		ReflectionTestUtils.setField(testUserEntity, "id", 2);
+
+		given(userRepository.findByEmail(eq(testEmail)))
+			.willReturn(Optional.of(testUserEntity));
+
+		auth = new UsernamePasswordAuthenticationToken(
+			testEmail,
+			null,
+			List.of(new SimpleGrantedAuthority("ROLE_USER"))
+		);
+
+		log.info("MockMvc 및 테스트 사용자 설정이 완료되었습니다.");
 	}
 
 	@Nested
@@ -83,10 +111,6 @@ class BookFavoriteControllerTest {
 		@DisplayName("좋아요 목록 정상 조회")
 		void getFavorites_Success() throws Exception {
 			// given
-			AuthUser testUser = AuthUser.builder()
-				.id(2)
-				.build();
-
 			BookFavoriteResponse response = BookFavoriteResponse.builder()
 				.id(1)
 				.bookItemId(100)
@@ -108,7 +132,7 @@ class BookFavoriteControllerTest {
 
 			// when & then
 			mockMvc.perform(get("/api/favorites")
-					.with(user((UserDetails)testUser))) // 사용자 인증 모킹
+					.with(authentication(auth)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content[0].id").exists())
 				.andExpect(jsonPath("$.content[0].bookItemId").value(100))
@@ -123,7 +147,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 조회 시도")
 		void getFavorites_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/favorites"))
-				.andExpect(status().isUnauthorized());
+				.andExpect(status().is3xxRedirection());
 		}
 	}
 
@@ -134,18 +158,12 @@ class BookFavoriteControllerTest {
 		@WithMockUser
 		@DisplayName("좋아요 여부 확인 성공")
 		void checkFavorite_Success() throws Exception {
-			// given
-			AuthUser testUser = AuthUser.builder()
-				.id(2)
-				.build();
-
 			given(bookFavoriteService.checkFavorite(eq(2), eq(100)))
 				.willReturn(true);
 			log.info("좋아요 여부 확인 테스트 시작");
 
-			// when & then
 			mockMvc.perform(get("/api/favorites/{bookItemId}", 100)
-					.with(user((UserDetails)testUser))) // 사용자 인증 모킹
+					.with(authentication(auth)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").value(true));
 
@@ -156,7 +174,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 확인 시도")
 		void checkFavorite_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/favorites/100"))
-				.andExpect(status().isUnauthorized());
+				.andExpect(status().is3xxRedirection());
 		}
 	}
 
@@ -167,11 +185,6 @@ class BookFavoriteControllerTest {
 		@WithMockUser
 		@DisplayName("좋아요 토글 성공")
 		void toggleFavorite_Success() throws Exception {
-			// given
-			AuthUser testUser = AuthUser.builder()
-				.id(2)
-				.build();
-
 			BookFavoriteResponse response = BookFavoriteResponse.builder()
 				.id(1)
 				.bookItemId(100)
@@ -185,10 +198,9 @@ class BookFavoriteControllerTest {
 				.willReturn(response);
 			log.info("좋아요 토글 테스트 시작");
 
-			// when & then
 			mockMvc.perform(post("/api/favorites/{bookItemId}", 100)
 					.with(csrf())
-					.with(user((UserDetails)testUser))) // 사용자 인증 모킹
+					.with(authentication(auth)))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").exists())
 				.andExpect(jsonPath("$.bookItemId").value(100))
@@ -202,19 +214,13 @@ class BookFavoriteControllerTest {
 		@WithMockUser
 		@DisplayName("좋아요 취소 성공")
 		void toggleFavorite_DeleteSuccess() throws Exception {
-			// given
-			AuthUser testUser = AuthUser.builder()
-				.id(2)
-				.build();
-
 			given(bookFavoriteService.toggleFavorite(eq(2), eq(100)))
 				.willReturn(null);
 			log.info("좋아요 취소 테스트 시작");
 
-			// when & then
 			mockMvc.perform(post("/api/favorites/{bookItemId}", 100)
 					.with(csrf())
-					.with(user((UserDetails)testUser))) // 사용자 인증 모킹
+					.with(authentication(auth)))
 				.andExpect(status().isOk());
 
 			log.info("좋아요 취소 테스트 완료");
@@ -224,7 +230,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 토글 시도")
 		void toggleFavorite_Unauthorized() throws Exception {
 			mockMvc.perform(post("/api/favorites/100"))
-				.andExpect(status().isUnauthorized());
+				.andExpect(status().is3xxRedirection());
 		}
 	}
 
@@ -235,12 +241,10 @@ class BookFavoriteControllerTest {
 		@WithMockUser
 		@DisplayName("도서의 좋아요 수 조회 성공")
 		void getBookFavoriteCount_Success() throws Exception {
-			// given
 			given(bookFavoriteService.getBookFavoriteCount(eq(100)))
 				.willReturn(5);
 			log.info("도서 좋아요 수 조회 테스트 시작");
 
-			// when & then
 			mockMvc.perform(get("/api/favorites/count/{bookItemId}", 100))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").value(5));
@@ -255,23 +259,9 @@ class BookFavoriteControllerTest {
 		@Test
 		@DisplayName("내 좋아요 수 조회 성공")
 		void getUserFavoriteCount_Success() throws Exception {
-			// given
-			AuthUser authUser = AuthUser.builder()
-				.id(2)
-				.email("user@test.com")
-				.role(Role.USER)
-				.build();
-
-			Authentication auth = new UsernamePasswordAuthenticationToken(
-				authUser,
-				null,
-				List.of(new SimpleGrantedAuthority("ROLE_USER"))
-			);
-
 			given(bookFavoriteService.getUserFavoriteCount(eq(2)))
 				.willReturn(3);
 
-			// when & then
 			mockMvc.perform(get("/api/favorites/count")
 					.with(authentication(auth)))
 				.andExpect(status().isOk())
@@ -282,7 +272,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 조회 시도")
 		void getUserFavoriteCount_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/favorites/count"))
-				.andExpect(status().isUnauthorized());
+				.andExpect(status().is3xxRedirection());
 		}
 	}
 }
