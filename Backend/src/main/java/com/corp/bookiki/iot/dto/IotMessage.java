@@ -14,8 +14,27 @@ import lombok.Setter;
 public class IotMessage {
 	private IotMessageType type;
 	private String bookId;
-	private ShelfEntity shelf;
+	private ShelfInfo shelf;
 	private LocalDateTime timestamp;
+
+	@Getter
+	@Setter
+	@NoArgsConstructor
+	public static class ShelfInfo {
+		private Integer id;
+		private Integer shelfNumber;
+		private Integer lineNumber;
+		private Integer category;
+
+		public static ShelfInfo from(ShelfEntity entity) {
+			ShelfInfo info = new ShelfInfo();
+			info.setId(entity.getId());
+			info.setShelfNumber(entity.getShelfNumber());
+			info.setLineNumber(entity.getLineNumber());
+			info.setCategory(entity.getCategory());
+			return info;
+		}
+	}
 
 	public static IotMessage bookReturn(String bookId) {
 		IotMessage message = new IotMessage();
@@ -29,7 +48,7 @@ public class IotMessage {
 		IotMessage message = new IotMessage();
 		message.setType(IotMessageType.LOCATION_UPDATE);
 		message.setBookId(bookId);
-		message.setShelf(shelf);
+		message.setShelf(ShelfInfo.from(shelf));
 		message.setTimestamp(LocalDateTime.now());
 		return message;
 	}
@@ -38,7 +57,7 @@ public class IotMessage {
 		IotMessage message = new IotMessage();
 		message.setType(IotMessageType.BOOK_LOCATION);
 		message.setBookId(bookId);
-		message.setShelf(shelf);
+		message.setShelf(ShelfInfo.from(shelf));
 		message.setTimestamp(LocalDateTime.now());
 		return message;
 	}

@@ -1,24 +1,27 @@
 package com.corp.bookiki.global.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
 import com.corp.bookiki.global.error.handler.IotWebSocketHandler;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSocket
+@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketConfigurer {
 
-    @Autowired
-    private IotWebSocketHandler iotWebSocketHandler;
+    private final IotWebSocketHandler iotWebSocketHandler;
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(iotWebSocketHandler, "/iot/ws")
-            .setAllowedOrigins("*");
+            .setAllowedOriginPatterns("*")
+            .addInterceptors(new HttpSessionHandshakeInterceptor());
     }
 
 }

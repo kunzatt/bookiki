@@ -1,10 +1,8 @@
 package com.corp.bookiki.global.config;
 
-import com.corp.bookiki.jwt.filter.JwtFilter;
-import com.corp.bookiki.user.service.CustomUserDetailsService;
-import com.corp.bookiki.user.service.CustomOAuth2UserService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +20,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
-import java.util.List;
+import com.corp.bookiki.jwt.filter.JwtFilter;
+import com.corp.bookiki.user.service.CustomOAuth2UserService;
+import com.corp.bookiki.user.service.CustomUserDetailsService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
@@ -50,16 +52,21 @@ public class SecurityConfig {
 							.configurationSource(request -> {
 								CorsConfiguration configuration = new CorsConfiguration();
 								configuration.setAllowedOriginPatterns(List.of(frontendUrl,
-										"http://i12a206.p.ssafy.io:8088"));
+										"http://i12a206.p.ssafy.io:8088",
+										"ws://70.12.246.118:8088"));
 
 								configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 								configuration.setAllowCredentials(true);
 								configuration.addAllowedHeader("*");
 								configuration.setExposedHeaders(Arrays.asList(
-										"Authorization",
-										"Set-Cookie",
-										"Access-Control-Allow-Credentials",
-										"Access-Control-Allow-Origin"
+									"Authorization",
+									"Set-Cookie",
+									"Access-Control-Allow-Credentials",
+									"Access-Control-Allow-Origin",
+									"Sec-WebSocket-Accept",           // WebSocket 헤더 추가
+									"Sec-WebSocket-Protocol",
+									"Sec-WebSocket-Version",
+									"Sec-WebSocket-Key"
 								));
 								configuration.setAllowedHeaders(Arrays.asList(
 										"Authorization",
@@ -68,7 +75,12 @@ public class SecurityConfig {
 										"Access-Control-Allow-Credentials",
 										"Access-Control-Allow-Origin",
 										"X-Requested-With",
-										"x-socket-transport"
+										"x-socket-transport",
+										"Upgrade",                        // WebSocket 헤더 추가
+										"Connection",
+										"Sec-WebSocket-Key",
+										"Sec-WebSocket-Protocol",
+										"Sec-WebSocket-Version"
 								));
 								configuration.setMaxAge(3600L);
 								return configuration;
@@ -98,7 +110,10 @@ public class SecurityConfig {
 								"/api/swagger-resources/**",
 								"/api/webjars/**",
 								"/api/test-token/**",
-								"/api/configuration/**"
+								"/api/configuration/**",
+								"/iot/**",
+								"/api/ws/**",
+								"/ws/**"
 						).permitAll()   //  인증 없이 사용
 						.requestMatchers("/api/admin").hasRole("ADMIN")  // Role에 따라 권한 부여
 						.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
