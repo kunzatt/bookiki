@@ -20,7 +20,7 @@ const activeTab = ref(router.currentRoute.value.path);
           :key="item.path"
           :to="item.path"
           class="flex flex-col items-center w-full py-1"
-          :class="{ 'text-[#344E41]': activeTab === item.path, 'text-[#DAD7CD]': activeTab !== item.path }"
+          :class="{ 'text-[#344E41]': activeTab === item.path, 'text-[#A3B18A]': activeTab !== item.path }"
           @click="activeTab = item.path"
         >
           <span class="material-icons text-2xl">{{ item.icon }}</span>
