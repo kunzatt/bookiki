@@ -24,7 +24,7 @@ public class SwaggerConfig {
 		return new OpenAPI()
 			.info(new Info()
 				.title("Bookiki API Documentation")
-				.description("<h3>Bookiki Reference for Developers</h3>Swagger를 이용한 Bookiki API")
+				.description("<h3>Bookiki Reference for Developers </h3>Swagger를 이용한 Bookiki API")
 				.version("v1.0")
 				.contact(new Contact()
 					.name("Support Team")
