@@ -27,6 +27,7 @@ public enum ErrorCode {
 	LOGIN_BAD_CREDENTIALS(HttpStatus.UNAUTHORIZED.value(), "이메일 또는 비밀번호가 일치하지 않습니다."),
 	LOGIN_FAILED(HttpStatus.UNAUTHORIZED.value(), "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."),
 	USER_NOT_ACTIVE(400, "대출 가능 기한이 아니므로 대출이 불가능합니다"),
+	
 	// 사용자 관련 에러
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다."),
 	USER_SEARCH_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "사용자 정보 조회 중 오류가 발생했습니다."),
@@ -36,6 +37,7 @@ public enum ErrorCode {
 	FAIL_EMAIL_SEND(500, "이메일 발송에 실패했습니다"),
 	HAS_OVERDUE_BOOKS(400, "이미 연체된 도서가 있습니다"),
 	BORROW_LIMIT_EXCEEDED(400, "대출 한도가 초과했습니다."),
+	ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "관리자 계정을 찾을 수 없습니다."),
 
 	// OAuth2 관련 에러 코드들
 	OAUTH2_INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 OAuth2 토큰입니다."),

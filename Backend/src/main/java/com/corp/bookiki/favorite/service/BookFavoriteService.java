@@ -57,7 +57,7 @@ public class BookFavoriteService {
 
 	// 특정 책의 모든 유저 ID 조회(알림 기능에 사용 유력)
 	@Transactional(readOnly = true)
-	public List<Integer> getAllFavoriteUserId(Integer userId, Integer bookItemId) {
+	public List<Integer> getAllFavoriteUserId(Integer bookItemId) {
 		return favoriteRepository.findUserIdByBookItemId(bookItemId);
 	}
 
