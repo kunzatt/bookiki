@@ -9,10 +9,10 @@ import com.corp.bookiki.notice.repository.NoticeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +36,9 @@ public class NoticeService {
 
     // 공지사항 조회 (삭제되지 않은)
     @Transactional(readOnly = true)
-    public List<NoticeEntity> selectAllNotices() {
+    public Page<NoticeEntity> selectAllNotices(Pageable pageable) {
         try {
-            return noticeRepository.findByDeletedFalseOrderByCreatedAtDesc();
+            return noticeRepository.findByDeletedFalseOrderByCreatedAtDesc(pageable);
         } catch (Exception ex) {
             log.error("공지사항 목록 조회 실패: {}", ex.getMessage());
             throw new NoticeException(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -46,17 +46,17 @@ public class NoticeService {
     }
 
     // 공지사항 검색
-    public List<NoticeEntity> searchNotice(String keyword) {
+    @Transactional(readOnly = true)
+    public Page<NoticeEntity> searchNotice(String keyword, Pageable pageable) {
         try {
             if (keyword == null || keyword.trim().isEmpty()) {
-                return selectAllNotices();
+                return selectAllNotices(pageable);
             }
-            return noticeRepository.findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(keyword, keyword);
+            return noticeRepository.findBySearchCriteria(keyword, pageable);
         } catch (Exception ex) {
             log.error("공지사항 검색 실패: {}", ex.getMessage());
             throw new NoticeException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-
     }
 
     // 공지사항 1개 조회

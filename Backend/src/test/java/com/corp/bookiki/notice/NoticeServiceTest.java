@@ -16,6 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
@@ -69,39 +70,47 @@ class NoticeServiceTest {
     @Test
     void selectAllNotices() {
         // given
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         List<NoticeEntity> notices = Arrays.asList(
                 NoticeEntity.builder().title("Notice 1").content("Content 1").build(),
                 NoticeEntity.builder().title("Notice 2").content("Content 2").build()
         );
+        Page<NoticeEntity> noticePage = new PageImpl<>(notices, pageable, notices.size());
 
-        when(noticeRepository.findByDeletedFalseOrderByCreatedAtDesc()).thenReturn(notices);
+        when(noticeRepository.findByDeletedFalseOrderByCreatedAtDesc(pageable)).thenReturn(noticePage);
 
         // when
-        List<NoticeEntity> result = noticeService.selectAllNotices();
+        Page<NoticeEntity> result = noticeService.selectAllNotices(pageable);
 
         // then
-        assertThat(result).hasSize(2);
-        assertThat(result.get(0).getTitle()).isEqualTo("Notice 1");
-        assertThat(result.get(0).isDeleted()).isFalse();
+        assertThat(result.getContent()).hasSize(2);
+        assertThat(result.getContent().get(0).getTitle()).isEqualTo("Notice 1");
+        assertThat(result.getContent().get(0).isDeleted()).isFalse();
+        assertThat(result.getTotalElements()).isEqualTo(2);
     }
 
     @Test
+    @DisplayName("키워드로 공지사항 검색")
     void searchNotice_WithKeyword() {
         // given
         String keyword = "Important";
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         NoticeEntity notice = NoticeEntity.builder()
                 .title("Important Notice")
                 .content("Test Content")
                 .build();
-        given(noticeRepository.findByDeletedFalseAndTitleContainingOrContentContainingOrderByCreatedAtDesc(keyword, keyword))
-                .willReturn(Collections.singletonList(notice));
+        List<NoticeEntity> notices = Collections.singletonList(notice);
+        Page<NoticeEntity> noticePage = new PageImpl<>(notices, pageable, notices.size());
+
+        given(noticeRepository.findBySearchCriteria(keyword, pageable)).willReturn(noticePage);
 
         // when
-        List<NoticeEntity> result = noticeService.searchNotice(keyword);
+        Page<NoticeEntity> result = noticeService.searchNotice(keyword, pageable);
 
         // then
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getTitle()).isEqualTo("Important Notice");
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getTitle()).isEqualTo("Important Notice");
+        assertThat(result.getTotalElements()).isEqualTo(1);
     }
 
     @DisplayName("공지사항 상세 조회 테스트")
