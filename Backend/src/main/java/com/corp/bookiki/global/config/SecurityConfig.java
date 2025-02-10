@@ -1,5 +1,11 @@
 package com.corp.bookiki.global.config;
 
+import com.corp.bookiki.jwt.filter.JwtFilter;
+import com.corp.bookiki.user.service.CustomOAuth2UserService;
+import com.corp.bookiki.user.service.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,12 +26,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import com.corp.bookiki.jwt.filter.JwtFilter;
-import com.corp.bookiki.user.service.CustomOAuth2UserService;
-import com.corp.bookiki.user.service.CustomUserDetailsService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Configuration
 @EnableWebSecurity
@@ -88,9 +88,9 @@ public class SecurityConfig {
 					log.debug("CORS 설정 완료");
 				})
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
-			.httpBasic(basic -> basic.disable())	// HTTP Basic 인증 비활성화
+			.httpBasic(basic -> basic.disable())    // HTTP Basic 인증 비활성화
 			.sessionManagement(session ->
-				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))	// 세션 사용 안함 (JWT 사용)
+				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))    // 세션 사용 안함 (JWT 사용)
 			.authorizeHttpRequests(auth -> {
 				log.debug("URL 기반 보안 설정 구성");
 				auth
@@ -119,23 +119,30 @@ public class SecurityConfig {
 						.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
 				log.debug("URL 보안 설정 완료");
 			})
+			.exceptionHandling(exception ->
+				exception.accessDeniedHandler((request, response, accessDeniedException) -> {
+					response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					response.setContentType("application/json;charset=UTF-8");
+					response.getWriter().write("접근 권한이 없습니다.");
+				})
+			)
 			.authenticationProvider(authenticationProvider())
 			.oauth2Login(oauth2 -> {
 				log.debug("OAuth2 로그인 설정 시작");
 				oauth2
-				.userInfoEndpoint(userInfo -> {
-					log.debug("OAuth2 사용자 서비스 설정");
-					userInfo.userService(customOAuth2UserService);
-				});
-			log.debug("OAuth2 로그인 설정 완료");
+					.userInfoEndpoint(userInfo -> {
+						log.debug("OAuth2 사용자 서비스 설정");
+						userInfo.userService(customOAuth2UserService);
+					});
+				log.debug("OAuth2 로그인 설정 완료");
 			})
 			.logout(AbstractHttpConfigurer::disable)
 			.logout(logout -> {
-			logout
+				logout
 					.logoutUrl("/api/auth/logout")
 					.permitAll();
 			});
-//			.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
+		//            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
 
 
 		log.info("보안 필터 체인 구성 완료");

@@ -1,6 +1,7 @@
 package com.corp.bookiki.bookhistory.controller;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,7 +10,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,14 +17,18 @@ import org.springframework.web.bind.annotation.RestController;
 import com.corp.bookiki.bookhistory.dto.BookHistoryResponse;
 import com.corp.bookiki.bookhistory.enitity.PeriodType;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
+import com.corp.bookiki.global.annotation.CurrentUser;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
+import com.corp.bookiki.global.error.exception.UserException;
+import com.corp.bookiki.user.dto.AuthUser;
+import com.corp.bookiki.user.entity.Role;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -34,52 +38,206 @@ import lombok.extern.slf4j.Slf4j;
 
 @Tag(name = "도서 대출 기록 API", description = "도서 대출 기록 조회 관련 API")
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 @Slf4j
 public class BookHistoryController {
 	private final BookHistoryService bookHistoryService;
 
 	@Operation(
-		summary = "도서 대출 기록 전체 조회",
-		description = """
-            기간별 도서 대출 기록을 조회합니다.
-            
-            - periodType이 CUSTOM인 경우 startDate, endDate가 필수입니다.
-            - 다른 periodType인 경우 startDate, endDate는 자동으로 설정됩니다.
-            
-            조회 가능한 기간 타입:
-            - LAST_WEEK: 최근 1주일
-            - LAST_MONTH: 최근 1개월
-            - LAST_THREE_MONTHS: 최근 3개월
-            - LAST_SIX_MONTHS: 최근 6개월
-            - LAST_YEAR: 최근 1년
-            - CUSTOM: 사용자 지정 기간
-            
-            검색 기능:
-            - keyword 파라미터로 도서 제목 또는 저자 검색 가능
-            """
+		summary = "관리자용 도서 대출 기록 전체 조회",
+		description = "관리자가 전체 도서 대출 기록을 조회합니다."
 	)
-	@ApiResponses(value = {
+	@ApiResponses({
 		@ApiResponse(
 			responseCode = "200",
 			description = "조회 성공",
 			content = @Content(
 				mediaType = "application/json",
-				array = @ArraySchema(schema = @Schema(implementation = BookHistoryResponse.class))
+				schema = @Schema(implementation = Page.class),
+				examples = @ExampleObject(
+					value = """
+                    {
+                        "content": [{
+                            "id": 1,
+                            "userId": 100,
+                            "userName": "홍길동",
+                            "companyId": "CORP123",
+                            "bookItemId": 200,
+                            "borrowedAt": "2024-02-04T10:00:00",
+                            "returnedAt": "2024-02-18T10:00:00",
+                            "isOverdue": false
+                        }],
+                        "pageable": {
+                            "pageNumber": 0,
+                            "pageSize": 20,
+                            "sort": {
+                                "sorted": true,
+                                "direction": "DESC"
+                            }
+                        },
+                        "totalElements": 1
+                    }
+                    """
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "401",
+			description = "권한 없음",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class),
+				examples = @ExampleObject(
+					value = """
+                    {
+                        "timestamp": "2024-02-04T10:00:00",
+                        "status": 401,
+                        "message": "접근 권한이 없습니다",
+                        "errors": []
+                    }
+                    """
+				)
 			)
 		),
 		@ApiResponse(
 			responseCode = "400",
-			description = """
-                잘못된 요청
-                - 필수 파라미터 누락
-                - CUSTOM 타입일 때 시작일/종료일 누락
-                - 시작일이 종료일보다 늦은 경우
-                """,
+			description = "잘못된 입력값",
 			content = @Content(
 				mediaType = "application/json",
-				schema = @Schema(implementation = ErrorResponse.class)
+				schema = @Schema(implementation = ErrorResponse.class),
+				examples = @ExampleObject(
+					value = """
+                    {
+                        "timestamp": "2024-02-04T10:00:00",
+                        "status": 400,
+                        "message": "잘못된 입력값입니다",
+                        "errors": []
+                    }
+                    """
+				)
+			)
+		)
+	})
+	@GetMapping("/admin/book-histories")
+	public ResponseEntity<Page<BookHistoryResponse>> getAdminBookHistories(
+		@Parameter(description = "조회 기간 타입") @RequestParam PeriodType periodType,
+		@Parameter(description = "시작일 (YYYY-MM-DD, CUSTOM 타입일 때 필수)")
+		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+		@Parameter(description = "종료일 (YYYY-MM-DD, CUSTOM 타입일 때 필수)")
+		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+		@Parameter(description = "사용자 이름") @RequestParam(required = false) String userName,
+		@Parameter(description = "회사 ID") @RequestParam(required = false) String companyId,
+		@Parameter(description = "연체 여부") @RequestParam(required = false) Boolean overdue,
+		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
+	) {
+
+		LocalDate start = getStartDate(periodType, startDate);
+		LocalDate end = getEndDate(periodType, endDate);
+
+		return ResponseEntity.ok(
+			bookHistoryService.getAdminBookHistories(start, end, userName, companyId, overdue, pageable)
+		);
+	}
+
+	@Operation(
+		summary = "사용자용 도서 대출 기록 조회",
+		description = "사용자가 자신의 도서 대출 기록을 조회합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "조회 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = Page.class),
+				examples = @ExampleObject(
+					value = """
+                    {
+                        "content": [{
+                            "id": 1,
+                            "userId": 100,
+                            "bookItemId": 200,
+                            "borrowedAt": "2024-02-04T10:00:00",
+                            "returnedAt": "2024-02-18T10:00:00",
+                            "isOverdue": false
+                        }],
+                        "pageable": {
+                            "pageNumber": 0,
+                            "pageSize": 20,
+                            "sort": {
+                                "sorted": true,
+                                "direction": "DESC"
+                            }
+                        },
+                        "totalElements": 1
+                    }
+                    """
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "400",
+			description = "잘못된 입력값",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class),
+				examples = @ExampleObject(
+					value = """
+                    {
+                        "timestamp": "2024-02-04T10:00:00",
+                        "status": 400,
+                        "message": "잘못된 입력값입니다",
+                        "errors": []
+                    }
+                    """
+				)
+			)
+		)
+	})
+	@GetMapping("/user/book-histories")
+	public ResponseEntity<Page<BookHistoryResponse>> getUserBookHistories(
+		@CurrentUser AuthUser authUser,
+		@Parameter(description = "조회 기간 타입") @RequestParam PeriodType periodType,
+		@Parameter(description = "시작일 (YYYY-MM-DD, CUSTOM 타입일 때 필수)")
+		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+		@Parameter(description = "종료일 (YYYY-MM-DD, CUSTOM 타입일 때 필수)")
+		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
+		@Parameter(description = "연체 여부로 필터링") @RequestParam(required = false) Boolean overdue,
+		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
+	) {
+
+		LocalDate start = getStartDate(periodType, startDate);
+		LocalDate end = getEndDate(periodType, endDate);
+
+		return ResponseEntity.ok(
+			bookHistoryService.getUserBookHistories(authUser.getId(), start, end, overdue, pageable)
+		);
+	}
+
+	@Operation(
+		summary = "현재 대출 중인 도서 목록 조회",
+		description = "사용자의 현재 대출 중인 도서 목록을 조회합니다."
+	)
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "조회 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = List.class),
+				examples = @ExampleObject(
+					value = """
+                [{
+                    "id": 1,
+                    "userId": 100,
+                    "bookItemId": 200,
+                    "borrowedAt": "2024-02-04T10:00:00",
+                    "dueDate": "2024-02-18T10:00:00",
+                    "isOverdue": false
+                }]
+                """
+				)
 			)
 		),
 		@ApiResponse(
@@ -87,166 +245,50 @@ public class BookHistoryController {
 			description = "대출 기록을 찾을 수 없음",
 			content = @Content(
 				mediaType = "application/json",
-				schema = @Schema(implementation = ErrorResponse.class)
+				schema = @Schema(implementation = ErrorResponse.class),
+				examples = @ExampleObject(
+					value = """
+                {
+                    "timestamp": "2024-02-04T10:00:00",
+                    "status": 404,
+                    "message": "대출 기록을 찾을 수 없습니다",
+                    "errors": []
+                }
+                """
+				)
 			)
 		)
 	})
-	@GetMapping("/books")
-	public ResponseEntity<Page<BookHistoryResponse>> getBookHistories(
-		@Parameter(
-			description = "조회 기간 타입",
-			required = true,
-			schema = @Schema(implementation = PeriodType.class)
-		)
-		@RequestParam PeriodType periodType,
-
-		@Parameter(
-			description = "시작일 (YYYY-MM-DD)",
-			example = "2024-02-04"
-		)
-		@RequestParam(required = false)
-		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-
-		@Parameter(
-			description = "종료일 (YYYY-MM-DD)",
-			example = "2024-02-18"
-		)
-		@RequestParam(required = false)
-		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
-
-		@Parameter(
-			description = "검색 키워드 (도서 제목 또는 저자)",
-			example = "스프링"
-		)
-		@RequestParam(required = false) String keyword,
-
-		@Parameter(hidden = true)
-		@PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC)
-		Pageable pageable
+	@GetMapping("user/book-histories/current")
+	public ResponseEntity<List<BookHistoryResponse>> getCurrentBorrowedBooks(
+		@CurrentUser AuthUser authUser,
+		@Parameter(description = "연체 도서만 조회") @RequestParam(required = false) Boolean onlyOverdue
 	) {
-		log.info("도서 대출 기록 조회 요청 - periodType: {}, startDate: {}, endDate: {}, keyword: {}",
-			periodType, startDate, endDate, keyword);
-
-		validatePeriod(periodType, startDate, endDate);
-
-		LocalDate start = (periodType == PeriodType.CUSTOM) ? startDate : periodType.getStartDate();
-		LocalDate end = (periodType == PeriodType.CUSTOM) ? endDate : LocalDate.now();
-
-		Page<BookHistoryResponse> response = bookHistoryService.getBookHistories(
-			start, end, keyword, pageable);
-
-		log.info("도서 대출 기록 조회 완료 - 총 {} 건", response.getTotalElements());
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(
+			bookHistoryService.getCurrentBorrowedBooks(authUser.getId(), onlyOverdue)
+		);
 	}
 
-	@Operation(
-		summary = "특정 사용자의 도서 대출 기록 조회",
-		description = """
-            특정 사용자의 기간별 도서 대출 기록을 조회합니다.
-            
-            - periodType이 CUSTOM인 경우 startDate, endDate가 필수입니다.
-            - 다른 periodType인 경우 startDate, endDate는 자동으로 설정됩니다.
-            """
-	)
-	@ApiResponses(value = {
-		@ApiResponse(
-			responseCode = "200",
-			description = "조회 성공",
-			content = @Content(
-				mediaType = "application/json",
-				array = @ArraySchema(schema = @Schema(implementation = BookHistoryResponse.class))
-			)
-		),
-		@ApiResponse(
-			responseCode = "400",
-			description = """
-                잘못된 요청
-                - 필수 파라미터 누락
-                - CUSTOM 타입일 때 시작일/종료일 누락
-                - 시작일이 종료일보다 늦은 경우
-                """,
-			content = @Content(
-				mediaType = "application/json",
-				schema = @Schema(implementation = ErrorResponse.class)
-			)
-		),
-		@ApiResponse(
-			responseCode = "404",
-			description = "사용자 또는 대출 기록을 찾을 수 없음",
-			content = @Content(
-				mediaType = "application/json",
-				schema = @Schema(implementation = ErrorResponse.class)
-			)
-		)
-	})
-	@GetMapping("/books/{userId}")
-	public ResponseEntity<Page<BookHistoryResponse>> getUserBookHistories(
-		@Parameter(
-			description = "사용자 ID",
-			required = true,
-			example = "1"
-		)
-		@PathVariable Integer userId,
-
-		@Parameter(
-			description = "조회 기간 타입",
-			required = true,
-			schema = @Schema(implementation = PeriodType.class)
-		)
-		@RequestParam PeriodType periodType,
-
-		@Parameter(
-			description = "시작일 (YYYY-MM-DD)",
-			example = "2024-02-04"
-		)
-		@RequestParam(required = false)
-		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
-
-		@Parameter(
-			description = "종료일 (YYYY-MM-DD)",
-			example = "2024-02-18"
-		)
-		@RequestParam(required = false)
-		@DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
-
-		@Parameter(
-			description = "검색 키워드 (도서 제목 또는 저자)",
-			example = "스프링"
-		)
-		@RequestParam(required = false) String keyword,
-
-		@Parameter(hidden = true)
-		@PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC)
-		Pageable pageable
-	) {
-		log.info("사용자별 도서 대출 기록 조회 요청 - userId: {}, periodType: {}, startDate: {}, endDate: {}, keyword: {}",
-			userId, periodType, startDate, endDate, keyword);
-
-		validatePeriod(periodType, startDate, endDate);
-
-		LocalDate start = (periodType == PeriodType.CUSTOM) ? startDate : periodType.getStartDate();
-		LocalDate end = (periodType == PeriodType.CUSTOM) ? endDate : LocalDate.now();
-
-		Page<BookHistoryResponse> response = bookHistoryService.getUserBookHistories(
-			userId, start, end, keyword, pageable);
-
-		log.info("사용자별 도서 대출 기록 조회 완료 - 사용자: {}, 총 {} 건",
-			userId, response.getTotalElements());
-
-		return ResponseEntity.ok(response);
-	}
-
-	private void validatePeriod(PeriodType periodType, LocalDate startDate, LocalDate endDate) {
+	private LocalDate getStartDate(PeriodType periodType, LocalDate startDate) {
 		if (periodType == PeriodType.CUSTOM) {
-			if (startDate == null || endDate == null) {
-				log.warn("CUSTOM 타입 조회 시 날짜 미입력");
+			if (startDate == null) {
 				throw new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE_NO_DATE);
 			}
-			if (startDate.isAfter(endDate)) {
-				log.warn("시작일이 종료일보다 늦음 - startDate: {}, endDate: {}", startDate, endDate);
+			return startDate;
+		}
+		return periodType.getStartDate();
+	}
+
+	private LocalDate getEndDate(PeriodType periodType, LocalDate endDate) {
+		if (periodType == PeriodType.CUSTOM) {
+			if (endDate == null) {
+				throw new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE_NO_DATE);
+			}
+			if (endDate.isBefore(getStartDate(periodType, endDate))) {
 				throw new BookHistoryException(ErrorCode.INVALID_INPUT_VALUE_AFTER_DATE);
 			}
+			return endDate;
 		}
+		return LocalDate.now();
 	}
 }
