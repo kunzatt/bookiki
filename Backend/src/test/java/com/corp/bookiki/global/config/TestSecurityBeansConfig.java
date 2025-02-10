@@ -1,6 +1,11 @@
 package com.corp.bookiki.global.config;
 
 
+import com.corp.bookiki.jwt.service.JwtService;
+import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.service.AuthService;
+import com.corp.bookiki.user.service.CustomOAuth2UserService;
+import com.corp.bookiki.user.service.CustomUserDetailsService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -19,9 +24,6 @@ public class TestSecurityBeansConfig {
 
 	@MockBean
 	private JwtService jwtService;
-
-	// @MockBean
-	// private UserRepository userRepository;
 
 	@MockBean
 	private CustomUserDetailsService customUserDetailsService;
