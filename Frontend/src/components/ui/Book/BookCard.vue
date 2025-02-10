@@ -2,7 +2,6 @@
 <script setup lang="ts">
 import { type BookCardProps } from './BookCard'
 import { computed } from 'vue';
-import Book from '@/assets/book2.png'
 
 const props = defineProps<BookCardProps>()
 
