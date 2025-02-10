@@ -26,6 +26,7 @@ public class ProfileImageService {
     private static final String PROFILE_IMAGE_PATH = "/images/profile/";
 
     // 프로필 사진 변경
+    @Transactional
     public void updateProfileImage(Integer userId, MultipartFile file) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
@@ -45,6 +46,7 @@ public class ProfileImageService {
     }
 
     // 프로필 사진 삭제
+    @Transactional
     public void deleteProfileImage(Integer userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
@@ -61,6 +63,7 @@ public class ProfileImageService {
 
     }
 
+    @Transactional(readOnly = true)
     public ProfileResponse getProfileImage(Integer userId) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
