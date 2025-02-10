@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import type { MenuItem, User } from './Sidebar';
 import { menuItems } from './Sidebar';
 import { useAuthStore } from '@/stores/auth';
+import BookikiLogo from '@/assets/BookikiLogo.png'
 
 // props와 interface 제거
 // Store 사용
@@ -33,11 +34,11 @@ const isMenuOpen = (menuName: string): boolean => {
 <template>
   <aside class="w-64 h-screen bg-[#F6F6F3] shadow-lg">
     <!-- 로고 -->
-    <div class="px-6 py-4">
+    <div class="px-6 py-4 flex flex-col items-center justify-center">
       <img 
-        :src="LogoImage" 
+        :src="BookikiLogo" 
         alt="Bookiki Logo" 
-        class="h-10 w-auto"
+        class="h-32 w-auto"
       />
     </div>
 
