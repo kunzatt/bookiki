@@ -6,6 +6,9 @@ import com.corp.bookiki.user.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,8 +26,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -44,38 +45,48 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		log.info("보안 필터 체인 구성 시작");
 		http
-			.csrf((auth) -> auth.disable())    // CSRF 보호 비활성화
-			.cors(cors -> {
-				log.debug("CORS 설정 구성");
-				cors
-					.configurationSource(request -> {
-						CorsConfiguration configuration = new CorsConfiguration();
-						configuration.setAllowedOriginPatterns(List.of(frontendUrl,
-							"http://i12a206.p.ssafy.io:8088"));
+			.csrf((auth) -> auth.disable())	// CSRF 보호 비활성화
+				.cors(cors -> {
+					log.debug("CORS 설정 구성");
+					cors
+							.configurationSource(request -> {
+								CorsConfiguration configuration = new CorsConfiguration();
+								configuration.setAllowedOriginPatterns(List.of(frontendUrl,
+										"http://i12a206.p.ssafy.io:8088",
+										"ws://70.12.246.118:8088"));
 
-						configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-						configuration.setAllowCredentials(true);
-						configuration.addAllowedHeader("*");
-						configuration.setExposedHeaders(Arrays.asList(
-							"Authorization",
-							"Set-Cookie",
-							"Access-Control-Allow-Credentials",
-							"Access-Control-Allow-Origin"
-						));
-						configuration.setAllowedHeaders(Arrays.asList(
-							"Authorization",
-							"Content-Type",
-							"Cookie",
-							"Access-Control-Allow-Credentials",
-							"Access-Control-Allow-Origin",
-							"X-Requested-With",
-							"x-socket-transport"
-						));
-						configuration.setMaxAge(3600L);
-						return configuration;
-					});
-				log.debug("CORS 설정 완료");
-			})
+								configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+								configuration.setAllowCredentials(true);
+								configuration.addAllowedHeader("*");
+								configuration.setExposedHeaders(Arrays.asList(
+									"Authorization",
+									"Set-Cookie",
+									"Access-Control-Allow-Credentials",
+									"Access-Control-Allow-Origin",
+									"Sec-WebSocket-Accept",           // WebSocket 헤더 추가
+									"Sec-WebSocket-Protocol",
+									"Sec-WebSocket-Version",
+									"Sec-WebSocket-Key"
+								));
+								configuration.setAllowedHeaders(Arrays.asList(
+										"Authorization",
+										"Content-Type",
+										"Cookie",
+										"Access-Control-Allow-Credentials",
+										"Access-Control-Allow-Origin",
+										"X-Requested-With",
+										"x-socket-transport",
+										"Upgrade",                        // WebSocket 헤더 추가
+										"Connection",
+										"Sec-WebSocket-Key",
+										"Sec-WebSocket-Protocol",
+										"Sec-WebSocket-Version"
+								));
+								configuration.setMaxAge(3600L);
+								return configuration;
+							});
+					log.debug("CORS 설정 완료");
+				})
 			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 			.httpBasic(basic -> basic.disable())    // HTTP Basic 인증 비활성화
 			.sessionManagement(session ->
@@ -83,26 +94,29 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> {
 				log.debug("URL 기반 보안 설정 구성");
 				auth
-					.requestMatchers(
-						"/api/auth/**",  // 인증 관련 엔드포인트
-						"/api/email/**", // 이메일 인증
-						"/api/user/signup/**", // 이메일 인증
-						"/api/user/login/**", // 이메일 인증
-						"/api/books/**",
-						"/api/users/books/**",
-						"/api/oauth2/**",
-						"/api/login/**",
-						"/api/api-docs/**",
-						"/api/api-docs",
-						"/api/swagger-ui/**",
-						"/api/swagger-ui.html",
-						"/api/swagger-resources/**",
-						"/api/webjars/**",
-						"/api/test-token/**",
-						"/api/configuration/**"
-					).permitAll()   //  인증 없이 사용
-					.requestMatchers("/api/admin/**").hasRole("ADMIN")  // Role에 따라 권한 부여
-					.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
+						.requestMatchers(
+								"/api/auth/**",  // 인증 관련 엔드포인트
+								"/api/email/**", // 이메일 인증
+								"/api/user/signup/**", // 이메일 인증
+								"/api/user/login/**", // 이메일 인증
+								"/api/books/**",
+								"/api/users/books/**",
+								"/api/oauth2/**",
+								"/api/login/**",
+								"/api/api-docs/**",
+								"/api/api-docs",
+								"/api/swagger-ui/**",
+								"/api/swagger-ui.html",
+								"/api/swagger-resources/**",
+								"/api/webjars/**",
+								"/api/test-token/**",
+								"/api/configuration/**",
+								"/iot/**",
+								"/api/ws/**",
+								"/ws/**"
+						).permitAll()   //  인증 없이 사용
+						.requestMatchers("/api/admin/**").hasRole("ADMIN")  // Role에 따라 권한 부여
+						.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
 				log.debug("URL 보안 설정 완료");
 			})
 			.exceptionHandling(exception ->

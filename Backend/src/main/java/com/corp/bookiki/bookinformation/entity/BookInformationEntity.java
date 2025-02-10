@@ -57,11 +57,11 @@ public class BookInformationEntity {
 	private String description;
 
 	@Column(length = 10)
-	private String category;
+	private Integer category;
 
 	@Builder
 	public BookInformationEntity(String title, String author, String publisher, String isbn, LocalDateTime publishedAt,
-		String image, String description, String category) {
+		String image, String description, Integer category) {
 		this.title = title;
 		this.author = author;
 		this.publisher = publisher;
