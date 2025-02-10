@@ -93,7 +93,7 @@ public class BookBorrowController {
 		)
 	})
 	public ResponseEntity<BookBorrowResponse> borrowBook(
-		@Parameter(hidden = true) @CurrentUser AuthUser authUser,
+		@Parameter @CurrentUser AuthUser authUser,
 		@Parameter(description = "도서 아이템 ID", required = true, example = "1")
 		@RequestParam @NotNull Integer bookItemId
 	) {

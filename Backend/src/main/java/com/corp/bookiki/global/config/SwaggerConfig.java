@@ -9,12 +9,12 @@ import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.List;
-
-// 스웨거 주소 : http://i12a206.p.ssafy.io:8088/swagger-ui/index.html#/
 
 @Configuration
 public class SwaggerConfig {
@@ -47,5 +47,19 @@ public class SwaggerConfig {
 						.bearerFormat("JWT")
 						.in(SecurityScheme.In.HEADER)))
 			.addSecurityItem(new SecurityRequirement().addList("bearerAuth"));
+	}
+
+	/**
+	 * Swagger에서 @CurrentUser AuthUser authUser를 자동으로 제거하여 JSON 입력 없이 Bearer Token을 기반으로 인증 가능하게 설정
+	 */
+	@Bean
+	public OperationCustomizer customizeOperation() {
+		return (operation, handlerMethod) -> {
+			List<Parameter> parameters = operation.getParameters();
+			if (parameters != null) {
+				parameters.removeIf(param -> param.getName().equals("authUser"));
+			}
+			return operation;
+		};
 	}
 }
