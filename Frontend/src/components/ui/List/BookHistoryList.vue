@@ -1,9 +1,13 @@
 <script setup lang="ts">
 interface HistoryItem {
-  title: string;      // 도서명
-  category: string;   // 기록/공학 등 카테고리
-  dueDate: string;    // 대출일
-  returnDate: string; // 반납일
+  id: number;         
+  book_item_id: number;
+  user_id: number;
+  title: string;      
+  category: string;   
+  dueDate: string;    
+  returnDate: string; 
+  status?: 'overdue' | 'returned' | 'borrowed';
 }
 
 interface Props {

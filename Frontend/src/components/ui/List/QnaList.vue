@@ -2,10 +2,14 @@
 import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
 
 interface QnaItem {
-  title: string;      // 문의 제목
-  status: string;     // 상태 (질문/회망도서 신청/이름사변 변경 등)
-  author: string;     // 작성자
-  date: string;       // 작성일
+  id: number;         // string -> number로 수정
+  title: string;      
+  qna_type: string;
+  content: string;
+  author_id: number;
+  created_at: string;
+  updated_at: string;
+  deleted: number;
 }
 
 interface Props {
@@ -22,13 +26,13 @@ const formatDate = (dateString: string) => {
 };
 
 // 상태에 따른 배지 타입 매핑
-const getStatusType = (status: string) => {
+const getStatusType = (qna_type: string) => {
   const typeMap = {
     '질문': 'primary',
     '회망도서 신청': 'info',
     '이름/사번 변경': 'warning'
   };
-  return typeMap[status] || 'gray';
+  return typeMap[qna_type] || 'gray';
 };
 </script>
 
@@ -43,8 +47,8 @@ const getStatusType = (status: string) => {
         <div class="flex justify-between items-start mb-2">
           <!-- 상태 배지 -->
           <BasicStatusBadge
-            :text="item.status"
-            :type="getStatusType(item.status)"
+            :text="item.qna_type"
+            :type="getStatusType(item.qna_type)"
             :isEnabled="true"
           />
           <!-- 날짜 -->
@@ -72,19 +76,19 @@ const getStatusType = (status: string) => {
 const qnaItems = [
   {
     title: "도커, 컨테이너 빌드업!",
-    status: "질문",
+    qna_type: "질문",
     author: "박성문",
     date: "2025-02-09"
   },
   {
     title: "도커, 컨테이너 빌드업!",
-    status: "회망도서 신청",
+    qna_type: "회망도서 신청",
     author: "박성문",
     date: "2025-02-10"
   },
   {
     title: "도커, 컨테이너 빌드업!",
-    status: "이름/사번 변경",
+    qna_type: "이름/사번 변경",
     author: "박성문",
     date: "2025-02-10"
   }

@@ -6,11 +6,24 @@ interface Props {
   /**
    * 사용자 정보
    */
-  user: {
-    name: string;
-    id: string;
-    profileImage?: string;
-    status?: string;
+  interface User {
+    id: number;        
+    email: string;
+    provider: 'BOOKIKI' | 'NAVER' | 'GOOGLE';
+    password?: string;
+    user_name: string;
+    company_id: string;
+    role: 'USER' | 'ADMIN';
+    created_at: string;
+    updated_at: string;
+    active_at?: string;
+    profile_image?: string;
+    deleted: number;
+    status: {
+      availableLoans: number;
+      isOverdue: boolean;
+      isSuspended: boolean;
+    };
   }
 }
 
@@ -38,12 +51,12 @@ const handleProfileChange = () => {
       <div class="w-16 h-16 rounded-full overflow-hidden">
         <img 
           :src="user.profileImage || '/default-profile.jpg'" 
-          :alt="user.name"
+          :alt="user.user_name"
           class="w-full h-full object-cover"
         />
       </div>
       <div class="flex-1">
-        <h2 class="text-xl font-medium text-gray-900">{{ user.name }}</h2>
+        <h2 class="text-xl font-medium text-gray-900">{{ user.user_name }}</h2>
         <p class="text-sm text-gray-500">{{ user.id }}</p>
         <div class="mt-2">
           <BasicButton 
@@ -81,7 +94,7 @@ const handleProfileChange = () => {
 <!-- 
 <script setup>
 const user = {
-  name: '박성문',
+  user_name: '박성문',
   id: 'HN12345678',
   profileImage: '/path/to/profile.jpg',
   status: '현재 2권 대출 가능 / 연체 / 일시정지'
