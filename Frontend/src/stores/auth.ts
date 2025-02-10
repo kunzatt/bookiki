@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { User } from '../components/common/Sidebar';
+import type { User } from '../api/sideBar';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
