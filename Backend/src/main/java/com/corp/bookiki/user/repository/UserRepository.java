@@ -22,5 +22,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 	Optional<UserEntity> findByEmailAndProvider(String email, Provider provider);
 
 	List<UserEntity> findAllByRole(Role role);
+	Optional<UserEntity> findById(Integer id);
 
 }
