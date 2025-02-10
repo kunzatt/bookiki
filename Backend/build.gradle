@@ -75,6 +75,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.2'
     testImplementation 'org.mockito:mockito-core'
     testImplementation 'org.mockito:mockito-junit-jupiter'
+    testImplementation 'org.mockito:mockito-inline:3.12.4'
 
     // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
@@ -96,9 +97,6 @@ dependencies {
 
     // json
     implementation 'org.json:json:20231013'
-
-    // pagehelper
-    implementation 'com.github.pagehelper:pagehelper-spring-boot-starter:2.1.0'
 
     // Mail
     implementation 'org.springframework.boot:spring-boot-starter-mail'

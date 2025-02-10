@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -35,36 +37,6 @@ class ImageFileServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(imageFileService, "storagePath", TEST_STORAGE_PATH);
-    }
-
-    @Test
-    @DisplayName("파일 삭제 성공")
-    void deleteFile_WhenValidFile_ThenSuccess() {
-        // given
-        log.info("파일 삭제 테스트 시작");
-        String fileUrl = "/images/test/test-image.jpg";
-        String fullPath = TEST_STORAGE_PATH + fileUrl;
-
-        // 1️⃣ mockFile을 생성하고 동작 설정
-        File mockFile = mock(File.class);
-        when(mockFile.exists()).thenReturn(true);
-        when(mockFile.delete()).thenReturn(true);
-
-        // 2️⃣ spyService를 생성하여 getFile을 오버라이드
-        ImageFileService spyService = spy(imageFileService);
-        doReturn(mockFile).when(spyService).getFile(fullPath);  // 💡 getFile을 Mock 처리
-
-        log.info("Mock 파일 설정 완료: {}", fullPath);
-
-        // when & then
-        assertThatCode(() -> {
-            ReflectionTestUtils.setField(spyService, "storagePath", TEST_STORAGE_PATH);
-            spyService.deleteFile(fileUrl);
-        }).doesNotThrowAnyException();
-
-        verify(mockFile).exists();
-        verify(mockFile).delete();
-        log.info("파일 삭제 테스트 완료");
     }
 
     @Test

@@ -19,7 +19,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class ProfileImageService {
 
-    @Value("${file.storage.default-image}")
+    @Value("${spring.file.storage.default-image}")
     private String defaultImageUrl;
 
     private final ImageFileService imageFileService;

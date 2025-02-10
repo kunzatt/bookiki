@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class ImageFileService {
-    @Value("${file.storage.path}")
+    @Value("${spring.file.storage.path}")
     private String storagePath;
 
     public String uploadFile(MultipartFile file, String directoryPath) throws IOException {
@@ -100,7 +100,7 @@ public class ImageFileService {
     }
 
     // 테스트를 위한 메서드
-    protected File getFile(String path) {
+    public File getFile(String path) {
         return new File(path);
     }
 }
