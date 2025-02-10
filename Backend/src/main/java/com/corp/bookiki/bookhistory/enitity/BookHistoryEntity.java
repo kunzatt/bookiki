@@ -70,8 +70,20 @@ public class BookHistoryEntity {
 		checkAndSetOverdue(loanPolicy);
 	}
 
+	public boolean checkOverdue(LoanPolicyEntity loanPolicy) {
+		if (returnedAt == null) {
+			long daysBetween = ChronoUnit.DAYS.between(borrowedAt, LocalDateTime.now());
+			return daysBetween > loanPolicy.getLoanPeriod();
+		}
+		return false;
+	}
+
+	public void updateOverdueStatus(boolean isOverdue) {
+		this.overdue = isOverdue;
+	}
+
 	private void checkAndSetOverdue(LoanPolicyEntity loanPolicy) {
-		long daysBetween = ChronoUnit.DAYS.between(borrowedAt, returnedAt);
-		this.overdue = daysBetween > loanPolicy.getLoanPeriod();
+		boolean isOverdue = checkOverdue(loanPolicy);
+		updateOverdueStatus(isOverdue);
 	}
 }
