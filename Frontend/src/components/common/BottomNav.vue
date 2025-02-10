@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import type { NavItem } from './BottomNav';
-import { navItems } from './BottomNav';
+import { navItems } from '@/api/BottomNav';
 import { useAuthStore } from '@/stores/auth';
 
 const router = useRouter();

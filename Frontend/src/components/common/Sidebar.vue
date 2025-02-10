@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import type { MenuItem, User } from './Sidebar';
-import { menuItems } from './Sidebar';
+import type { MenuItem, User } from '../../api/sideBar';
+import { menuItems } from '../../api/sideBar';
 import { useAuthStore } from '@/stores/auth';
 import BookikiLogo from '@/assets/BookikiLogo.png'
 
