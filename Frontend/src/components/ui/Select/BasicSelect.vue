@@ -1,0 +1,85 @@
+<script setup lang="ts">
+interface Option {
+  value: string | number;
+  label: string;
+}
+
+interface Props {
+  size?: 'L' | 'M' | 'S';
+  disabled?: boolean;
+  options: Option[];
+  placeholder?: string;
+  label?: string;
+  modelValue: string | number;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  size: 'M',
+  disabled: false,
+  placeholder: '선택해주세요',
+  label: '',
+});
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string | number): void;
+}>();
+
+const sizeClasses = {
+  'L': 'w-64 h-9',    // 256px
+  'M': 'w-32 h-9',    // 128px
+  'S': 'w-24 h-9'     // 96px
+} as const;
+</script>
+
+<template>
+  <div>
+    <label v-if="label" class="block text-sm text-gray-600 mb-1">{{ label }}</label>
+    
+    <div class="relative inline-block">
+      <select
+        :value="modelValue"
+        @input="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
+        :disabled="disabled"
+        :class="[
+          'appearance-none rounded border border-gray-300',
+          'bg-white text-gray-700',
+          'focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent',
+          'hover:border-[#698469]',
+          'disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed',
+          'pl-2 pr-7 text-sm select-none',
+          sizeClasses[size]
+        ]"
+      >
+        <option value="" disabled>{{ placeholder }}</option>
+        <option
+          v-for="option in options"
+          :key="option.value"
+          :value="option.value"
+        >
+          {{ option.label }}
+        </option>
+      </select>
+
+      <div class="absolute inset-y-0 right-0 flex items-center pr-1.5 pointer-events-none">
+        <span class="material-icons text-gray-400 select-none text-lg">
+          expand_more
+        </span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- 사용 예시
+const selectedValue = ref('')
+
+<BasicSelect
+  v-model="selectedValue"
+  :options="[
+    { value: 'option1', label: '옵션 1' },
+    { value: 'option2', label: '옵션 2' },
+    { value: 'option3', label: '옵션 3' }
+  ]"
+  size="M"
+  label="선택"
+/> 
+-->
