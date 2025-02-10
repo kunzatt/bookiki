@@ -57,7 +57,7 @@ public class BookInformationResponse {
 	private String description;
 
 	@Schema(description = "카테고리 코드")
-	private String category;
+	private Integer category;
 
 	@Schema(name = "BookInformationResponse", description = "책 정보 응답")
 	public static BookInformationResponse from(

@@ -1,11 +1,14 @@
 package com.corp.bookiki.shelf.repository;
 
-import com.corp.bookiki.shelf.entity.ShelfEntity;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.corp.bookiki.shelf.entity.ShelfEntity;
+
 @Repository
 public interface ShelfRepository extends JpaRepository<ShelfEntity, Integer> {
-    // findAll(), findById(), save(), delete()는 JpaRepository에서 기본 제공
+	Optional<ShelfEntity> findByCategory(Integer category);
 
 }
