@@ -17,21 +17,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.List;
 
 @Slf4j
 @WebMvcTest(NoticeController.class)
@@ -85,39 +92,39 @@ class NoticeControllerTest {
     }
 
     // 공지사항 목록 조회 테스트
-//    @Test
-//    @WithMockUser
-//    @DisplayName("공지사항 목록 조회 및 검색 테스트")
-//    void selectAllNoticesTest() throws Exception {
-//        // given
-//        NoticeEntity notice = NoticeEntity.builder()
-//                .title("Important Notice")
-//                .content("Test Content")
-//                .build();
-//        ReflectionTestUtils.setField(notice, "id", 1);
-//        List<NoticeEntity> notices = List.of(notice);
-//
-//        PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
-//        Page<NoticeEntity> noticePage = new PageImpl<>(notices, pageRequest, notices.size());
-//
-//        when(noticeService.selectAllNotices(any(Pageable.class))).thenReturn(noticePage);
-//        when(noticeService.searchNotice(eq("Important"), any(Pageable.class))).thenReturn(noticePage);
-//
-//        // 전체 조회 테스트
-//        ResultActions resultActions = mockMvc.perform(get("/notices")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .accept(MediaType.APPLICATION_JSON)
-//                .param("page", "0")
-//                .param("size", "10")
-//                .param("sort", "createdAt,desc"));
-//
-//        resultActions
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.content[0].id").value(1))
-//                .andExpect(jsonPath("$.content[0].title").value("Important Notice"))
-//                .andDo(print());  // 로그 출력을 위해 추가
-//    }
+   @Test
+   @WithMockUser
+   @DisplayName("공지사항 목록 조회 및 검색 테스트")
+   void selectAllNoticesTest() throws Exception {
+       // given
+       NoticeEntity notice = NoticeEntity.builder()
+               .title("Important Notice")
+               .content("Test Content")
+               .build();
+       ReflectionTestUtils.setField(notice, "id", 1);
+       List<NoticeEntity> notices = List.of(notice);
+
+       PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+       Page<NoticeEntity> noticePage = new PageImpl<>(notices, pageRequest, notices.size());
+
+       when(noticeService.selectAllNotices(any(Pageable.class))).thenReturn(noticePage);
+       when(noticeService.searchNotice(eq("Important"), any(Pageable.class))).thenReturn(noticePage);
+
+       // 전체 조회 테스트
+       ResultActions resultActions = mockMvc.perform(get("/api/notices")
+               .contentType(MediaType.APPLICATION_JSON)
+               .accept(MediaType.APPLICATION_JSON)
+               .param("page", "0")
+               .param("size", "10")
+               .param("sort", "createdAt,desc"));
+
+       resultActions
+               .andExpect(status().isOk())
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+               .andExpect(jsonPath("$.content[0].id").value(1))
+               .andExpect(jsonPath("$.content[0].title").value("Important Notice"))
+               .andDo(print());  // 로그 출력을 위해 추가
+   }
 
     @DisplayName("공지사항 1개 조회 성공")
     @WithMockUser()

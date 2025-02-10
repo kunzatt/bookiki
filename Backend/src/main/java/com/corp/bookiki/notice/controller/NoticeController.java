@@ -75,7 +75,7 @@ public class NoticeController {
     }
 
     // 공지사항 전체 목록
-    @GetMapping("")
+    @GetMapping("/notices")
     @Operation(summary = "공지사항 목록 조회", description = "전체 공지사항 목록을 조회하거나 키워드로 검색합니다.")
     @ApiResponse(
             responseCode = "200",
