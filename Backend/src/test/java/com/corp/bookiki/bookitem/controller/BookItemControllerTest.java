@@ -410,7 +410,7 @@ class BookItemControllerTest {
 	@DisplayName("도서 아이템 등록 테스트")
 	class AddBookItem {
 		@Test
-		@WithMockUser
+		@WithMockUser(roles = "ADMIN")
 		@DisplayName("정상적인 도서 아이템 등록 시 성공")
 		void addBookItem_WhenValidRequest_ThenReturnsOk() throws Exception {
 			// given
@@ -443,7 +443,7 @@ class BookItemControllerTest {
 		}
 
 		@Test
-		@WithMockUser
+		@WithMockUser(roles = "ADMIN")
 		@DisplayName("도서 정보를 찾을 수 없을 때 에러 반환")
 		void addBookItem_WhenBookInfoNotFound_ThenReturnsBadRequest() throws Exception {
 			// given

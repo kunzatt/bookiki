@@ -117,7 +117,7 @@ class QnaCommentControllerTest {
                 .andDo(print())
                 .andExpect(result -> assertTrue(
                         result.getResolvedException() instanceof AuthorizationDeniedException ||
-                                result.getResponse().getStatus() == HttpStatus.INTERNAL_SERVER_ERROR.value()
+                                result.getResponse().getStatus() == HttpStatus.FORBIDDEN.value()
                 ));
 
         verify(qnaCommentService, never()).createQnaComment(any(QnaCommentRequest.class), anyInt());
