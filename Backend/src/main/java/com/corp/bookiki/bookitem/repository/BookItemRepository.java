@@ -1,12 +1,14 @@
 package com.corp.bookiki.bookitem.repository;
 
-import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.entity.BookStatus;
 
 @Repository
 public interface BookItemRepository extends JpaRepository<BookItemEntity, Integer> {
@@ -46,4 +48,6 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 			@Param("keyword") String keyword,
 			Pageable pageable
 	);
+
+	int countByBookStatus(BookStatus bookStatus);
 }

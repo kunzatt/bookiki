@@ -5,6 +5,11 @@ spring:
       on-profile: default
   application:
     name: Bookiki
+  task:
+    scheduling:
+      pool:
+        size: 2
+      thread-name-prefix: bookiki-scheduler-
   autoconfigure:
     exclude:
       - io.awspring.cloud.autoconfigure.core.AwsAutoConfiguration
@@ -163,6 +168,11 @@ spring:
   config:
     activate:
       on-profile: test
+  task:
+    scheduling:
+      pool:
+        size: 1
+      thread-name-prefix: bookiki-scheduler-test-
   datasource:
     url: jdbc:h2:mem:testdb;MODE=MySQL
     username: sa

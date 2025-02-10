@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
 import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
@@ -27,11 +26,11 @@ public class BookBorrowService {
 	private final BookItemRepository bookItemRepository;
 	private final UserRepository userRepository;
 
-	public BookBorrowResponse borrowBook(BookBorrowRequest request) {
-		BookItemEntity bookItem = bookItemRepository.findById(request.getBookItemId())
+	public BookBorrowResponse borrowBook(Integer userId, Integer bookItemId) {
+		BookItemEntity bookItem = bookItemRepository.findById(bookItemId)
 			.orElseThrow(() -> new BookHistoryException(ErrorCode.BOOK_ITEM_NOT_FOUND));
 
-		UserEntity user = userRepository.findById(request.getUserId())
+		UserEntity user = userRepository.findById(userId)
 			.orElseThrow(() -> new BookHistoryException(ErrorCode.USER_NOT_FOUND));
 
 		if (!bookItem.isAvailable()) {

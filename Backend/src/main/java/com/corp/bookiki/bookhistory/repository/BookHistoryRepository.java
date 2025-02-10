@@ -203,4 +203,5 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		@Param("userId") Integer userId,
 		@Param("overdue") Boolean overdue
 	);
+
 }
