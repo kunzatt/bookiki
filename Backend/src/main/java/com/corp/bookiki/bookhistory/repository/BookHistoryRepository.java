@@ -8,7 +8,6 @@ import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -205,15 +204,4 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		@Param("overdue") Boolean overdue
 	);
 
-	@Query("SELECT bh FROM BookHistoryEntity bh " +
-		"WHERE bh.returnedAt IS NULL " +
-		"AND bh.overdue = false " +
-		"AND DATEDIFF(CURRENT_DATE, bh.borrowedAt) > " +
-		"(SELECT lp.loanPeriod FROM LoanPolicyEntity lp)")
-	List<BookHistoryEntity> findOverdueBooks();
-
-	@Modifying
-	@Query("UPDATE BookHistoryEntity bh SET bh.overdue = true " +
-		"WHERE bh.id = :historyId")
-	void updateOverdueStatus(@Param("historyId") Integer historyId);
 }

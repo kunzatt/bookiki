@@ -1,6 +1,7 @@
 package com.corp.bookiki.bookhistory.service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -29,48 +30,49 @@ public class OverdueService {
 	private final LoanPolicyRepository loanPolicyRepository;
 
 	public void processOverdueBooks() {
-		try {
-			log.debug("연체 도서 처리 시작");
+		LoanPolicyEntity loanPolicy = loanPolicyRepository.findById(1)
+			.orElseThrow(() -> new LoanPolicyException(ErrorCode.LOAN_POLICY_NOT_FOUND));
 
-			List<BookHistoryEntity> overdueHistories = bookHistoryRepository.findOverdueBooks();
-			log.debug("처리할 연체 도서 수: {}", overdueHistories.size());
+		LocalDateTime overdueDate = LocalDateTime.now().minusDays(loanPolicy.getLoanPeriod());
+		List<BookHistoryEntity> overdueHistories = bookHistoryRepository.findOverdueBooks(overdueDate);
 
-			LoanPolicyEntity loanPolicy = loanPolicyRepository.findFirstByOrderByIdDesc()
-				.orElseThrow(() -> new LoanPolicyException(ErrorCode.LOAN_POLICY_NOT_FOUND));
-
-			for (BookHistoryEntity history : overdueHistories) {
-				processOverdueBook(history, loanPolicy);
-			}
-
-			log.debug("연체 도서 처리 완료");
-		} catch (Exception e) {
-			log.error("연체 도서 처리 중 오류 발생", e);
-			throw new BookHistoryException(ErrorCode.INTERNAL_SERVER_ERROR);
+		for (BookHistoryEntity history : overdueHistories) {
+			processOverdueBook(history, loanPolicy);
 		}
 	}
 
 	private void processOverdueBook(BookHistoryEntity history, LoanPolicyEntity loanPolicy) {
 		try {
-			log.debug("도서 연체 처리 시작 - 도서ID: {}, 사용자ID: {}",
-				history.getBookItem().getId(), history.getUser().getId());
+			history.updateOverdueStatus(true);
+			bookHistoryRepository.save(history);
 
-			if (history.checkOverdue(loanPolicy)) {
-				LocalDateTime overdueDate = calculateOverdueDate(history, loanPolicy);
-				updateUserActiveAt(history.getUser(), overdueDate);
-				history.updateOverdueStatus(true);
-				bookHistoryRepository.save(history);
+			UserEntity user = history.getUser();
+			LocalDateTime overdueDate = calculateOverdueDate(history, loanPolicy);
+			updateUserActiveAt(user, overdueDate);
 
-				log.debug("도서 연체 처리 완료 - 도서ID: {}, 사용자ID: {}, 연체일: {}",
-					history.getBookItem().getId(), history.getUser().getId(), overdueDate);
-			}
+			log.info("도서 연체 처리 완료 - 도서ID: {}, 사용자ID: {}, 연체일: {}",
+				history.getBookItem().getId(),
+				user.getId(),
+				overdueDate);
 		} catch (Exception e) {
-			log.error("도서 연체 처리 중 오류 발생 - 도서ID: {}", history.getBookItem().getId(), e);
+			log.error("도서 연체 처리 중 오류 발생 - 도서ID: {}, 상세 오류: {}",
+				history.getBookItem().getId(),
+				e.getMessage(),
+				e);
 			throw new BookHistoryException(ErrorCode.INTERNAL_SERVER_ERROR);
 		}
 	}
 
 	private LocalDateTime calculateOverdueDate(BookHistoryEntity history, LoanPolicyEntity loanPolicy) {
-		return history.getBorrowedAt().plusDays(loanPolicy.getLoanPeriod());
+		LocalDateTime expectedReturnDate = history.getBorrowedAt().plusDays(loanPolicy.getLoanPeriod());
+
+		if (history.getReturnedAt() != null) {
+			long overdueDays = ChronoUnit.DAYS.between(expectedReturnDate, history.getReturnedAt());
+			return history.getReturnedAt().plusDays(overdueDays);
+		} else {
+			long overdueDays = ChronoUnit.DAYS.between(expectedReturnDate, LocalDateTime.now());
+			return LocalDateTime.now().plusDays(overdueDays);
+		}
 	}
 
 	private void updateUserActiveAt(UserEntity user, LocalDateTime overdueDate) {

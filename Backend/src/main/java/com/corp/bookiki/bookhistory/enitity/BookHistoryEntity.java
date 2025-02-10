@@ -89,4 +89,13 @@ public class BookHistoryEntity {
 		boolean isOverdue = checkOverdue(loanPolicy);
 		updateOverdueStatus(isOverdue);
 	}
+
+	public boolean isOverdue(LoanPolicyEntity loanPolicy) {
+		if (this.returnedAt != null) {
+			return false;
+		}
+		LocalDateTime overdueDate = this.borrowedAt.plusDays(loanPolicy.getLoanPeriod());
+		return LocalDateTime.now().isAfter(overdueDate);
+	}
+
 }
