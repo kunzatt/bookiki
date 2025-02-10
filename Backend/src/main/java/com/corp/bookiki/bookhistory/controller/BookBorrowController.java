@@ -2,23 +2,25 @@ package com.corp.bookiki.bookhistory.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
 import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
 import com.corp.bookiki.bookhistory.service.BookBorrowService;
+import com.corp.bookiki.global.annotation.CurrentUser;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
+import com.corp.bookiki.user.dto.AuthUser;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,17 +93,11 @@ public class BookBorrowController {
 		)
 	})
 	public ResponseEntity<BookBorrowResponse> borrowBook(
-		@io.swagger.v3.oas.annotations.parameters.RequestBody(
-			description = "도서 대출 정보",
-			required = true,
-			content = @Content(schema = @Schema(implementation = BookBorrowRequest.class))
-		)
-		@Valid @RequestBody BookBorrowRequest bookBorrowRequest
+		@Parameter(hidden = true) @CurrentUser AuthUser authUser,
+		@Parameter(description = "도서 아이템 ID", required = true, example = "1")
+		@RequestParam @NotNull Integer bookItemId
 	) {
-		log.info("도서 대출 요청: userId={}, bookItemId={}",
-			bookBorrowRequest.getUserId(),
-			bookBorrowRequest.getBookItemId());
-
-		return ResponseEntity.ok(bookBorrowService.borrowBook(bookBorrowRequest));
+		log.info("도서 대출 요청: userId={}, bookItemId={}", authUser.getId(), bookItemId);
+		return ResponseEntity.ok(bookBorrowService.borrowBook(authUser.getId(), bookItemId));
 	}
 }

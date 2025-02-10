@@ -78,6 +78,13 @@ public class BookItemEntity {
 		this.bookStatus = BookStatus.BORROWED;
 	}
 
+	public void returnBook() {
+		if (isAvailable()) {
+			throw new BookItemException(ErrorCode.BOOK_ALREADY_RETURNED);
+		}
+		this.bookStatus = BookStatus.AVAILABLE;
+	}
+
 	@Builder
 	public BookItemEntity(BookInformationEntity bookInformation, LocalDateTime purchaseAt,
 		BookStatus bookStatus, LocalDateTime updatedAt, QrCodeEntity qrCode, Boolean deleted,
