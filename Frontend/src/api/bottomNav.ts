@@ -1,4 +1,3 @@
-// src/components/common/BottomNav.ts
 export interface NavItem {
     name: string;
     path: string;
