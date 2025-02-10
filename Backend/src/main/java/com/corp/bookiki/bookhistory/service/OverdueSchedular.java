@@ -13,7 +13,7 @@ public class OverdueSchedular {
 
 	private final OverdueService overdueService;
 
-	@Scheduled(cron = "0 0 9 * * *")
+	@Scheduled(cron = "0 44 13 * * *")
 	public void checkOverdue() {
 		log.info("대출 도서 연체 확인 스케줄러 실행");
 		overdueService.processOverdueBooks();
