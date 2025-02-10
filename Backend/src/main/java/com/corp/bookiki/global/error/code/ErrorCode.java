@@ -59,6 +59,7 @@ public enum ErrorCode {
 	BOOK_NOT_AVAILABLE(400, "현재 대출 불가능한 도서입니다"),
 	BOOK_ALREADY_DELETED(400, "이미 삭제된 도서입니다"),
 	DUPLICATE_BOOK_LOCATION(400, "이미 위치가 지정된 도서입니다"),
+	BOOK_SEARCH_NOT_FOUND(404, "도서 검색 결과가 없습니다."),
 
 	// Shelf & Location
 	SHELF_NOT_FOUND(404, "책장을 찾을 수 없습니다"),
@@ -101,7 +102,31 @@ public enum ErrorCode {
 	LOAN_POLICY_NOT_FOUND(404, "대출 정책을 찾을 수 없습니다"),
 	INVALID_LOAN_POLICY(400, "잘못된 대출 정책입니다"),
 	INVALID_MAX_BOOKS(400, "올바르지 않은 최대 대출 가능 권수입니다."),
-	INVALID_LOAN_PERIOD(400, "올바르지 않은 대출 기간입니다.");
+	INVALID_LOAN_PERIOD(400, "올바르지 않은 대출 기간입니다."),
+
+	// 챗봇 관련
+	CHATBOT_NOT_AVAILABLE(500, "챗봇 서비스를 일시적으로 사용할 수 없습니다"),
+	INVALID_INTENT(400, "올바르지 않은 의도 형식입니다"),
+	SESSION_NOT_FOUND(404, "대화 세션을 찾을 수 없습니다"),
+	CONTEXT_NOT_FOUND(404, "대화 컨텍스트를 찾을 수 없습니다"),
+	INVALID_WEBHOOK_REQUEST(400, "올바르지 않은 웹훅 요청입니다"),
+	DIALOGFLOW_API_ERROR(500, "Dialogflow API 오류가 발생했습니다"),
+	INTENT_PROCESSING_ERROR(500, "의도 처리 중 오류가 발생했습니다"),
+	CHATBOT_SESSION_EXPIRED(401, "대화 세션이 만료되었습니다"),
+	DIALOGFLOW_CLIENT_ERROR(500, "Dialogflow 클라이언트 생성에 실패했습니다"),
+	CHATBOT_CONTEXT_INVALID(400, "잘못된 대화 컨텍스트입니다"),
+	DIALOGFLOW_PROCESSING_ERROR(400, "챗봇 메시지 처리 중 오류가 발생했습니다."),
+	ENTITY_EXTRACTION_ERROR(400, "엔티티 추출 중 오류가 발생했습니다."),
+	CONTEXT_MANAGEMENT_ERROR(400, "컨텍스트 관리 중 오류가 발생했습니다."),
+
+	// 대화 이력 관련
+	CONVERSATION_HISTORY_ERROR(500, "대화 이력 처리 중 오류가 발생했습니다"),
+	PREFERENCE_UPDATE_ERROR(500, "사용자 선호도 업데이트 중 오류가 발생했습니다"),
+	KNOWLEDGE_BASE_ERROR(500, "지식 베이스 처리 중 오류가 발생했습니다"),
+
+	// 개인화 관련
+	PERSONALIZATION_ERROR(500, "응답 개인화 중 오류가 발생했습니다"),
+	USER_PREFERENCE_NOT_FOUND(404, "사용자 선호도 정보를 찾을 수 없습니다");
 
 	private final int status;
 	private final String message;

@@ -15,52 +15,55 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
-import com.corp.bookiki.user.entity.UserEntity;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional
 @Slf4j
 public class BookHistoryService {
 	private final BookHistoryRepository bookHistoryRepository;
 
-	public Page<BookHistoryResponse> getBookHistories(
+	public Page<BookHistoryResponse> getAdminBookHistories(
 		LocalDate startDate,
 		LocalDate endDate,
-		String keyword,
+		String userName,
+		String companyId,
+		Boolean overdue,
 		Pageable pageable
 	) {
 		try {
-			log.debug("대출 기록 조회 시작 - 시작일: {}, 종료일: {}, 키워드: {}", startDate, endDate, keyword);
+			log.debug("관리자용 대출 기록 조회 시작 - 시작일: {}, 종료일: {}, 사용자명: {}, 회사ID: {}, 연체여부: {}",
+				startDate, endDate, userName, companyId, overdue);
 
 			LocalDateTime startDateTime = startDate.atStartOfDay();
 			LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
-			Page<BookHistoryEntity> histories = bookHistoryRepository
-				.searchBookHistoryWithCount(startDateTime, endDateTime, keyword, pageable);
+			Page<BookHistoryEntity> histories = bookHistoryRepository.findAllBookHistoriesForAdmin(
+				startDateTime, endDateTime, userName, companyId, overdue, pageable);
 
-			log.debug("대출 기록 조회 완료 - 총 {} 건", histories.getTotalElements());
+			log.debug("관리자용 대출 기록 조회 완료 - 총 {} 건", histories.getTotalElements());
 
 			return histories.map(BookHistoryResponse::from);
 		} catch (Exception e) {
-			log.error("도서 대출 기록 조회 중 오류 발생 - 시작일: {}, 종료일: {}, 키워드: {}",
-				startDate, endDate, keyword, e);
+			log.error("관리자용 대출 기록 조회 중 오류 발생", e);
 			throw new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND);
 		}
 	}
 
-	public List<BookHistoryResponse> getCurrentBorrowsByUser(UserEntity user) {
+	public List<BookHistoryResponse> getCurrentBorrowedBooks(Integer userId, Boolean overdue) {
 		try {
-			log.debug("사용자 현재 대출 목록 조회 - 사용자 ID: {}", user.getId());
-			return bookHistoryRepository.findCurrentBorrowsByUser(user)
-				.stream()
-				.map(BookHistoryResponse::from)
-				.toList();
+			log.debug("현재 대출 중인 도서 조회 시작 - 사용자ID: {}, 연체만 조회: {}", userId, overdue);
+
+			List<BookHistoryEntity> currentBorrows = bookHistoryRepository.findCurrentBorrowsByUserId(userId, overdue);
+
+			log.debug("현재 대출 중인 도서 조회 완료 - 사용자ID: {}, 총 {} 건", userId, currentBorrows.size());
+
+			return currentBorrows.stream().map(BookHistoryResponse::from).toList();
 		} catch (Exception e) {
-			log.error("사용자 대출 목록 조회 중 오류 발생 - 사용자 ID: {}", user.getId(), e);
+			log.error("현재 대출 중인 도서 조회 중 오류 발생 - 사용자ID: {}", userId, e);
 			throw new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND);
 		}
 	}
@@ -69,30 +72,27 @@ public class BookHistoryService {
 		Integer userId,
 		LocalDate startDate,
 		LocalDate endDate,
-		String keyword,
+		Boolean overdue,
 		Pageable pageable
 	) {
 		try {
-			log.debug("사용자별 대출 기록 조회 시작 - 사용자: {}, 시작일: {}, 종료일: {}, 키워드: {}",
-				userId, startDate, endDate, keyword);
+			log.debug("사용자 대출 기록 조회 시작 - 사용자ID: {}, 시작일: {}, 종료일: {}, 연체여부: {}",
+				userId, startDate, endDate, overdue);
 
 			LocalDateTime startDateTime = startDate.atStartOfDay();
 			LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
 
-			Page<BookHistoryEntity> histories = bookHistoryRepository
-				.searchUserBookHistoryWithCount(userId, startDateTime, endDateTime, keyword, pageable);
+			Page<BookHistoryEntity> histories = bookHistoryRepository.findAllForUser(
+				userId, startDateTime, endDateTime, overdue, pageable);
 
-			log.debug("사용자별 대출 기록 조회 완료 - 사용자: {}, 총 {} 건",
-				userId, histories.getTotalElements());
+			log.debug("사용자 대출 기록 조회 완료 - 총 {} 건", histories.getTotalElements());
 
 			return histories.map(BookHistoryResponse::from);
 		} catch (Exception e) {
-			log.error("사용자별 도서 대출 기록 조회 중 오류 발생 - 사용자: {}, 시작일: {}, 종료일: {}, 키워드: {}",
-				userId, startDate, endDate, keyword, e);
+			log.error("사용자 대출 기록 조회 중 오류 발생 - 사용자ID: {}", userId, e);
 			throw new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND);
 		}
 	}
-
 
 	public boolean isBookCurrentlyBorrowed(BookItemEntity bookItem) {
 		return bookHistoryRepository.findCurrentBorrowByBookItem(bookItem).isPresent();
