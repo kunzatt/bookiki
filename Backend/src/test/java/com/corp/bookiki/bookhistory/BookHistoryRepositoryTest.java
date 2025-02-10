@@ -151,7 +151,7 @@ class BookHistoryRepositoryTest {
 		entityManager.flush();
 
 		LocalDateTime overdueDate = now.minusDays(15);
-		bookHistory.returnBook(loanPolicy);
+		bookHistory.returnBook();
 		bookHistoryRepository.save(bookHistory);
 		entityManager.flush();
 		entityManager.clear();

@@ -15,7 +15,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.corp.bookiki.bookhistory.dto.BookBorrowRequest;
 import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
@@ -51,15 +50,14 @@ class BookBorrowServiceTest {
 		@DisplayName("정상적인 도서 대출 요청 시 성공")
 		void borrowBook_WhenValidRequest_ThenSuccess() {
 			// given
-			BookBorrowRequest request = new BookBorrowRequest();
-			request.setUserId(100);
-			request.setBookItemId(200);
+			Integer userId = 100;
+			Integer bookItemId = 200;
 
 			UserEntity user = mock(UserEntity.class);
-			when(user.getId()).thenReturn(request.getUserId());
+			when(user.getId()).thenReturn(userId);
 
 			BookItemEntity bookItem = mock(BookItemEntity.class);
-			when(bookItem.getId()).thenReturn(request.getBookItemId());
+			when(bookItem.getId()).thenReturn(bookItemId);
 			when(bookItem.isAvailable()).thenReturn(true);
 
 			BookHistoryEntity history = mock(BookHistoryEntity.class);
@@ -67,9 +65,9 @@ class BookBorrowServiceTest {
 			when(history.getBookItem()).thenReturn(bookItem);
 			when(history.getUser()).thenReturn(user);
 
-			given(bookItemRepository.findById(request.getBookItemId()))
+			given(bookItemRepository.findById(bookItemId))
 				.willReturn(Optional.of(bookItem));
-			given(userRepository.findById(request.getUserId()))
+			given(userRepository.findById(userId))
 				.willReturn(Optional.of(user));
 			given(bookHistoryRepository.save(any(BookHistoryEntity.class)))
 				.willReturn(history);
@@ -78,16 +76,16 @@ class BookBorrowServiceTest {
 			when(user.getActiveAt()).thenReturn(before);
 
 			log.info("테스트 데이터 설정 완료: userId={}, bookItemId={}",
-				request.getUserId(), request.getBookItemId());
+				userId, bookItemId);
 
 			// when
-			BookBorrowResponse response = bookBorrowService.borrowBook(request);
+			BookBorrowResponse response = bookBorrowService.borrowBook(userId, bookItemId);
 			log.info("도서 대출 처리 완료: historyId={}", response.getId());
 
 			// then
 			assertThat(response).isNotNull();
-			assertThat(response.getBookItemId()).isEqualTo(request.getBookItemId());
-			assertThat(response.getUserId()).isEqualTo(request.getUserId());
+			assertThat(response.getBookItemId()).isEqualTo(bookItemId);
+			assertThat(response.getUserId()).isEqualTo(userId);
 			verify(bookHistoryRepository).save(any(BookHistoryEntity.class));
 			verify(bookItem).borrow();
 			log.info("도서 대출 성공 검증 완료");
