@@ -23,7 +23,6 @@ public enum ErrorCode {
 	COMPANY_ID_DUPLICATE(400, "이미 존재하는 사번입니다"),
 	INVALID_PASSWORD(400, "잘못된 비밀번호입니다"),
 	INVALID_ROLE_TYPE(400, "잘못된 권한 타입입니다"),
-	INVALID_PROFILE_IMAGE(400, "잘못된 프로필 이미지 형식입니다"),
 	LOGIN_BAD_CREDENTIALS(HttpStatus.UNAUTHORIZED.value(), "이메일 또는 비밀번호가 일치하지 않습니다."),
 	LOGIN_FAILED(HttpStatus.UNAUTHORIZED.value(), "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요."),
 	USER_NOT_ACTIVE(400, "대출 가능 기한이 아니므로 대출이 불가능합니다"),
@@ -36,6 +35,13 @@ public enum ErrorCode {
 	FAIL_EMAIL_SEND(500, "이메일 발송에 실패했습니다"),
 	HAS_OVERDUE_BOOKS(400, "이미 연체된 도서가 있습니다"),
 	BORROW_LIMIT_EXCEEDED(400, "대출 한도가 초과했습니다."),
+
+	// 이미지 파일 관련 에러 코드들
+	FILE_NOT_FOUND(404, "파일을 찾을 수 없습니다."),
+	FILE_INVALID_FORMAT(400, "지원하지 않는 파일 형식입니다."),
+	FILE_SIZE_EXCEEDED(413, "파일 크기가 제한을 초과했습니다."),
+	FILE_UPLOAD_FAILED(500, "파일 업로드에 실패했습니다."),
+	FILE_DELETE_FAILED(500, "파일 삭제에 실패했습니다."),
 
 	// OAuth2 관련 에러 코드들
 	OAUTH2_INVALID_TOKEN(HttpStatus.UNAUTHORIZED.value(), "유효하지 않은 OAuth2 토큰입니다."),
