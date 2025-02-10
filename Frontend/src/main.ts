@@ -11,6 +11,7 @@ import { configure } from 'vee-validate'
 
 // Material Icons 스타일 import
 import '@material-design-icons/font'
+import '@material-design-icons/font/index.css'
 
 // Element Plus
 import ElementPlus from 'element-plus'
