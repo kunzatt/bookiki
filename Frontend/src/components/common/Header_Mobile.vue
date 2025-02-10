@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { defineProps, withDefaults } from 'vue';
-import type { HeaderProps } from './Header_Mobile';
+import type { MobileHeaderProps } from './Header';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const props = withDefaults(defineProps<HeaderProps>(), {
+const props = withDefaults(defineProps<MobileHeaderProps>(), {
   type: 'default',
   hasNewNotification: false
 });
