@@ -1,20 +1,15 @@
 <script setup lang="ts">
-interface Column {
-  key: string;
-  label: string;
-  width?: string;
-  align?: 'left' | 'center' | 'right';
-}
+import type { TableColumn } from '@/types/common/table';
 
-interface Props {
-  columns: Column[];
+interface TableProps {
+  columns: TableColumn[];
   data: any[];
   hoverable?: boolean;
   loading?: boolean;
   minWidth?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const tableProps = withDefaults(defineProps<TableProps>(), {
   hoverable: true,
   loading: false,
   minWidth: '1024px' // 기본 최소 너비 설정
@@ -24,7 +19,7 @@ const emit = defineEmits<{
   (e: 'row-click', row: any): void;
 }>();
 
-const getColumnClass = (column: Column) => {
+const getColumnClass = (column: TableColumn) => {
   return {
     'text-left': column.align === 'left' || !column.align,
     'text-center': column.align === 'center',
@@ -99,15 +94,3 @@ const getColumnClass = (column: Column) => {
     </div>
   </div>
 </template>
-
-<!-- 사용 예시
-최소 너비 지정 포함
-<BasicWebTable
-  :columns="columns"
-  :data="tableData"
-  :loading="isLoading"
-  :min-width="1200px"
-  @row-click="handleRowClick"
->
-  
-</BasicWebTable> -->

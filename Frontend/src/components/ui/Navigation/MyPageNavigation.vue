@@ -2,33 +2,37 @@
 import NavigationMenuItem from './NavigationMenuItem.vue';
 import BasicButton from '../Button/BasicButton.vue';
 
-interface Props {
-  /**
-   * 사용자 정보
-   */
-  interface User {
-    id: number;        
-    email: string;
-    provider: 'BOOKIKI' | 'NAVER' | 'GOOGLE';
-    password?: string;
-    user_name: string;
-    company_id: string;
-    role: 'USER' | 'ADMIN';
-    created_at: string;
-    updated_at: string;
-    active_at?: string;
-    profile_image?: string;
-    deleted: number;
-    status: {
-      availableLoans: number;
-      isOverdue: boolean;
-      isSuspended: boolean;
-    };
-  }
-}
 
-const props = defineProps<Props>();
+// 마이페이지 dto 생성 후 수정 필요
 
+// interface MyPageProps {
+//   /**
+//    * 사용자 정보
+//    */
+//   interface User {
+//     id: number;        
+//     email: string;
+//     provider: 'BOOKIKI' | 'NAVER' | 'GOOGLE';
+//     password?: string;
+//     user_name: string;
+//     company_id: string;
+//     role: 'USER' | 'ADMIN';
+//     created_at: string;
+//     updated_at: string;
+//     active_at?: string;
+//     profile_image?: string;
+//     deleted: number;
+//     status: {
+//       availableLoans: number;
+//       isOverdue: boolean;
+//       isSuspended: boolean;
+//     };
+//   }
+// }
+
+const myPageProps = defineProps<MyPageProps>();
+
+// router 변경 필요
 const menuItems = [
   { title: '대출 중 도서', to: '/mypage/current-loans' },
   { title: '즐겨찾기 도서', to: '/mypage/favorites' },
@@ -89,19 +93,3 @@ const handleProfileChange = () => {
     </nav>
   </div>
 </template>
-
-<!-- 사용예시 -->
-<!-- 
-<script setup>
-const user = {
-  user_name: '박성문',
-  id: 'HN12345678',
-  profileImage: '/path/to/profile.jpg',
-  status: '현재 2권 대출 가능 / 연체 / 일시정지'
-};
-</script>
-
-<template>
-  <MyPageNavigation :user="user" />
-</template> 
--->

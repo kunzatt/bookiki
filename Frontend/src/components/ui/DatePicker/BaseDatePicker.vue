@@ -2,14 +2,15 @@
 import { ref, computed } from 'vue'
 import type { Ref } from 'vue'
 import dayjs from 'dayjs'
+import type { DateRange } from '@/types/common/datePicker'
 
-interface Props {
-  modelValue?: [Date, Date] | null
+interface DateProps {
+  modelValue?: DateRange | null
   disabled?: boolean
   format?: string
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const dateProps = withDefaults(defineProps<DateProps>(), {
   disabled: false,
   format: 'YYYY.MM.DD'
 })
@@ -52,7 +53,7 @@ const tabOptions = [
 
 const formatDate = (date: Date | null) => {
   if (!date) return ''
-  return dayjs(date).format(props.format)
+  return dayjs(date).format(dateProps.format)
 }
 
 const handleTabChange = (tab: string) => {
@@ -265,15 +266,3 @@ const isInRange = (date: dayjs.Dayjs) => {
       </div>
     </Transition>
   </template>
-
-
-<!-- 사용 예시
-<MobileDatePicker
-v-model="dateRange"
-@change="handleDateChange"
-/>
-const dateRange: Ref<[Date, Date] | null> = ref(null)
-
-const handleDateChange = (range: [Date, Date]) => {
-  console.log('Selected range:', range)
-} -->

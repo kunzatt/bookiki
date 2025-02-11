@@ -1,22 +1,14 @@
 <script setup lang="ts">
 import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
+import type { QnaListResponse } from '@/types/api/qna';
+import { QnaType, QnaTypeDescriptions  } from '@/types/enums/qnaType';
+import type { BadgeStatus } from '@/types/common/ui';
 
-interface QnaItem {
-  id: number;         // string -> number로 수정
-  title: string;      
-  qna_type: string;
-  content: string;
-  author_id: number;
-  created_at: string;
-  updated_at: string;
-  deleted: number;
+interface QnaProps {
+  items: QnaListResponse[];
 }
 
-interface Props {
-  items: QnaItem[];
-}
-
-const props = defineProps<Props>();
+const qnaProps = defineProps<QnaProps>();
 
 // 날짜 포맷팅 함수 (YY.MM.DD)
 const formatDate = (dateString: string) => {
@@ -26,14 +18,20 @@ const formatDate = (dateString: string) => {
 };
 
 // 상태에 따른 배지 타입 매핑
-const getStatusType = (qna_type: string) => {
-  const typeMap = {
-    '질문': 'primary',
-    '회망도서 신청': 'info',
-    '이름/사번 변경': 'warning'
+const getStatusType = (qna_type: QnaType): BadgeStatus => {
+  const typeMap: Record<QnaType, BadgeStatus> = {
+    [QnaType.NORMAL]: 'info',
+    [QnaType.NEW_BOOK]: 'success',
+    [QnaType.CHANGE_INFO]: 'warning'
   };
   return typeMap[qna_type] || 'gray';
 };
+
+// QnaTypeDescriptions를 사용하여 표시 텍스트 가져오기
+const getDisplayText = (qna_type: QnaType): string => {
+  return QnaTypeDescriptions[qna_type];
+};
+
 </script>
 
 <template>
@@ -47,13 +45,13 @@ const getStatusType = (qna_type: string) => {
         <div class="flex justify-between items-start mb-2">
           <!-- 상태 배지 -->
           <BasicStatusBadge
-            :text="item.qna_type"
-            :type="getStatusType(item.qna_type)"
+            :text="item.qnaType"
+            :type="getStatusType(item.qnaType)"
             :isEnabled="true"
           />
           <!-- 날짜 -->
           <span class="text-sm text-gray-500">
-            {{ formatDate(item.date) }}
+            {{ formatDate(item.createdAt) }}
           </span>
         </div>
         
@@ -63,39 +61,10 @@ const getStatusType = (qna_type: string) => {
             {{ item.title }}
           </h3>
           <p class="text-sm text-gray-500">
-            {{ item.author }}
+            {{ item.quthorName }}
           </p>
         </div>
       </li>
     </ul>
   </div>
 </template>
-
-<!-- 사용 예시
-<script setup>
-const qnaItems = [
-  {
-    title: "도커, 컨테이너 빌드업!",
-    qna_type: "질문",
-    author: "박성문",
-    date: "2025-02-09"
-  },
-  {
-    title: "도커, 컨테이너 빌드업!",
-    qna_type: "회망도서 신청",
-    author: "박성문",
-    date: "2025-02-10"
-  },
-  {
-    title: "도커, 컨테이너 빌드업!",
-    qna_type: "이름/사번 변경",
-    author: "박성문",
-    date: "2025-02-10"
-  }
-];
-</script>
-
-<template>
-  <QnaList :items="qnaItems" />
-</template>
--->

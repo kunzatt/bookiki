@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import BasicButton from '../Button/BasicButton.vue';
 import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
+import type { PostType } from '@/types/common/postForm';
 import { ref } from 'vue';
 
-interface Props {
+interface PostFormProps {
   /**
    * 폼 타입 (notice: 공지사항, inquiry: 문의사항)
    */
-  type: 'notice' | 'inquiry';
+  type: PostType;
   /**
    * 문의사항 카테고리 목록 (type이 inquiry일 때만 사용)
    */
@@ -24,7 +25,7 @@ interface Props {
   contentPlaceholder?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const postFormProps = withDefaults(defineProps<PostFormProps>(), {
   titlePlaceholder: '제목을 입력하세요',
   contentPlaceholder: '내용을 입력하세요',
   categories: () => []
@@ -43,7 +44,7 @@ const handleSubmit = () => {
   const formData = {
     title: title.value,
     content: content.value,
-    ...(props.type === 'inquiry' && { category: selectedCategory.value })
+    ...(postFormProps.type === 'inquiry' && { category: selectedCategory.value })
   };
   emit('submit', formData);
 };

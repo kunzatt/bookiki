@@ -1,19 +1,17 @@
 <script setup lang="ts">
-interface Option {
-  value: string | number;
-  label: string;
-}
+import type { ComponentSize } from '@/types/common/ui';
+import type { SelectOption } from '@/types/common/select';
 
-interface Props {
-  size?: 'L' | 'M' | 'S';
+interface SelectProps {
+  size?: ComponentSize;
   disabled?: boolean;
-  options: Option[];
+  options: SelectOption[];
   placeholder?: string;
   label?: string;
   modelValue: string | number;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const selectProps = withDefaults(defineProps<SelectProps>(), {
   size: 'M',
   disabled: false,
   placeholder: '선택해주세요',
@@ -68,18 +66,3 @@ const sizeClasses = {
     </div>
   </div>
 </template>
-
-<!-- 사용 예시
-const selectedValue = ref('')
-
-<BasicSelect
-  v-model="selectedValue"
-  :options="[
-    { value: 'option1', label: '옵션 1' },
-    { value: 'option2', label: '옵션 2' },
-    { value: 'option3', label: '옵션 3' }
-  ]"
-  size="M"
-  label="선택"
-/> 
--->
