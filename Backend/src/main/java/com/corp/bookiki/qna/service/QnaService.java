@@ -3,6 +3,8 @@ package com.corp.bookiki.qna.service;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaException;
 import com.corp.bookiki.global.error.exception.UserException;
+import com.corp.bookiki.notification.entity.NotificationInformation;
+import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaDetailResponse;
 import com.corp.bookiki.qna.dto.QnaRequest;
@@ -35,6 +37,7 @@ public class QnaService {
     private final QnaRepository qnaRepository;
     private final QnaCommentRepository qnaCommentRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     // 문의사항 등록
     @Transactional
@@ -42,6 +45,7 @@ public class QnaService {
         try {
             QnaEntity qna = request.toEntity(authorId);
             qnaRepository.save(qna);
+            notificationService.addQnaCreatedNotification(NotificationInformation.QNA_CREATED, qna.getTitle(), qna.getId());
             return qna.getId();
         } catch (Exception ex) {
             log.error("문의사항 등록 실패: {}", ex.getMessage());

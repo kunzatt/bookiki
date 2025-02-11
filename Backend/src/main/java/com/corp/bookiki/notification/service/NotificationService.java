@@ -70,15 +70,15 @@ public class NotificationService {
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 
-	// 도서 연체 알림 생성(관리자한테)
+	// 도서 연체 알림 생성(관리자한테) - historyId가 담김
 	@Transactional
-	public void addBookOverdueNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
+	public void addAdminOverdueNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
 		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
 		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 	
-	// 문의 사항 등록 알림 생성
+	// 문의 사항 등록 알림 생성 - qnaId가 담김
 	@Transactional
 	public void addQnaCreatedNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
 		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
@@ -94,15 +94,15 @@ public class NotificationService {
 		saveNotification(notificationEntity, user);
 	}
 
-	// 연체 알림 생성
+	// 연체 알림 생성 - historyId가 담김
 	@Transactional
-	public void addOverDueNoticeNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
+	public void addUserOverDueNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
 		UserEntity user = userService.getUserById(userId);
 		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
 		saveNotification(notificationEntity, user);
 	}
 
-	// 관심 도서 대출 가능 알림 생성
+	// 관심 도서 대출 가능 알림 생성 - bookItemId가 담김
 	@Transactional
 	public void addFavoriteBookAvailableNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
 		List<Integer> userIds = bookFavoriteService.getAllFavoriteUserId(notificationId);
@@ -111,7 +111,7 @@ public class NotificationService {
 		saveNotificationForUsers(notificationEntity, users);
 	}
 
-	// 문의사항 답변 알림 생성
+	// 문의사항 답변 알림 생성 - qnaId가 담김
 	@Transactional
 	public void addQnaAnsweredNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
 		UserEntity user = userService.getUserById(userId);

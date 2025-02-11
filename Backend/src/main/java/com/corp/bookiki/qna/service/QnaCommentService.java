@@ -2,6 +2,8 @@ package com.corp.bookiki.qna.service;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaCommentException;
+import com.corp.bookiki.notification.entity.NotificationInformation;
+import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.qna.dto.QnaCommentRequest;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaCommentUpdate;
@@ -23,6 +25,7 @@ public class QnaCommentService {
 
     private final QnaCommentRepository qnaCommentRepository;
     private final QnaService qnaService;
+    private final NotificationService notificationService;
 
     // 문의사항Id 별 답변 리스트 조회
     @Transactional
@@ -77,6 +80,10 @@ public class QnaCommentService {
 
             QnaCommentEntity comment = request.toEntity(authorId);
             QnaCommentEntity savedComment = qnaCommentRepository.save(comment);
+            String qnaTitle = savedComment.getQna().getTitle();
+            Integer qnaId = savedComment.getQnaId();
+            Integer userId = savedComment.getQna().getAuthorId();
+            notificationService.addQnaAnsweredNotification(NotificationInformation.QNA_ANSWERED,qnaTitle, qnaId, userId);
 
             return savedComment.getId();
         } catch (QnaCommentException e) {
