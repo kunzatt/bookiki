@@ -1,40 +1,48 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { Pageable } from '@/types/common/pagination';
 
-interface Props {
+interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  pageSize: number;
+  sort?: string[];
   visiblePages?: number;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  visiblePages: 7
+const paginationProps = withDefaults(defineProps<PaginationProps>(), {
+  visiblePages: 7,
+  sort: () => []
 });
 
 const emit = defineEmits<{
-  (e: 'update:currentPage', value: number): void;
+  (e: 'update:pageInfo', value: Pageable): void;
 }>();
 
 const pages = computed(() => {
   const pages: number[] = [];
-  let startPage = Math.max(1, props.currentPage - Math.floor(props.visiblePages / 2));
-  let endPage = Math.min(props.totalPages, startPage + props.visiblePages - 1);
-
+  let startPage = Math.max(1, paginationProps.currentPage - Math.floor(paginationProps.visiblePages / 2));
+  let endPage = Math.min(paginationProps.totalPages, startPage + paginationProps.visiblePages - 1);
+  
   // 마지막 페이지가 총 페이지수를 초과하지 않도록 조정
-  if (endPage - startPage + 1 < props.visiblePages) {
-    startPage = Math.max(1, endPage - props.visiblePages + 1);
+  if (endPage - startPage + 1 < paginationProps.visiblePages) {
+    startPage = Math.max(1, endPage - paginationProps.visiblePages + 1);
   }
-
+  
   for (let i = startPage; i <= endPage; i++) {
     pages.push(i);
   }
-
   return pages;
 });
 
 const handlePageClick = (page: number) => {
-  if (page !== props.currentPage && page >= 1 && page <= props.totalPages) {
-    emit('update:currentPage', page);
+  if (page !== paginationProps.currentPage && page >= 1 && page <= paginationProps.totalPages) {
+    const pageInfo: Pageable = {
+      pageNumber: page - 1, // 백엔드는 0-based index 사용
+      pageSize: paginationProps.pageSize,
+      sort: paginationProps.sort
+    };
+    emit('update:pageInfo', pageInfo);
   }
 };
 </script>
@@ -47,6 +55,7 @@ const handlePageClick = (page: number) => {
       :class="{ 'text-gray-300': currentPage === 1 }"
       :disabled="currentPage === 1"
       @click="handlePageClick(currentPage - 1)"
+      aria-label="Previous page"
     >
       <span class="material-icons text-sm">chevron_left</span>
     </button>
@@ -61,6 +70,8 @@ const handlePageClick = (page: number) => {
         'hover:bg-gray-100': page !== currentPage
       }"
       @click="handlePageClick(page)"
+      :aria-label="`Go to page ${page}`"
+      :aria-current="page === currentPage ? 'page' : undefined"
     >
       {{ page }}
     </button>
@@ -71,14 +82,44 @@ const handlePageClick = (page: number) => {
       :class="{ 'text-gray-300': currentPage === totalPages }"
       :disabled="currentPage === totalPages"
       @click="handlePageClick(currentPage + 1)"
+      aria-label="Next page"
     >
       <span class="material-icons text-sm">chevron_right</span>
     </button>
   </div>
 </template>
 
-<!-- 사용예시
-<BasicWebPagination
-v-model:currentPage="currentPage"
-:total-pages="totalPages"
-/> -->
+<!--
+사용 예시:
+<template>
+  <Pagination
+    v-model:pageInfo="pageInfo"
+    :current-page="currentPage"
+    :total-pages="totalPages"
+    :page-size="10"
+    :sort="['createdAt,DESC']"
+  />
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import type { Pageable } from '@/types/common/pagination';
+
+const pageInfo = ref<Pageable>({
+  pageNumber: 0,
+  pageSize: 10,
+  sort: ['createdAt,DESC']
+});
+
+const currentPage = ref(1);
+const totalPages = ref(10);
+
+// pageInfo가 변경될 때마다 데이터를 새로 불러오는 로직 구현
+watch(pageInfo, async (newPageInfo) => {
+  // API 호출 및 데이터 업데이트
+  // const response = await fetchData(newPageInfo);
+  // totalPages.value = response.totalPages;
+  // currentPage.value = newPageInfo.pageNumber + 1;
+});
+</script>
+-->
