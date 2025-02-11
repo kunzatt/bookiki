@@ -38,8 +38,8 @@ export interface OAuth2Request  {
     name: string;
 }
 
-// OAuth 회원가입입 요청
-export interface OAuth2Request  {
+// OAuth 회원가입 요청
+export interface OAuth2SignUpRequest  {
     companyId: string;
     userName: string;
 }
