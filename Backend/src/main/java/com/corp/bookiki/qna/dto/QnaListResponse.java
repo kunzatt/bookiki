@@ -27,12 +27,6 @@ public class QnaListResponse {
     @Schema(description = "생성일시", example = "2024-01-24T10:00:00")
     private LocalDateTime createdAt;
 
-    // 페이지 메타 정보
-    private Integer pageNumber;
-    private Integer pageSize;
-    private Long totalElements;
-    private Integer totalPages;
-
     public QnaListResponse(QnaEntity qna, String authorName) {
         this.id = qna.getId();
         this.title = qna.getTitle();
@@ -40,12 +34,4 @@ public class QnaListResponse {
         this.authorName = authorName;
         this.createdAt = qna.getCreatedAt();
     }
-
-    public void setPageInfo(Page<?> page) {
-        this.pageNumber = page.getNumber();
-        this.pageSize = page.getSize();
-        this.totalElements = page.getTotalElements();
-        this.totalPages = page.getTotalPages();
-    }
-
 }

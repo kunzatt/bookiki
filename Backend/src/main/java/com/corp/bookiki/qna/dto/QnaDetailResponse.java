@@ -27,7 +27,6 @@ public class QnaDetailResponse {
     @Schema(description = "작성자 ID", example = "1")
     private Integer authorId;
 
-    // entity에는 없지만, 함께 사용해야할 column
     @Schema(description = "작성자 이름", example = "홍길동")
     private String authorName;
 
@@ -40,13 +39,13 @@ public class QnaDetailResponse {
     @Schema(description = "댓글 목록")
     private List<QnaCommentResponse> comments;
 
-    public QnaDetailResponse(QnaEntity qna, String authorName, List<QnaCommentResponse> comments) {
+    public QnaDetailResponse(QnaEntity qna, List<QnaCommentResponse> comments) {
         this.id = qna.getId();
         this.title = qna.getTitle();
         this.qnaType = qna.getQnaType();
         this.content = qna.getContent();
-        this.authorId = qna.getAuthorId();
-        this.authorName = authorName;
+        this.authorId = qna.getUser().getId();
+        this.authorName = qna.getUser().getUserName();
         this.createdAt = qna.getCreatedAt();
         this.updatedAt = qna.getUpdatedAt();
         this.comments = comments;
