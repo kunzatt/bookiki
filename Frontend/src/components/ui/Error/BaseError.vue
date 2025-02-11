@@ -1,12 +1,12 @@
 <script setup lang="ts">
-interface Props {
+interface ErrorProps {
   modelValue: boolean;
   title?: string;
   content?: string;
   confirmText?: string;
 }
 
-withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<ErrorProps>(), {
   title: '오류가 발생했습니다',
   content: '',
   confirmText: '확인'
@@ -76,23 +76,3 @@ const handleConfirm = () => {
     </div>
   </Transition>
 </template>
-
-<!-- 사용예시
-<BaseError
-v-model="isErrorVisible"
-title="오류가 발생했습니다"
-content="요청을 처리하는 중에 문제가 발생했습니다. 다시 시도해 주세요."
-@confirm="handleErrorConfirm"
-/>
-
-const isErrorVisible = ref(false)
-
-const handleErrorConfirm = () => {
-  console.log('Error confirmed')
-  // 추가 처리...
-}
-
-// 에러 모달 표시
-const showError = () => {
-  isErrorVisible.value = true
-} -->

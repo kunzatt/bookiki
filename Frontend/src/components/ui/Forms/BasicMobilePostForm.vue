@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import BasicPostForm from './BasicPostForm.vue';
+import type { PostType } from '@/types/common/postForm';
 
-interface Props {
-  type: 'notice' | 'inquiry';
+interface MobilePostFormProps {
+  type: PostType;
   categories?: string[];
 }
 
-const props = defineProps<Props>();
+const mobilePostFormProps = defineProps<MobilePostFormProps>();
 
 const handleSubmit = (formData: { title: string; content: string; category?: string }) => {
   console.log('Mobile form submitted:', formData);
@@ -34,6 +35,3 @@ const handleCancel = () => {
     </div>
   </div>
 </template>
-
-<!-- 사용예시 -->
-<!-- <BasicMobilePostForm type="notice" /> -->

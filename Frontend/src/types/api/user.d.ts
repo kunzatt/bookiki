@@ -50,7 +50,7 @@ export interface ProfileResponse {
 }
 
 // 메일 전송 요청
-export interface SEndEmailRequest {
+export interface SendEmailRequest {
     email: string;
 }
 

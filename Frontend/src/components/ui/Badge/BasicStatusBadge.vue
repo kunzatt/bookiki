@@ -1,5 +1,7 @@
 <script setup lang="ts">
-interface Props {
+import type { BadgeStatus } from '@/types/common/ui';
+
+interface BadgeProps {
   /**
    * 배지에 표시될 텍스트
    */
@@ -13,7 +15,7 @@ interface Props {
    * - gray: 기본 회색 상태
    * @default 'primary'
    */
-  type?: 'primary' | 'info' | 'warning' | 'error' | 'gray';
+  type?: BadgeStatus;
   /**
    * 배지의 활성화 여부 (outline 스타일)
    * @default true
@@ -21,7 +23,7 @@ interface Props {
   isEnabled?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const BadgeProps = withDefaults(defineProps<BadgeProps>(), {
   type: 'primary',
   isEnabled: true
 });
@@ -56,50 +58,3 @@ const getStatusClass = (type: string, isEnabled: boolean) => {
     <slot>{{ text }}</slot>
   </div>
 </template>
-
-<!-- 사용 예시 -->
- <!-- 기본 사용 -->
-<!-- 
-<BasicStatusBadge
-  text="완료"
-  type="primary"
-  :isEnabled="true"
-/>
--->
-
-<!-- 긴 텍스트 사용 -->
-<!-- 
-<BasicStatusBadge
-  text="이름/사번 변경 요청"
-  type="primary"
-  :isEnabled="true"
-/>
--->
-
-<!-- 아이콘과 함께 사용 -->
-<!-- 
-<BasicStatusBadge type="warning">
-  <span class="flex items-center gap-0.5">
-    <i class="material-icons !text-[12px] leading-none">warning</i>
-    <span>대기중</span>
-  </span>
-</BasicStatusBadge> 
--->
-
-<!-- 
-<BasicStatusBadge type="warning">
-  <span class="flex items-center gap-0.5">
-    <i class="material-icons !text-[12px] leading-none">warning</i>
-    <span>처리 대기중</span>
-  </span>
-</BasicStatusBadge> 
--->
-
-<!-- outline 스타일 -->
-<!-- 
-<BasicStatusBadge
-  text="진행중"
-  type="primary"
-  :isEnabled="false"
-/>
- -->

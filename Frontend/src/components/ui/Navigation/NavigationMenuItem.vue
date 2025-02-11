@@ -1,5 +1,5 @@
 <script setup lang="ts">
-interface Props {
+interface NavigationMenuProps {
   /**
    * 메뉴 아이템의 제목
    */
@@ -15,7 +15,7 @@ interface Props {
   isHighlighted?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const navigationMenuProps = withDefaults(defineProps<NavigationMenuProps>(), {
   to: '',
   isHighlighted: false
 });

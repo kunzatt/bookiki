@@ -1,7 +1,7 @@
 <script setup lang="ts">
   import BasicButton from '../Button/BasicButton.vue';
 
-  interface Props {
+  interface BaseModalProps {
   modelValue: boolean;
   title?: string;
   content?: string;
@@ -9,7 +9,7 @@
   confirmText?: string;
 }
 
-withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<BaseModalProps>(), {
   title: '',
   content: '',
   icon: 'info',

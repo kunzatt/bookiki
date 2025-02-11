@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue';
 
-interface Props {
+interface ToastProps {
   isVisible: boolean;
   message: string;
   type?: 'success' | 'info';
@@ -12,7 +12,7 @@ interface Props {
   duration?: number;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const toastProps = withDefaults(defineProps<ToastProps>(), {
   type: 'info',
   duration: 3000
 });
@@ -21,7 +21,7 @@ const localVisible = ref(false);
 let timeoutId: number | null = null;
 
 // isVisible prop이 변경될 때마다 타이머 설정
-watch(() => props.isVisible, (newValue) => {
+watch(() => toastProps.isVisible, (newValue) => {
   if (newValue) {
     localVisible.value = true;
     
@@ -33,7 +33,7 @@ watch(() => props.isVisible, (newValue) => {
     // 새로운 타이머 설정
     timeoutId = window.setTimeout(() => {
       localVisible.value = false;
-    }, props.duration);
+    }, toastProps.duration);
   } else {
     localVisible.value = false;
     if (timeoutId !== null) {
@@ -79,13 +79,3 @@ onBeforeUnmount(() => {
     </div>
   </Transition>
 </template>
-
-<!-- 선택적으로 지속 시간을 변경할 수 있습니다 -->
-<!-- 사용 예시
-  <ToastAlert
-    :is-visible="showToast"
-    message="저장되었습니다"
-    type="success"
-    :duration="3000" 
-    />
-/> -->
