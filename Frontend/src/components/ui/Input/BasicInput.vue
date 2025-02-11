@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import BasicButton from '../Button/BasicButton.vue';
 
-interface Props {
+interface InputProps {
   /**
    * Input type variant
    * - 'withButton': Input with small button (Type A)
@@ -33,7 +33,7 @@ interface Props {
   buttonText?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const inputProps = withDefaults(defineProps<InputProps>(), {
   type: 'full',
   inputType: 'text',
   placeholder: '',
@@ -119,37 +119,3 @@ const togglePassword = () => {
     </div>
   </div>
 </template>
-  
-
-  <!-- 사용예시 -->
-    <!-- Type A: Input with button (이메일 인증 등) -->
-    <!-- <BasicInput
-    type="withButton"
-    inputType="email"
-    v-model="email"
-    placeholder="E-mail"
-    buttonText="메일 전송"
-    @buttonClick="handleEmailVerification"
-  /> -->
-
-  <!-- Type B: Underline style -->
-  <!-- <BasicInput
-    type="underline"
-    v-model="username"
-    placeholder="Field"
-  /> -->
-
-  <!-- Type C: Full width box -->
-  <!-- <BasicInput
-    type="full"
-    v-model="name"
-    placeholder="Name"
-  /> -->
-
-  <!-- Type D: Password input -->
-  <!-- <BasicInput
-    type="password"
-    inputType="password"
-    v-model="password"
-    placeholder="Password"
-  /> -->

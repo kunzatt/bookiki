@@ -2,7 +2,7 @@
   import BaseModal from './BaseModal.vue';
   import BasicButton from '../Button/BasicButton.vue';
 
-  interface Props {
+  interface ConfirmModalProps {
   modelValue: boolean;
   title?: string;
   content?: string;
@@ -11,11 +11,11 @@
   cancelText?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const confirmModalProps = withDefaults(defineProps<ConfirmModalProps>(), {
   title: '',
   content: '',
   icon: 'help',
-  confirmText: '작성',
+  confirmText: '확인',
   cancelText: '취소'
 });
 

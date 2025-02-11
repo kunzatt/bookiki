@@ -2,30 +2,22 @@
 import { ref, computed } from 'vue'
 import BaseDatePicker from '../DatePicker/BaseDatePicker.vue';
 import BasicInput from '../Input/BasicInput.vue';
+import type { FilterConfig } from '@/types/common/filter';
 
 interface FilterOption {
   label: string;
   value: string | number;
 }
 
-interface FilterConfig {
-  type: 'select' | 'date' | 'radio' | 'checkbox' | 'search';
-  key: string;
-  label: string;
-  options?: FilterOption[];
-  multiple?: boolean;
-  placeholder?: string;
-}
-
-interface Props {
+interface FilterProps {
   filters: FilterConfig[];
   modelValue: Record<string, any>;
 }
 
-const props = defineProps<Props>();
+const filterProps = defineProps<FilterProps>();
 const emit = defineEmits(['update:modelValue', 'apply']);
 
-const localFilters = ref({ ...props.modelValue });
+const localFilters = ref({ ...filterProps.modelValue });
 
 const updateFilter = (key: string, value: any) => {
   localFilters.value[key] = value;
@@ -34,7 +26,7 @@ const updateFilter = (key: string, value: any) => {
 
 const resetFilters = () => {
   const resetValue: Record<string, any> = {};
-  props.filters.forEach(filter => {
+    filterProps.filters.forEach(filter => {
     resetValue[filter.key] = filter.multiple ? [] : '';
   });
   localFilters.value = resetValue;

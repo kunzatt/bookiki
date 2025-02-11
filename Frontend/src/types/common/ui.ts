@@ -1,5 +1,5 @@
-// 버튼, 배지 사이즈
-export type Size = 'L' | 'M' | 'S';
+// 버튼, 배지, QR 사이즈
+export type ComponentSize = 'L' | 'M' | 'S';
 
 // 배지 타입
-export type Status = 'success' | 'info' | 'warning' | 'error' | 'gray';
+export type BadgeStatus = 'success' | 'info' | 'warning' | 'error' | 'gray';

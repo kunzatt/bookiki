@@ -1,10 +1,12 @@
 <script setup lang="ts">
-interface Props {
+import type { ComponentSize } from '@/types/common/ui';
+
+interface ButtonProps {
   /**
    * 버튼 크기 (L, M, S)
    * @default 'M'
    */
-  size?: 'L' | 'M' | 'S';
+  size?: ComponentSize;
   /**
    * 버튼 활성화 여부
    * @default true
@@ -21,7 +23,7 @@ interface Props {
   text?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const buttonProps = withDefaults(defineProps<ButtonProps>(), {
   size: 'M',
   isEnabled: true,
   disabled: false,
@@ -55,10 +57,3 @@ const sizeClasses = {
     <slot>{{ text }}</slot>
   </button>
 </template>
-
-<!-- 사용 예시
-<BasicButton 
-size="L" 
-text="메일 전송" 
-:isEnabled="true"
-/> -->

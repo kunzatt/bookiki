@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import BasicPostForm from './BasicPostForm.vue';
+import type { PostType } from '@/types/common/postForm';
 
-interface Props {
-  type: 'notice' | 'inquiry';
+interface WebPostFormProps {
+  type: PostType;
   categories?: string[];
 }
 
-const props = defineProps<Props>();
+const webPostFormProps = defineProps<WebPostFormProps>();
 
 const handleSubmit = (formData: { title: string; content: string; category?: string }) => {
   console.log('Web form submitted:', formData);
@@ -34,9 +35,3 @@ const handleCancel = () => {
     />
   </div>
 </template>
-
-<!-- 사용 예시 -->
-<!-- <BasicWebPostForm 
-  type="inquiry"
-  :categories="['질문', '회망도서 신청', '이름/사번 변경']"
-/> -->
