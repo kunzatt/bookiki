@@ -5,8 +5,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +19,7 @@ import com.corp.bookiki.global.annotation.CurrentUser;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
-import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.AuthUser;
-import com.corp.bookiki.user.entity.Role;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -129,9 +125,8 @@ public class BookHistoryController {
 		@Parameter(description = "사용자 이름") @RequestParam(required = false) String userName,
 		@Parameter(description = "회사 ID") @RequestParam(required = false) String companyId,
 		@Parameter(description = "연체 여부") @RequestParam(required = false) Boolean overdue,
-		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
+		Pageable pageable
 	) {
-
 		LocalDate start = getStartDate(periodType, startDate);
 		LocalDate end = getEndDate(periodType, endDate);
 
@@ -204,7 +199,7 @@ public class BookHistoryController {
 		@Parameter(description = "종료일 (YYYY-MM-DD, CUSTOM 타입일 때 필수)")
 		@RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate,
 		@Parameter(description = "연체 여부로 필터링") @RequestParam(required = false) Boolean overdue,
-		@Parameter(hidden = true) @PageableDefault(size = 20, sort = "borrowedAt", direction = Sort.Direction.DESC) Pageable pageable
+		Pageable pageable
 	) {
 
 		LocalDate start = getStartDate(periodType, startDate);
