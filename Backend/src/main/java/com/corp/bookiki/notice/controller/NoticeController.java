@@ -67,8 +67,7 @@ public class NoticeController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = NoticeRequest.class))
             )
-            @Valid @RequestBody NoticeRequest request,
-            @CurrentUser AuthUser authUser) {
+            @Valid @RequestBody NoticeRequest request) {
         log.info("공지사항 등록: {}", request.getTitle());
         int noticeId = noticeService.createNotice(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(noticeId);
@@ -167,8 +166,7 @@ public class NoticeController {
     })
     public ResponseEntity<String> deleteNotice(
             @Parameter(description = "공지사항 ID", required = true, example = "1")
-            @PathVariable int id,
-            @CurrentUser AuthUser authUser) {
+            @PathVariable int id) {
         log.info("공지사항 삭제: id={}", id);
         noticeService.deleteNotice(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("공지사항이 삭제되었습니다.");
@@ -205,8 +203,7 @@ public class NoticeController {
                     required = true,
                     content = @Content(schema = @Schema(implementation = NoticeUpdate.class))
             )
-            @Valid @RequestBody NoticeUpdate update,
-            @CurrentUser AuthUser authUser) {
+            @Valid @RequestBody NoticeUpdate update) {
         log.info("공지사항 수정: id={}, title={}", update.getId(), update.getTitle());
         noticeService.updateNotice(update);
         return ResponseEntity.status(HttpStatus.OK).body("공지사항이 수정되었습니다.");

@@ -108,8 +108,8 @@ public class ProfileImageController {
     })
     @PutMapping
     public ResponseEntity<?> updateProfileImage(@RequestParam("file") MultipartFile file,
-                                                @CurrentUser AuthUser user){
-        Integer userId = user.getId();
+                                                @CurrentUser AuthUser authUser){
+        Integer userId = authUser.getId();
         log.info("유저 이미지 변경 시작 - 유저 ID: {}", userId);
         profileImageService.updateProfileImage(userId, file);
         log.info("유저 이미지 변경 완료 - 유저 ID: {}", userId);
@@ -159,8 +159,8 @@ public class ProfileImageController {
             )
     })
     @DeleteMapping
-    public ResponseEntity<?> deleteProfileImage(@CurrentUser AuthUser user){
-        Integer userId = user.getId();
+    public ResponseEntity<?> deleteProfileImage(@CurrentUser AuthUser authUser){
+        Integer userId = authUser.getId();
         log.info("유저 이미지 삭제 시작 - 유저 ID: {}", userId);
         profileImageService.deleteProfileImage(userId);
         log.info("유저 이미지 삭제 완료 - 유저 ID: {}", userId);
@@ -205,8 +205,8 @@ public class ProfileImageController {
             )
     })
     @GetMapping
-    public ResponseEntity<?> getProfileImage(@CurrentUser AuthUser user){
-        Integer userId = user.getId();
+    public ResponseEntity<?> getProfileImage(@CurrentUser AuthUser authUser){
+        Integer userId = authUser.getId();
         log.info("유저 프로필 이미지 조회 시작 - 유저 ID: {}", userId);
         ProfileResponse response = profileImageService.getProfileImage(userId);
         log.info("유저 프로필 이미지 조회 완료 - 유저 ID: {}", userId);
