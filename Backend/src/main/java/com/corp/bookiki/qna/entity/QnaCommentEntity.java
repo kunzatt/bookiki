@@ -11,6 +11,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import com.corp.bookiki.user.entity.UserEntity;
+
 @Entity
 @Table(name = "qna_comments")
 @Getter
@@ -21,14 +23,16 @@ public class QnaCommentEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "qna_id", nullable = false)
-    private int qnaId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "qna_id")
+    private QnaEntity qna;
 
     @Column
     private String content;
 
-    @Column(name = "author_id", nullable = false)
-    private int authorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    private UserEntity user;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -41,15 +45,11 @@ public class QnaCommentEntity {
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private boolean deleted;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "qna_id", insertable = false, updatable = false)
-    private QnaEntity qna;
-
     @Builder
-    private QnaCommentEntity(int qnaId, String content, int authorId) {
-        this.qnaId = qnaId;
+    private QnaCommentEntity(QnaEntity qna, String content, UserEntity user) {
+        this.qna = qna;
         this.content = content;
-        this.authorId = authorId;
+        this.user = user;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.deleted = false;
