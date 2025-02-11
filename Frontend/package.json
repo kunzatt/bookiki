@@ -19,6 +19,7 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@material-design-icons/font": "^0.14.14",
     "@vee-validate/rules": "^4.15.0",
+    "@vueuse/core": "^12.5.0",
     "@zxing/library": "^0.21.3",
     "axios": "^1.7.9",
     "chart.js": "^4.4.7",
