@@ -3,6 +3,8 @@ package com.corp.bookiki.bookhistory.service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -16,6 +18,9 @@ import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
+import com.corp.bookiki.global.error.exception.ShelfException;
+import com.corp.bookiki.shelf.entity.ShelfEntity;
+import com.corp.bookiki.shelf.repository.ShelfRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +33,7 @@ public class BookReturnService {
 
 	private final BookItemRepository bookItemRepository;
 	private final BookHistoryRepository bookHistoryRepository;
+	private final ShelfRepository shelfRepository;
 
 	// OCR 결과 유사성 분석을 위한 내부 클래스
 	private static class OcrSimilarityAnalyzer {
@@ -111,9 +117,9 @@ public class BookReturnService {
 	private List<String> previousOcrResults = new ArrayList<>();
 
 	public void processScanResults(BookReturnRequest bookReturnRequest) {
-		// 1. QR로 읽은 책들 자동 반납 처리
-		List<BookItemEntity> returnedQrBooks = processQrResults(
-			bookReturnRequest.getScannedBookItemIds()
+		// 1. Shelf별로 도서 반납 처리 및 카테고리 검증
+		List<BookItemEntity> returnedBooks = processReturnsByShelf(
+			bookReturnRequest.getShelfBookItemsMap()
 		);
 
 		// 2. OCR 결과 분석
@@ -121,24 +127,65 @@ public class BookReturnService {
 			bookReturnRequest.getOcrResults()
 		);
 
-		// 3. QR이 없고 새로운 OCR 결과가 있다면 관리자에게 알림
-		if (returnedQrBooks.isEmpty() && !newOcrTexts.isEmpty()) {
-			// TODO : 관리자 알림 구현 필요
+		// 3. 반납된 도서가 없고 새로운 OCR 결과가 있다면 관리자에게 알림
+		if (returnedBooks.isEmpty() && !newOcrTexts.isEmpty()) {
+			// TODO: 관리자 알림 구현 필요
 		}
 	}
 
-	private List<BookItemEntity> processQrResults(List<Integer> scannedIds) {
-		if (scannedIds == null || scannedIds.isEmpty()) {
+	private List<BookItemEntity> processReturnsByShelf(Map<Integer, List<Integer>> shelfBookItemsMap) {
+		if (shelfBookItemsMap == null || shelfBookItemsMap.isEmpty()) {
 			return new ArrayList<>();
 		}
-		List<BookItemEntity> borrowedBooks = bookItemRepository.findAllById(scannedIds)
-			.stream()
+
+		List<BookItemEntity> allReturnedBooks = new ArrayList<>();
+
+		shelfBookItemsMap.forEach((shelfId, bookItemIds) -> {
+			List<BookItemEntity> shelfBooks = validateAndReturnBooks(shelfId, bookItemIds);
+			allReturnedBooks.addAll(shelfBooks);
+		});
+
+		return allReturnedBooks;
+	}
+
+	private List<BookItemEntity> validateAndReturnBooks(Integer shelfId, List<Integer> bookItemIds) {
+		if (bookItemIds == null || bookItemIds.isEmpty()) {
+			return new ArrayList<>();
+		}
+
+		ShelfEntity shelf = shelfRepository.findById(shelfId)
+			.orElseThrow(() -> new ShelfException(ErrorCode.SHELF_NOT_FOUND));
+
+		List<BookItemEntity> allBooks = bookItemRepository.findAllById(bookItemIds);
+
+		List<BookItemEntity> mismatchedBooks = allBooks.stream()
+			.filter(book -> !Objects.equals(book.getBookInformation().getCategory(), shelf.getCategory()))
+			.collect(Collectors.toList());
+
+		if (!mismatchedBooks.isEmpty()) {
+			// TODO: 관리자 알림 구현 필요
+
+		}
+
+		List<BookItemEntity> borrowedBooks = allBooks.stream()
 			.filter(book -> book.getBookStatus() == BookStatus.BORROWED && !book.getDeleted())
 			.collect(Collectors.toList());
 
 		borrowedBooks.forEach(this::processReturn);
 
 		return borrowedBooks;
+	}
+
+	private void processReturn(BookItemEntity bookItemEntity) {
+		bookItemEntity.returnBook();
+
+		BookHistoryEntity latestHistory = bookItemEntity.getBookHistories().stream()
+			.filter(history -> history.getReturnedAt() == null)
+			.max(Comparator.comparing(BookHistoryEntity::getBorrowedAt))
+			.orElseThrow(() -> new BookItemException(ErrorCode.INVALID_BOOK_STATUS));
+
+		latestHistory.returnBook();
+
 	}
 
 	private List<String> analyzeOcrChanges(List<String> currentOcrResults) {
@@ -165,16 +212,5 @@ public class BookReturnService {
 					)
 			)
 			.collect(Collectors.toList());
-	}
-
-	private void processReturn(BookItemEntity bookItem) {
-		bookItem.returnBook();
-
-		BookHistoryEntity latestHistory = bookItem.getBookHistories().stream()
-			.filter(history -> history.getReturnedAt() == null)
-			.max(Comparator.comparing(BookHistoryEntity::getBorrowedAt))
-			.orElseThrow(() -> new BookItemException(ErrorCode.INVALID_BOOK_STATUS));
-
-		latestHistory.returnBook();
 	}
 }
