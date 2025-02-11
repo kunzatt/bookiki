@@ -1,20 +1,11 @@
 <script setup lang="ts">
-interface HistoryItem {
-  id: number;         
-  book_item_id: number;
-  user_id: number;
-  title: string;      
-  category: string;   
-  dueDate: string;    
-  returnDate: string; 
-  status?: 'overdue' | 'returned' | 'borrowed';
+import type { BookBorrowResponse } from '@/types/api/bookHistory';
+
+interface BookHistoryProps {
+  items: BookBorrowResponse[];
 }
 
-interface Props {
-  items: HistoryItem[];
-}
-
-const props = defineProps<Props>();
+const bookhistoryProps = defineProps<BookHistoryProps>();
 
 // 날짜 포맷팅 함수 (YYYY.MM.DD)
 const formatDate = (dateString: string) => {
@@ -35,10 +26,10 @@ const formatDate = (dateString: string) => {
         <!-- 왼쪽: 도서 정보 -->
         <div class="flex-1">
           <h3 class="text-base font-medium text-gray-900 mb-1">
-            {{ item.title }}
+            {{ item.bookTitle }}
           </h3>
           <p class="text-sm text-gray-500">
-            {{ item.category }}
+            {{ item.bookAuthor }}
           </p>
         </div>
         
@@ -46,12 +37,12 @@ const formatDate = (dateString: string) => {
         <div class="ml-4 space-y-1 min-w-[140px]">
           <div class="flex justify-between text-sm">
             <span class="text-gray-500">대출일:</span>
-            <span class="text-gray-900">{{ formatDate(item.dueDate) }}</span>
+            <span class="text-gray-900">{{ formatDate(item.borrowedAt) }}</span>
           </div>
           <div class="flex justify-between text-sm">
             <span class="text-gray-500">반납일:</span>
-            <span :class="item.returnDate ? 'text-[#FF6B6B]' : 'text-gray-400'">
-              {{ item.returnDate ? formatDate(item.returnDate) : '-' }}
+            <span :class="item.returnedAt ? 'text-[#FF6B6B]' : 'text-gray-400'">
+              {{ item.returnedAt ? formatDate(item.returnedAt) : '-' }}
             </span>
           </div>
         </div>
@@ -59,32 +50,3 @@ const formatDate = (dateString: string) => {
     </ul>
   </div>
 </template>
-
-<!-- 사용 예시
-<script setup>
-const historyItems = [
-  {
-    title: "초보자를 위한 디버깅",
-    category: "기술/공학",
-    dueDate: "2025-01-03",
-    returnDate: ""
-  },
-  {
-    title: "이런 책도 있고",
-    category: "기술/공학",
-    dueDate: "2025-01-03",
-    returnDate: "2025-01-11"
-  },
-  {
-    title: "저런 책도 있는거죠",
-    category: "기술/공학",
-    dueDate: "2025-01-03",
-    returnDate: "2025-01-11"
-  }
-];
-</script>
-
-<template>
-  <BookHistoryList :items="historyItems" />
-</template>
--->

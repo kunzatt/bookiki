@@ -1,18 +1,17 @@
 <script setup lang="ts">
-interface Props {
+import type { QrCodeResponse } from '@/types/api/qrCode';
+import type { ComponentSize } from '@/types/common/ui';
+
+interface QrDisplayProps {
   /**
-   * QR 코드 이미지 URL
+   * QR 코드 이미지 URL, QR ID
    */
-  imageUrl: string;
-  /**
-   * QR ID (밑에 표시될 텍스트)
-   */
-  qrId: string;
+  qrCode: QrCodeResponse;
   /**
    * QR 코드 크기 (선택적)
    * @default 'M'
    */
-  size?: 'L' | 'M' | 'S';
+  size?: ComponentSize;
   /**
    * ID 표시 여부 (선택적)
    * @default true
@@ -20,7 +19,7 @@ interface Props {
   showId?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+const qrDisplayProps = withDefaults(defineProps<QrDisplayProps>(), {
   size: 'M',
   showId: true
 });
@@ -35,8 +34,8 @@ const sizeClasses = {
 <template>
   <div class="flex flex-col items-center">
     <img 
-      :src="imageUrl" 
-      :alt="`QR Code ${qrId}`"
+      :src="qrCode.qrValue" 
+      :alt="`QR Code ${qrCode.id}`"
       :class="[
         'rounded border border-gray-200',
         sizeClasses[size]
@@ -51,38 +50,7 @@ const sizeClasses = {
         'text-xs': size === 'S'
       }"
     >
-      {{ qrId }}
+      {{ qrCode.id }}
     </span>
   </div>
 </template>
-
-<!-- 단일 QR 코드 표시 -->
-<!-- 
-<QrDisplay 
-  image-url="/path/to/qr/image.png"
-  qr-id="00000001"
-  size="M"
-/> 
--->
-
-<!-- QR 코드 나열하기 -->
-<!-- 
-<div class="flex gap-4 flex-wrap">
-  <QrDisplay 
-    v-for="qr in qrCodes"
-    :key="qr.id"
-    :image-url="qr.imageUrl"
-    :qr-id="qr.id"
-    size="M"
-  />
-</div> 
--->
-
-<!-- ID 없이 QR 코드만 표시 -->
-<!-- 
-<QrDisplay 
-  image-url="/path/to/qr/image.png"
-  qr-id="00000001"
-  :show-id="false"
-/> 
--->
