@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.corp.bookiki.user.entity.UserEntity;
+
 @Entity
 @Table(name = "qnas")
 @Getter
@@ -32,8 +34,9 @@ public class QnaEntity {
     @Column
     private String content;
 
-    @Column(name = "author_id", nullable = false)
-    private Integer authorId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    private UserEntity user;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
@@ -50,11 +53,11 @@ public class QnaEntity {
     private List<QnaCommentEntity> comments = new ArrayList<>();
 
     @Builder
-    private QnaEntity(String title, String qnaType, String content, int authorId) {
+    private QnaEntity(String title, String qnaType, String content, UserEntity user) {
         this.title = title;
         this.qnaType = qnaType;
         this.content = content;
-        this.authorId = authorId;
+        this.user = user;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
         this.deleted = false;

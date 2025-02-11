@@ -1,6 +1,9 @@
 package com.corp.bookiki.qna.dto;
 
 import com.corp.bookiki.qna.entity.QnaCommentEntity;
+import com.corp.bookiki.qna.entity.QnaEntity;
+import com.corp.bookiki.user.entity.UserEntity;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -17,11 +20,11 @@ public class QnaCommentRequest {
     @NotBlank(message = "내용은 필수 입력값입니다.")
     private String content;
 
-    public QnaCommentEntity toEntity(int authorId) {
+    public QnaCommentEntity toEntity(QnaEntity qna) {
         return QnaCommentEntity.builder()
-                .qnaId(qnaId)
+                .qna(qna)
                 .content(content)
-                .authorId(authorId)
+                .user(qna.getUser())
                 .build();
     }
 }

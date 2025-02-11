@@ -11,8 +11,11 @@ import com.corp.bookiki.qna.dto.QnaUpdate;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.service.QnaService;
 import com.corp.bookiki.user.dto.AuthUser;
+import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.service.UserService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -46,7 +49,7 @@ import java.util.List;
 public class QnaController {
 
     private final QnaService qnaService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     // 문의사항 등록
     @Operation(summary = "문의사항 등록", description = "새로운 문의사항을 등록합니다.")
@@ -119,7 +122,7 @@ public class QnaController {
             @RequestParam(required = false) String qnaType,
             @Parameter(description = "답변 여부", example = "true")
             @RequestParam(required = false) Boolean answered,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Pageable pageable,
             @CurrentUser AuthUser authUser
     ) {
         log.info("문의사항 목록 조회 - 페이지: {}, 크기: {}", pageable.getPageNumber(), pageable.getPageSize());
@@ -130,8 +133,8 @@ public class QnaController {
 
         for (QnaEntity qna : qnaList) {
             try {
-                UserEntity author = userRepository.getReferenceById(qna.getAuthorId());
-                responseList.add(new QnaListResponse(qna, author.getUserName()));
+                UserEntity user = userService.getUserById(qna.getUser().getId());
+                responseList.add(new QnaListResponse(qna, user.getUserName()));
             } catch (EntityNotFoundException ex) {
                 throw new UserException(ErrorCode.USER_NOT_FOUND);
             }
@@ -141,6 +144,7 @@ public class QnaController {
                 responseList,
                 pageable,
                 qnaPage.getTotalElements()
+
         );
 
         return ResponseEntity.status(HttpStatus.OK).body(responsePage);
