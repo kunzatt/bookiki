@@ -65,6 +65,7 @@ public enum ErrorCode {
 	DUPLICATE_BOOK_LOCATION(400, "이미 위치가 지정된 도서입니다"),
 	BOOK_SEARCH_NOT_FOUND(404, "도서 검색 결과가 없습니다."),
 	BOOK_ALREADY_RETURNED(400, "이미 반납된 도서입니다."),
+	NO_RANKING_DATA(404, "랭킹 데이터가 존재하지 않습니다."),
 
 	// Shelf & Location
 	SHELF_NOT_FOUND(404, "책장을 찾을 수 없습니다"),
