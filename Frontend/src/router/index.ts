@@ -22,6 +22,11 @@ const router = createRouter({
       component: () => import('@/views/MainView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/signup',
+      name: 'SignUp',
+      component: () => import('@/views/auth/SignupView.vue')
+    }
     // 404 페이지
     // {
     //   path: '/:pathMatch(.*)*',
