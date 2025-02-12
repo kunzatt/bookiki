@@ -4,6 +4,11 @@ import com.corp.bookiki.qna.entity.QnaCommentEntity;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import com.corp.bookiki.qna.repository.QnaRepository;
+import com.corp.bookiki.user.entity.Provider;
+import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,16 +34,32 @@ class QnaCommentRepositoryTest {
     @Autowired
     private QnaRepository qnaRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private QnaEntity savedQna;
+    private UserEntity savedUser;
 
     @BeforeEach
     void setUp() {
         // 테스트용 QnA 생성
+        UserEntity user = UserEntity.builder()
+            .email("uset@test.com")
+            .password("Password")
+            .companyId("CompanyID")
+            .role(Role.USER)
+            .provider(Provider.BOOKIKI)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
+        ReflectionTestUtils.setField(user, "id", 1);
+        savedUser = userRepository.save(user);
+
         QnaEntity qna = QnaEntity.builder()
                 .title("Test Question")
                 .content("Test Content")
                 .qnaType("GENERAL")
-                .authorId(1)
+                .user(savedUser)
                 .build();
 
         ReflectionTestUtils.setField(qna, "createdAt", LocalDateTime.now());
@@ -53,9 +74,9 @@ class QnaCommentRepositoryTest {
     void save() {
         // given
         QnaCommentEntity comment = QnaCommentEntity.builder()
-                .qnaId(savedQna.getId())
+                .qna(savedQna)
                 .content("Test Comment")
-                .authorId(1)
+                .user(savedUser)
                 .build();
 
         ReflectionTestUtils.setField(comment, "createdAt", LocalDateTime.now());
@@ -75,15 +96,15 @@ class QnaCommentRepositoryTest {
     void findByQnaIdAndDeletedFalseOrderByCreatedAtAsc() {
         // given
         QnaCommentEntity comment1 = QnaCommentEntity.builder()
-                .qnaId(savedQna.getId())
+                .qna(savedQna)
                 .content("First Comment")
-                .authorId(1)
+                .user(savedUser)
                 .build();
 
         QnaCommentEntity comment2 = QnaCommentEntity.builder()
-                .qnaId(savedQna.getId())
+                .qna(savedQna)
                 .content("Second Comment")
-                .authorId(1)
+                .user(savedUser)
                 .build();
 
         ReflectionTestUtils.setField(comment1, "createdAt", LocalDateTime.now());

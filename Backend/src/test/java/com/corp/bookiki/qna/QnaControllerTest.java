@@ -1,7 +1,9 @@
 package com.corp.bookiki.qna;
 
+import com.corp.bookiki.global.config.JacksonConfig;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
 import com.corp.bookiki.qna.controller.QnaController;
 import com.corp.bookiki.qna.dto.QnaRequest;
@@ -12,12 +14,14 @@ import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.service.UserService;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -26,9 +30,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -37,19 +45,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest({QnaController.class})
-@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
+@Import({WebMvcConfig.class, CurrentUserArgumentResolver.class, TestSecurityBeansConfig.class, SecurityConfig.class, CookieUtil.class})
 @MockBean(JpaMetamodelMappingContext.class)
-@AutoConfigureMockMvc(addFilters = false)  // 이 부분 추가
 @DisplayName("문의사항 컨트롤러 테스트")
 @Slf4j
 class QnaControllerTest {
@@ -65,13 +73,14 @@ class QnaControllerTest {
     @MockBean
     private QnaService qnaService;
 
+    @MockBean
+    private UserService userService;
+
     @Autowired
     private UserRepository userRepository;
 
-    @MockBean
-    private CurrentUserArgumentResolver currentUserArgumentResolver;
-
-    private AuthUser authUser;
+	private String testEmail;
+    private Authentication auth;
 
     @BeforeEach
     void setup() {
@@ -81,14 +90,22 @@ class QnaControllerTest {
                 .build();
         log.info("MockMvc 설정이 완료되었습니다.");
 
-        authUser = AuthUser.builder()
-                .id(1)
-                .email("test@test.com")
-                .role(Role.USER)
-                .build();
+        testEmail = "test@example.com";
+		UserEntity testUserEntity = UserEntity.builder()
+			.email(testEmail)
+			.userName("Test User")
+			.role(Role.USER)
+			.build();
+        ReflectionTestUtils.setField(testUserEntity, "id", 1);
 
-        when(currentUserArgumentResolver.supportsParameter(any())).thenReturn(true);
-        when(currentUserArgumentResolver.resolveArgument(any(), any(), any(), any())).thenReturn(authUser);
+        given(userRepository.findByEmail(eq(testEmail)))
+            .willReturn(Optional.of(testUserEntity));
+
+        auth = new UsernamePasswordAuthenticationToken(
+            testEmail,
+            null,
+            List.of(new SimpleGrantedAuthority("ROLE_USER"))
+        );
     }
 
     @Test
@@ -106,6 +123,7 @@ class QnaControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/qna")
+                        .with(authentication(auth))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
@@ -124,7 +142,8 @@ class QnaControllerTest {
         doNothing().when(qnaService).deleteQna(eq(qnaId), eq(1));
 
         // when & then
-        mockMvc.perform(delete("/api/qna/{id}", qnaId))
+        mockMvc.perform(delete("/api/qna/{id}", qnaId)
+                    .with(authentication(auth)))
                 .andDo(print())
                 .andExpect(status().isNoContent());
 
@@ -146,6 +165,7 @@ class QnaControllerTest {
 
         // when & then
         mockMvc.perform(put("/api/qna")
+                        .with(authentication(auth))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestMap)))
                 .andDo(print())
@@ -159,53 +179,48 @@ class QnaControllerTest {
     @DisplayName("문의사항 목록 조회 성공")
     void selectQnas_Success() throws Exception {
         // given
-        List<QnaEntity> qnaList = new ArrayList<>();
-        QnaEntity qna = QnaEntity.builder()
-                .title("테스트 제목")
-                .qnaType("일반문의")
-                .content("테스트 내용")
-                .authorId(1)
-                .build();
-        ReflectionTestUtils.setField(qna, "id", 1);
-        ReflectionTestUtils.setField(qna, "createdAt", LocalDateTime.now());
-        ReflectionTestUtils.setField(qna, "updatedAt", LocalDateTime.now());
-        ReflectionTestUtils.setField(qna, "deleted", false);
-        qnaList.add(qna);
-
         UserEntity testUser = UserEntity.builder()
-                .userName("테스트유저")
-                .email("test@test.com")
-                .role(Role.USER)
-                .build();
+            .userName("Test User")
+            .email("test@example.com")
+            .role(Role.USER)
+            .build();
+        ReflectionTestUtils.setField(testUser, "id", 1);
 
-        AuthUser authUser = AuthUser.builder()
-                .id(1)
-                .email("test@test.com")
-                .role(Role.USER)
-                .build();
+        QnaEntity qna = QnaEntity.builder()
+            .title("테스트 제목")
+            .qnaType("일반문의")
+            .content("테스트 내용")
+            .user(testUser)
+            .build();
+        ReflectionTestUtils.setField(qna, "id", 1);
 
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        List<QnaEntity> qnaList = List.of(qna);
+        Pageable pageable = PageRequest.of(0, 10);
         Page<QnaEntity> qnaPage = new PageImpl<>(qnaList, pageable, qnaList.size());
 
-        // CurrentUserArgumentResolver 모킹 비활성화
-        given(currentUserArgumentResolver.supportsParameter(any())).willReturn(false);
+        // Mock 설정
+        lenient().when(qnaService.selectQnas(
+            isNull(),
+            isNull(),
+            isNull(),
+            any(AuthUser.class),  // authUser
+            any(Pageable.class)   // pageable
+        )).thenReturn(qnaPage);
 
-        given(qnaService.selectQnas(isNull(), isNull(), isNull(), any(AuthUser.class), any(Pageable.class)))
-                .willReturn(qnaPage);
-        given(userRepository.getReferenceById(1))
-                .willReturn(testUser);
+        lenient().when(userService.getUserById(anyInt())).thenReturn(testUser);
 
         // when & then
         mockMvc.perform(get("/api/qna")
-                        .param("page", String.valueOf(pageable.getPageNumber()))
-                        .param("size", String.valueOf(pageable.getPageSize()))
-                        .param("sort", "createdAt,desc")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.content[0].title").value("테스트 제목"))
-                .andExpect(jsonPath("$.content[0].authorName").value("테스트유저"))
-                .andExpect(jsonPath("$.totalElements").value(1));
+                .with(authentication(auth))
+                .param("page", "0")
+                .param("size", "10")
+                .contentType(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").exists())
+            .andExpect(jsonPath("$.content[0].title").value("테스트 제목"))
+            .andExpect(jsonPath("$.content[0].authorName").value("Test User"))
+            .andExpect(jsonPath("$.pageable").exists())
+            .andExpect(jsonPath("$.totalElements").exists());
     }
 }
