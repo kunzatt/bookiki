@@ -183,7 +183,6 @@ const handleSubmit = async () => {
           <EmailVerify
             v-model="formData.email"
             @verified="handleEmailVerified"
-            class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
           />
   
           <!-- 이름 -->
