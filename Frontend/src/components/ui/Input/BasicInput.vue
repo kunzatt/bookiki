@@ -54,13 +54,13 @@ const togglePassword = () => {
 </script>
 
 <template>
-   <div class="w-96">
+   <div class="w-full">
     <!-- Label -->
     <label v-if="label" class="block text-sm text-gray-500 mb-1">{{ label }}</label>
 
     <!-- Type A: Input with button -->
     <div v-if="type === 'withButton'" class="flex gap-2">
-      <div class="w-80 relative">
+      <div class="flex-1">
         <input
           :type="inputType"
           :value="modelValue"
@@ -77,7 +77,7 @@ const togglePassword = () => {
     </div>
 
     <!-- Type B: Underline -->
-    <div v-else-if="type === 'underline'" class="w-96">
+    <div v-else-if="type === 'underline'" class="w-full">
       <input
         :type="inputType"
         :value="modelValue"
@@ -88,7 +88,7 @@ const togglePassword = () => {
     </div>
 
     <!-- Type C: Full width box -->
-    <div v-else-if="type === 'full'" class="w-96">
+    <div v-else-if="type === 'full'" class="w-full">
       <input
         :type="inputType"
         :value="modelValue"
@@ -99,7 +99,7 @@ const togglePassword = () => {
     </div>
 
     <!-- Type D: Password input -->
-    <div v-else-if="type === 'password'" class="w-96 relative">
+    <div v-else-if="type === 'password'" class="w-full relative">
       <input
         :type="showPassword ? 'text' : 'password'"
         :value="modelValue"
