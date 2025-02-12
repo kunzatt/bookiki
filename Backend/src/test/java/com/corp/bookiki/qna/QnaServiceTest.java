@@ -9,7 +9,10 @@ import com.corp.bookiki.qna.repository.QnaRepository;
 import com.corp.bookiki.qna.service.QnaService;
 import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.service.UserService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,11 +28,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.util.AssertionErrors.fail;
@@ -43,6 +49,12 @@ class QnaServiceTest {
 
     @Mock
     private QnaCommentRepository qnaCommentRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private UserService userService;
 
     @InjectMocks
     private QnaService qnaService;
@@ -105,6 +117,7 @@ class QnaServiceTest {
             .build();
         Pageable pageable = PageRequest.of(0, 10);
 
+        UserEntity user = userRepository.findById(TEST_ADMIN_ID).orElse(null);
         List<QnaEntity> mockQnas = Arrays.asList(
                 createMockQna(1, "Question 1"),
                 createMockQna(2, "Question 2")
@@ -123,14 +136,36 @@ class QnaServiceTest {
         verify(qnaRepository).findBySearchCriteria(null, null, null, pageable);
     }
 
-    private QnaEntity createMockQna(int id, String title) {
+    private QnaEntity createMockQna(Integer id, String title) {
+        UserEntity user = UserEntity.builder()
+            .email("test@test.com")
+            .password("Password")
+            .userName("TestUser")
+            .companyId("CompanyID")
+            .role(Role.USER)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
+        ReflectionTestUtils.setField(user, "id", 1);
+
         QnaEntity qna = QnaEntity.builder()
                 .title(title)
                 .content("Test Content")
                 .qnaType("GENERAL")
-                .authorId(TEST_USER_ID)
+                .user(user)
                 .build();
         ReflectionTestUtils.setField(qna, "id", id);
         return qna;
+    }
+
+    private UserEntity createUser(Integer id) {
+        UserEntity user = UserEntity.builder()
+            .email("test@example.com")
+            .userName("테스트 유저")
+            .role(Role.USER)
+            .createdAt(LocalDateTime.now())
+            .build();
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
     }
 }

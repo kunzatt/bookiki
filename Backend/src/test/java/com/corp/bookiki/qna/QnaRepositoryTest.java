@@ -63,12 +63,18 @@ class QnaRepositoryTest {
     @DisplayName("페이징을 적용한 문의사항 검색 테스트")
     void findBySearchCriteria() {
         // given
-        UserEntity user;
-        try {
-            user = userRepository.getReferenceById(1);
-        } catch (EntityNotFoundException e) {
-            throw new UserException(ErrorCode.USER_NOT_FOUND);
-        }
+        UserEntity user = UserEntity.builder()
+            .email("test@example.com")
+            .password("password")
+            .userName("testAdmin")
+            .companyId("CORP002")
+            .role(Role.ADMIN)
+            .provider(Provider.BOOKIKI)
+            .createdAt(LocalDateTime.now())
+            .updatedAt(LocalDateTime.now())
+            .build();
+
+        user = userRepository.save(user); // 실제로 사용자를 저장하고 ID를 받아옴
 
         // 테스트용 문의사항 10개 생성
         List<QnaEntity> qnas = new ArrayList<>();
@@ -77,7 +83,7 @@ class QnaRepositoryTest {
                     .title("Title " + i)
                     .content("Content " + i)
                     .qnaType("GENERAL")
-                    .authorId(user.getId())
+                    .user(user)
                     .build();
             ReflectionTestUtils.setField(qna, "deleted", false);
             qnas.add(qna);
