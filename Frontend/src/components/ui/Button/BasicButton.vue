@@ -36,9 +36,9 @@ defineEmits<{
 
 // 사이즈별 Tailwind 클래스 매핑
 const sizeClasses = {
-  'L': 'min-w-[384px] h-12 text-base',
-  'M': 'min-w-[128px] h-12 text-base',
-  'S': 'min-w-[64px] h-12 text-sm'
+  'L': 'w-full h-12 text-base',
+  'M': 'w-32 h-12 text-base',
+  'S': 'w-16 h-12 text-sm'
 } as const;
 </script>
 
