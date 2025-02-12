@@ -82,8 +82,8 @@ public class QnaCommentService {
             QnaCommentEntity comment = request.toEntity(qna);
             QnaCommentEntity savedComment = qnaCommentRepository.save(comment);
             String qnaTitle = savedComment.getQna().getTitle();
-            Integer qnaId = savedComment.getQnaId();
-            Integer userId = savedComment.getQna().getAuthorId();
+            Integer qnaId = savedComment.getQna().getId();
+            Integer userId = savedComment.getQna().getUser().getId();
             notificationService.addQnaAnsweredNotification(NotificationInformation.QNA_ANSWERED,qnaTitle, qnaId, userId);
 
             return savedComment.getId();
