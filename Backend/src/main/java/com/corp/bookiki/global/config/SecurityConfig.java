@@ -6,9 +6,6 @@ import com.corp.bookiki.user.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +22,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Arrays;
+import java.util.List;
 
 
 @Configuration
@@ -52,6 +52,7 @@ public class SecurityConfig {
 							.configurationSource(request -> {
 								CorsConfiguration configuration = new CorsConfiguration();
 								configuration.setAllowedOriginPatterns(List.of(frontendUrl,
+										"http://localhost:5173",
 										"http://i12a206.p.ssafy.io:8088",
 										"ws://70.12.246.118:8088"));
 
