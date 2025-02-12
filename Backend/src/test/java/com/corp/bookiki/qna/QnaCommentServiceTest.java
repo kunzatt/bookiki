@@ -10,6 +10,9 @@ import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import com.corp.bookiki.qna.service.QnaCommentService;
 import com.corp.bookiki.qna.service.QnaService;
+import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +38,6 @@ import static org.mockito.Mockito.*;
 @Slf4j
 @ExtendWith(MockitoExtension.class)
 class QnaCommentServiceTest {
-
     @Mock
     private QnaCommentRepository qnaCommentRepository;
 
@@ -48,6 +50,46 @@ class QnaCommentServiceTest {
     private static final int TEST_USER_ID = 1;
     private static final int TEST_QNA_ID = 1;
 
+    // 테스트용 고정 UserEntity 생성
+    private static final UserEntity testUser = UserEntity.builder()
+        .email("test@test.com")
+        .password("Password")
+        .userName("TestUser")
+        .companyId("CompanyID")
+        .role(Role.USER)
+        .createdAt(LocalDateTime.now())
+        .updatedAt(LocalDateTime.now())
+        .build();
+
+    static {
+        ReflectionTestUtils.setField(testUser, "id", TEST_USER_ID);
+    }
+
+    private QnaEntity createMockQna() {
+        QnaEntity qna = QnaEntity.builder()
+            .title("Test Question")
+            .content("Test Content")
+            .qnaType("GENERAL")
+            .user(testUser)  // 연관관계 설정
+            .build();
+        ReflectionTestUtils.setField(qna, "id", TEST_QNA_ID);
+        ReflectionTestUtils.setField(qna, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(qna, "updatedAt", LocalDateTime.now());
+        return qna;
+    }
+
+    private QnaCommentEntity createMockComment(QnaEntity qna, String content) {
+        QnaCommentEntity comment = QnaCommentEntity.builder()
+            .qna(qna)       // QnaEntity 연관관계 설정
+            .content(content)
+            .user(testUser) // UserEntity 연관관계 설정
+            .build();
+        ReflectionTestUtils.setField(comment, "id", 1);
+        ReflectionTestUtils.setField(comment, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(comment, "updatedAt", LocalDateTime.now());
+        return comment;
+    }
+
     @Test
     @DisplayName("댓글 생성 성공 테스트")
     void createQnaComment_Success() {
@@ -56,22 +98,12 @@ class QnaCommentServiceTest {
         ReflectionTestUtils.setField(request, "qnaId", TEST_QNA_ID);
         ReflectionTestUtils.setField(request, "content", "Test Comment");
 
-        QnaEntity mockQna = QnaEntity.builder()
-                .title("Test Question")
-                .content("Test Content")
-                .qnaType("GENERAL")
-                .authorId(TEST_USER_ID)
-                .build();
-        ReflectionTestUtils.setField(mockQna, "id", TEST_QNA_ID);
-
+        QnaEntity mockQna = createMockQna();
         when(qnaService.selectQnaById(TEST_QNA_ID)).thenReturn(mockQna);
-        when(qnaCommentRepository.save(any(QnaCommentEntity.class))).thenAnswer(new Answer<QnaCommentEntity>() {
-            @Override
-            public QnaCommentEntity answer(InvocationOnMock invocation) {
-                QnaCommentEntity entity = invocation.getArgument(0);
-                ReflectionTestUtils.setField(entity, "id", 1);
-                return entity;
-            }
+        when(qnaCommentRepository.save(any(QnaCommentEntity.class))).thenAnswer(invocation -> {
+            QnaCommentEntity entity = invocation.getArgument(0);
+            ReflectionTestUtils.setField(entity, "id", 1);
+            return entity;
         });
 
         // when
@@ -86,13 +118,14 @@ class QnaCommentServiceTest {
     @DisplayName("댓글 조회 성공 테스트")
     void selectQnaCommentsByQnaId_Success() {
         // given
+        QnaEntity mockQna = createMockQna();
         List<QnaCommentEntity> mockComments = Arrays.asList(
-                createMockComment(1, "First Comment"),
-                createMockComment(2, "Second Comment")
+            createMockComment(mockQna, "First Comment"),
+            createMockComment(mockQna, "Second Comment")
         );
 
         when(qnaCommentRepository.findByQnaIdAndDeletedFalseOrderByCreatedAtAsc(TEST_QNA_ID))
-                .thenReturn(mockComments);
+            .thenReturn(mockComments);
 
         // when
         List<QnaCommentResponse> responses = qnaCommentService.selectQnaCommentsByQnaId(TEST_QNA_ID);
@@ -103,23 +136,12 @@ class QnaCommentServiceTest {
         verify(qnaCommentRepository).findByQnaIdAndDeletedFalseOrderByCreatedAtAsc(TEST_QNA_ID);
     }
 
-    private QnaCommentEntity createMockComment(int id, String content) {
-        QnaCommentEntity comment = QnaCommentEntity.builder()
-                .qnaId(TEST_QNA_ID)
-                .content(content)
-                .authorId(TEST_USER_ID)
-                .build();
-        ReflectionTestUtils.setField(comment, "id", id);
-        ReflectionTestUtils.setField(comment, "createdAt", LocalDateTime.now());
-        ReflectionTestUtils.setField(comment, "updatedAt", LocalDateTime.now());
-        return comment;
-    }
-
     @Test
     @DisplayName("댓글 삭제 성공 테스트")
     void deleteQnaComment_Success() {
         // given
-        QnaCommentEntity mockComment = createMockComment(1, "Test Comment");
+        QnaEntity mockQna = createMockQna();
+        QnaCommentEntity mockComment = createMockComment(mockQna, "Test Comment");
         when(qnaCommentRepository.getReferenceById(1)).thenReturn(mockComment);
 
         // when
@@ -134,7 +156,8 @@ class QnaCommentServiceTest {
     @DisplayName("댓글 수정 성공 테스트")
     void updateQnaComment_Success() {
         // given
-        QnaCommentEntity mockComment = createMockComment(1, "Original Comment");
+        QnaEntity mockQna = createMockQna();
+        QnaCommentEntity mockComment = createMockComment(mockQna, "Original Comment");
         QnaCommentUpdate update = new QnaCommentUpdate();
         ReflectionTestUtils.setField(update, "id", 1);
         ReflectionTestUtils.setField(update, "content", "Updated Comment");
@@ -159,7 +182,7 @@ class QnaCommentServiceTest {
 
         // when & then
         QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
-                qnaCommentService.createQnaComment(request, TEST_USER_ID));
+            qnaCommentService.createQnaComment(request, TEST_USER_ID));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
         verify(qnaCommentRepository, never()).save(any());
@@ -169,7 +192,8 @@ class QnaCommentServiceTest {
     @DisplayName("댓글 수정 실패 - 빈 내용")
     void updateQnaComment_EmptyContent() {
         // given
-        QnaCommentEntity mockComment = createMockComment(1, "Original Comment");
+        QnaEntity mockQna = createMockQna();
+        QnaCommentEntity mockComment = createMockComment(mockQna, "Original Comment");
         QnaCommentUpdate update = new QnaCommentUpdate();
         ReflectionTestUtils.setField(update, "id", 1);
         ReflectionTestUtils.setField(update, "content", "");
@@ -178,7 +202,7 @@ class QnaCommentServiceTest {
 
         // when & then
         QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
-                qnaCommentService.updateQnaComment(update));
+            qnaCommentService.updateQnaComment(update));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
         assertThat(mockComment.getContent()).isEqualTo("Original Comment");
@@ -188,13 +212,14 @@ class QnaCommentServiceTest {
     @DisplayName("삭제된 댓글 조회 실패")
     void selectQnaCommentById_Deleted() {
         // given
-        QnaCommentEntity mockComment = createMockComment(1, "Test Comment");
+        QnaEntity mockQna = createMockQna();
+        QnaCommentEntity mockComment = createMockComment(mockQna, "Test Comment");
         ReflectionTestUtils.setField(mockComment, "deleted", true);
         when(qnaCommentRepository.getReferenceById(1)).thenReturn(mockComment);
 
         // when & then
         QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
-                qnaCommentService.selectQnaCommentById(1));
+            qnaCommentService.selectQnaCommentById(1));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.COMMENT_NOT_FOUND);
     }
@@ -204,11 +229,11 @@ class QnaCommentServiceTest {
     void selectQnaCommentById_NotFound() {
         // given
         when(qnaCommentRepository.getReferenceById(anyInt()))
-                .thenThrow(EntityNotFoundException.class);
+            .thenThrow(EntityNotFoundException.class);
 
         // when & then
         QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
-                qnaCommentService.selectQnaCommentById(1));
+            qnaCommentService.selectQnaCommentById(1));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.COMMENT_NOT_FOUND);
     }
@@ -217,13 +242,14 @@ class QnaCommentServiceTest {
     @DisplayName("이미 삭제된 댓글 삭제 실패")
     void deleteQnaComment_AlreadyDeleted() {
         // given
-        QnaCommentEntity mockComment = createMockComment(1, "Test Comment");
+        QnaEntity mockQna = createMockQna();
+        QnaCommentEntity mockComment = createMockComment(mockQna, "Test Comment");
         ReflectionTestUtils.setField(mockComment, "deleted", true);
         when(qnaCommentRepository.getReferenceById(1)).thenReturn(mockComment);
 
         // when & then
         QnaCommentException exception = assertThrows(QnaCommentException.class, () ->
-                qnaCommentService.deleteQnaComment(1));
+            qnaCommentService.deleteQnaComment(1));
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.COMMENT_NOT_FOUND);
     }
