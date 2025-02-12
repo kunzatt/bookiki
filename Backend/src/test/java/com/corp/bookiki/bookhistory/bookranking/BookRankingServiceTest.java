@@ -23,7 +23,6 @@ import com.corp.bookiki.bookhistory.service.BookRankingService;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
 
-
 @ExtendWith(MockitoExtension.class)
 class BookRankingServiceTest {
 	@InjectMocks
