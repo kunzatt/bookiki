@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.corp.bookiki.bookhistory.dto.BookRankingResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -202,6 +203,34 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 	List<BookHistoryEntity> findCurrentBorrowsByUserId(
 		@Param("userId") Integer userId,
 		@Param("overdue") Boolean overdue
+	);
+
+	@Query("""
+   SELECT new com.corp.bookiki.bookhistory.dto.BookRankingResponse(
+       bi.id,
+       bi.bookInformation.title,
+       bi.bookInformation.author,
+       bi.bookInformation.category,
+       bi.bookInformation.image,
+       COUNT(bh)
+   )
+   FROM BookHistoryEntity bh
+   JOIN bh.bookItem bi
+   JOIN bi.bookInformation
+   WHERE bh.borrowedAt BETWEEN :startDate AND :endDate
+   AND (:bookItems IS NULL OR bi IN :bookItems)
+   GROUP BY bi.id, 
+            bi.bookInformation.title, 
+            bi.bookInformation.author, 
+            bi.bookInformation.category,
+            bi.bookInformation.image
+   ORDER BY COUNT(bh) DESC
+   """)
+	List<BookRankingResponse> findTop10BorrowedBooksFromBookItems(
+		@Param("startDate") LocalDateTime startDate,
+		@Param("endDate") LocalDateTime endDate,
+		@Param("bookItems") List<BookItemEntity> bookItems,
+		Limit limit
 	);
 
 }
