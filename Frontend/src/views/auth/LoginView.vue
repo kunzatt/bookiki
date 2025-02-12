@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import SocialLoginButtons from '@/components/ui/Button/SocialLoginButtons.vue';
 
+const router = useRouter();
 const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
@@ -15,6 +17,7 @@ const handleLogin = async () => {
       email: email.value,
       password: password.value
     });
+    await router.push('/main');
   } catch (error) {
     console.error('Login failed:', error);
     // TODO: 에러 처리 (토스트 또는 알림)

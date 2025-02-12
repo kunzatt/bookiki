@@ -17,8 +17,8 @@ export const useAuthStore = defineStore('auth', () => {
       // User 정보 설정
       user.value = response; 
       
-      await router.push('/main');
-
+      //await router.push('/main');
+      return response;
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
