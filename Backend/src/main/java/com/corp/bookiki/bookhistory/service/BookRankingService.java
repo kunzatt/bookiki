@@ -14,6 +14,7 @@ import com.corp.bookiki.global.error.exception.BookHistoryException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,6 +23,7 @@ public class BookRankingService {
 
 	private final BookHistoryRepository bookHistoryRepository;
 
+	@Transactional(readOnly = true)
 	public List<BookRankingResponse> getBookRanking() {
 		LocalDateTime endDate = LocalDateTime.now();
 		LocalDateTime startDate = endDate.minusMonths(1);
