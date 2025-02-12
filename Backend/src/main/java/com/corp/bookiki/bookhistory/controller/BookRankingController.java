@@ -31,7 +31,7 @@ public class BookRankingController {
 
 	@Operation(
 		summary = "도서 대출 순위 조회",
-		description = "최근 3개월간 가장 많이 대출된 도서 TOP 10을 조회합니다."
+		description = "최근 한달간 가장 많이 대출된 도서 TOP 10을 조회합니다."
 	)
 	@ApiResponses({
 		@ApiResponse(

@@ -24,7 +24,7 @@ public class BookRankingService {
 
 	public List<BookRankingResponse> getBookRanking() {
 		LocalDateTime endDate = LocalDateTime.now();
-		LocalDateTime startDate = endDate.minusMonths(3);
+		LocalDateTime startDate = endDate.minusMonths(1);
 
 		return Optional.of(bookHistoryRepository.findTop10BorrowedBooksFromBookItems(
 				startDate,
