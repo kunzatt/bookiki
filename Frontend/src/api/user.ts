@@ -89,9 +89,11 @@ export const verifyCode = async (email: string, request: VerifyCodeRequest): Pro
 export const login = async (request: LoginRequest): Promise<LoginResponse> => {
     try {
         const response = await axios.post<LoginResponse>(
-            `${API_URL}/auth/login`,
+            `${API_URL}/auth/email/login`,
             request
         );
+        console.log('로그인 request: ', request);
+        console.log('response: ', response);
         return response.data;
     } catch (error) {
         console.error('로그인 실패:', error);
