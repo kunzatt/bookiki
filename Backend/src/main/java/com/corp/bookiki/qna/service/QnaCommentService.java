@@ -8,6 +8,7 @@ import com.corp.bookiki.qna.dto.QnaCommentRequest;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaCommentUpdate;
 import com.corp.bookiki.qna.entity.QnaCommentEntity;
+import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class QnaCommentService {
 
     // 문의사항Id 별 답변 리스트 조회
     @Transactional
-    public List<QnaCommentResponse> selectQnaCommentsByQnaId(int qnaId) {
+    public List<QnaCommentResponse> selectQnaCommentsByQnaId(Integer qnaId) {
         try {
             List<QnaCommentEntity> comments = qnaCommentRepository.findByQnaIdAndDeletedFalseOrderByCreatedAtAsc(qnaId);
             List<QnaCommentResponse> responses = new ArrayList<>();
@@ -47,7 +48,7 @@ public class QnaCommentService {
 
     // 문의사항 1개 조회
     @Transactional(readOnly = true)
-    public QnaCommentEntity selectQnaCommentById(int commentId) {
+    public QnaCommentEntity selectQnaCommentById(Integer commentId) {
         try {
             QnaCommentEntity comment = qnaCommentRepository.getReferenceById(commentId);
 
@@ -69,16 +70,16 @@ public class QnaCommentService {
 
     // 문의사항 답변 등록
     @Transactional
-    public int createQnaComment(QnaCommentRequest request, int authorId) {
+    public int createQnaComment(QnaCommentRequest request, Integer authorId) {
         try {
             // 해당 문의사항 존재 확인
-            qnaService.selectQnaById(request.getQnaId());
+            QnaEntity qna = qnaService.selectQnaById(request.getQnaId());
 
             if (request.getContent() == null || request.getContent().isBlank()) {
                 throw new QnaCommentException(ErrorCode.INVALID_INPUT_VALUE);
             }
 
-            QnaCommentEntity comment = request.toEntity(authorId);
+            QnaCommentEntity comment = request.toEntity(qna);
             QnaCommentEntity savedComment = qnaCommentRepository.save(comment);
             String qnaTitle = savedComment.getQna().getTitle();
             Integer qnaId = savedComment.getQnaId();
@@ -97,7 +98,7 @@ public class QnaCommentService {
 
     // 문의사항 답변 삭제
     @Transactional
-    public void deleteQnaComment(int commentId) {
+    public void deleteQnaComment(Integer commentId) {
         try {
             QnaCommentEntity comment = selectQnaCommentById(commentId);
 

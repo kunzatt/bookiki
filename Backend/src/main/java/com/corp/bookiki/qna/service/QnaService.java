@@ -3,8 +3,6 @@ package com.corp.bookiki.qna.service;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaException;
 import com.corp.bookiki.global.error.exception.UserException;
-import com.corp.bookiki.notification.entity.NotificationInformation;
-import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaDetailResponse;
 import com.corp.bookiki.qna.dto.QnaRequest;
@@ -17,6 +15,8 @@ import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
+import com.corp.bookiki.user.service.UserService;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,16 +36,15 @@ public class QnaService {
 
     private final QnaRepository qnaRepository;
     private final QnaCommentRepository qnaCommentRepository;
-    private final UserRepository userRepository;
-    private final NotificationService notificationService;
+    private final UserService userService;
 
     // 문의사항 등록
     @Transactional
-    public int createQna(QnaRequest request, int authorId) {
+    public int createQna(QnaRequest request, Integer userId) {
         try {
-            QnaEntity qna = request.toEntity(authorId);
+            UserEntity user = userService.getUserById(userId);
+            QnaEntity qna = request.toEntity(user);
             qnaRepository.save(qna);
-            notificationService.addQnaCreatedNotification(NotificationInformation.QNA_CREATED, qna.getTitle(), qna.getId());
             return qna.getId();
         } catch (Exception ex) {
             log.error("문의사항 등록 실패: {}", ex.getMessage());
@@ -99,10 +98,10 @@ public class QnaService {
 
     // 문의사항 1개 조회
     @Transactional(readOnly = true)
-    public QnaEntity selectQnaById(int id) {
+    public QnaEntity selectQnaById(Integer id) {
         try {
             QnaEntity qna = qnaRepository.getReferenceById(id);
-            if (qna == null || qna.isDeleted()) {
+            if (qna.isDeleted()) {
                 throw new QnaException(ErrorCode.QNA_NOT_FOUND);
             }
             return qna;
@@ -117,19 +116,12 @@ public class QnaService {
 
     // 댓글 목록까지 포함한 상세 조회 메서드
     @Transactional(readOnly = true)
-    public QnaDetailResponse selectQnaByIdWithComment(int id, AuthUser authUser) {
+    public QnaDetailResponse selectQnaByIdWithComment(Integer id, AuthUser authUser) {
         try {
             QnaEntity qna = selectQnaById(id);
 
-            if (authUser.getRole() != Role.ADMIN && qna.getAuthorId() != authUser.getId()) {
+            if (authUser.getRole() != Role.ADMIN && (qna.getUser().getId() != authUser.getId())) {
                 throw new QnaException(ErrorCode.UNAUTHORIZED);
-            }
-
-            UserEntity author;
-            try {
-                author = userRepository.getReferenceById(qna.getAuthorId());
-            } catch (EntityNotFoundException e) {
-                throw new UserException(ErrorCode.USER_NOT_FOUND);
             }
 
             List<QnaCommentEntity> comments =
@@ -140,7 +132,7 @@ public class QnaService {
                 commentResponses.add(new QnaCommentResponse(comment));
             }
 
-            return new QnaDetailResponse(qna, author.getUserName(), commentResponses);
+            return new QnaDetailResponse(qna,commentResponses);
         } catch (QnaException | UserException e) {
             log.error("문의사항 상세 조회 실패: {}", e.getMessage());
             throw e;
@@ -152,10 +144,10 @@ public class QnaService {
 
     // 문의사항 삭제
     @Transactional
-    public void deleteQna(int id, int currentUserId) {
+    public void deleteQna(Integer id, Integer currentUserId) {
         try {
             QnaEntity qna = selectQnaById(id);
-            if (qna.getAuthorId() != currentUserId) {
+            if (qna.getUser().getId() != currentUserId) {
                 throw new QnaException(ErrorCode.UNAUTHORIZED);
             }
             qna.delete();
@@ -171,10 +163,10 @@ public class QnaService {
 
     // 문의사항 수정
     @Transactional
-    public void updateQna(QnaUpdate update, int currentUserId) {
+    public void updateQna(QnaUpdate update, Integer currentUserId) {
         try {
             QnaEntity qna = selectQnaById(update.getId());
-            if (qna.getAuthorId() != currentUserId) {
+            if (currentUserId == null || qna.getUser().getId() != currentUserId) {
                 throw new QnaException(ErrorCode.UNAUTHORIZED);
             }
             qna.update(update.getTitle(), update.getQnaType(), update.getContent());

@@ -118,7 +118,7 @@ public class QnaCommentController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteQnaComment(
             @Parameter(description = "답변 ID", required = true, example = "1")
-            @PathVariable int id) {
+            @PathVariable Integer id) {
         log.info("문의사항 삭제: id={}", id);
         qnaCommentService.deleteQnaComment(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body("문의사항 답변이 삭제되었습니다.");
