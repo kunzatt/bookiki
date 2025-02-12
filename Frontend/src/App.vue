@@ -1,6 +1,13 @@
 <!-- App.vue -->
 <script setup lang="ts">
-// App 레벨에서 필요한 설정이나 전역 상태 관리가 있다면 여기에 추가
+import { onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.initialize()
+})
 </script>
 
 <template>

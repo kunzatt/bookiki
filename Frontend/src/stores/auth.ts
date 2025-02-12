@@ -1,23 +1,32 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { AuthUser, LoginRequest, LoginResponse } from '@/types/api/user';
+import type { LoginRequest, LoginResponse } from '@/types/api/user';
 import { login as loginApi, logout as logoutApi } from '@/api/user';
 import { useRouter } from 'vue-router';
 
-
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<LoginResponse  | null>(null);
+  const user = ref<LoginResponse | null>(null);
+  const router = useRouter();
+
+  // 초기화 함수 추가
+  const initialize = () => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      user.value = JSON.parse(savedUser);
+    }
+  };
 
   // 로그인 처리
   const login = async (loginRequest: LoginRequest) => {
-    const router = useRouter();
     try {
       const response: LoginResponse = await loginApi(loginRequest);
       
       // User 정보 설정
-      user.value = response; 
+      user.value = response;
       
-      //await router.push('/main');
+      // 로그인 성공 시 localStorage에 저장
+      localStorage.setItem('user', JSON.stringify(response));
+      
       return response;
     } catch (error) {
       console.error('Login failed:', error);
@@ -27,9 +36,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 로그아웃 처리
   const logout = async () => {
-    const router = useRouter();
     try {
       await logoutApi();
+      
+      // localStorage에서 제거
+      localStorage.removeItem('user');
+      
       user.value = null;
       await router.push('/login');
     } catch (error) {
@@ -48,5 +60,6 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     login,
     logout,
+    initialize
   };
 });
