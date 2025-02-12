@@ -4,7 +4,7 @@ import { QrCodeResponse } from "./qrCode";
 // 가상책장 응답
 export interface BookItemDisplayResponse {
     id: number;
-    image: string;
+    image: string; // 이미지 url
 }
 
 // 책 리스트 응답
@@ -24,7 +24,7 @@ export interface BookItemRequest {
 // 책 응답
 export interface BookItemResponse {
     id: number;
-    bookInformationId: numbber;
+    bookInformationId: number;
     purchaseAt: string;
     bookStatus: BookStatus;
     updatedAt: string;
