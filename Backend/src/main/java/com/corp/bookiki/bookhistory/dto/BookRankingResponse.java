@@ -46,6 +46,6 @@ public class BookRankingResponse {
 		description = "도서 대출 횟수",
 		example = "42"
 	)
-	private Long borrowCount;
+	private Integer borrowCount;
 
 }
