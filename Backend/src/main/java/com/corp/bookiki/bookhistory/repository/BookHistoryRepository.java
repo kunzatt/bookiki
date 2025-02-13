@@ -209,29 +209,25 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		"AND DATE(bh.borrowedAt) = DATE(:targetDate)")
 	List<BookHistoryEntity> findByBorrowedAtAndNotReturned(@Param("targetDate") LocalDateTime targetDate);
 
-	@Query("""
-    SELECT 
-        bi.id as bookItemId,
-        bi_info.title as title,
-        bi_info.author as author,
-        bi_info.category as category,
-        bi_info.image as image,
-        COUNT(bh.id) as borrowCount
-    FROM BookItemEntity bi
-    JOIN bi.bookInformation bi_info
-    LEFT JOIN bi.bookHistories bh
-        ON bh.borrowedAt BETWEEN :startDate AND :endDate
-        AND bh.returnedAt IS NULL
-    GROUP BY 
-        bi.id,
-        bi_info.title,
-        bi_info.author,
-        bi_info.category,
-        bi_info.image
-    HAVING COUNT(bh.id) > 0
-    ORDER BY COUNT(bh.id) DESC
-    FETCH FIRST 10 ROWS ONLY
-    """)
+	@Query(value = """
+   SELECT 
+       bi.id AS book_item_id, 
+       bi_info.title,
+       COUNT(bh.id) AS borrow_count 
+   FROM 
+       book_items bi
+   JOIN 
+       book_informations bi_info ON bi.book_information_id = bi_info.id
+   LEFT JOIN 
+       book_histories bh ON bh.book_item_id = bi.id 
+       AND bh.borrowed_at BETWEEN :startDate AND :endDate
+   GROUP BY 
+       bi.id, 
+       bi_info.title
+   ORDER BY 
+       borrow_count DESC
+   LIMIT 10
+   """, nativeQuery = true)
 	List<Object[]> findTopMostBorrowedBooks(
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate

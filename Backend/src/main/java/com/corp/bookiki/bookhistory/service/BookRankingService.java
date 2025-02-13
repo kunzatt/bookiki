@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.bookhistory.dto.BookRankingResponse;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.repository.BookItemRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BookRankingService {
 
 	private final BookHistoryRepository bookHistoryRepository;
+	private final BookItemRepository bookItemRepository;
 
 	@Transactional(readOnly = true)
 	public List<BookRankingResponse> getBookRanking() {
@@ -30,14 +33,23 @@ public class BookRankingService {
 		List<Object[]> rankings = bookHistoryRepository.findTopMostBorrowedBooks(startDate, endDate);
 
 		return rankings.stream()
-			.map(result -> new BookRankingResponse(
-				(Integer) result[0],
-				(String) result[1],
-				(String) result[2],
-				(Integer) result[3],
-				(String) result[4],
-				(Long) result[5]
-			))
+			.map(result -> {
+				Integer bookItemId = ((Number) result[0]).intValue();
+				String title = (String) result[1];
+				Long borrowCount = ((Number) result[2]).longValue();
+
+				BookItemEntity bookItem = bookItemRepository.findByIdWithBookInformation(bookItemId)
+					.orElseThrow(() -> new IllegalArgumentException("Book not found: " + bookItemId));
+
+				return new BookRankingResponse(
+					bookItemId,
+					title,
+					bookItem.getBookInformation().getAuthor(),
+					bookItem.getBookInformation().getCategory(),
+					bookItem.getBookInformation().getImage(),
+					borrowCount
+				);
+			})
 			.collect(Collectors.toList());
 	}
 }
