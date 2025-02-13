@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { instance } from './instance';
 
 const API_URL = '/api' // 베이스 URL을 설정합니다.
 
@@ -82,26 +83,19 @@ export const getCurrentBorrowedBooks = async (onlyOverdue?: boolean) => {
 };
 
 // 사용자 도서 대출
-export const borrowBook = async (bookItemId: number): Promise<BookBorrowResponse> => {
-    try {
-        const response = await axios.post<BookBorrowResponse>(`${API_URL}/books/borrow`, null, {
-            params: {
-                bookItemId
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('도서 대출 요청 실패:', error);
-        throw error;
-    }
- };
+export const borrowBook = async (bookItemId: number) => {
+    const response = await instance.post(`/api/books/borrow`, {
+        bookItemId: bookItemId
+    });
+    return response.data;
+};
 
- // 도서 반납
- export const processScanResult = async (request: BookReturnRequest): Promise<void> => {
+// 도서 반납
+export const processScanResult = async (request: BookReturnRequest): Promise<void> => {
     try {
         await axios.post(`${API_URL}/books/return/scan`, request);
     } catch (error) {
         console.error('도서 반납 스캔 처리 실패:', error);
         throw error;
     }
- };
+};

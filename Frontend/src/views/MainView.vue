@@ -34,12 +34,12 @@
               <!-- 책 슬라이더 -->
               <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
-                  <div 
-                    v-for="index in displayCount" 
-                    :key="index"
-                    class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                  >
-                    <template v-if="monthlyBooks[currentIndex + index - 1]">
+                  <template v-for="index in displayCount" :key="index">
+                    <div 
+                      v-if="monthlyBooks[currentIndex + index - 1]?.bookItemId"
+                      class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      @click="monthlyBooks[currentIndex + index - 1]?.bookItemId && router.push(`/books/${monthlyBooks[currentIndex + index - 1].bookItemId}`)"
+                    >
                       <div class="relative">
                         <img :src="monthlyBooks[currentIndex + index - 1].image" 
                              :alt="monthlyBooks[currentIndex + index - 1].title"
@@ -55,8 +55,8 @@
                           {{ monthlyBooks[currentIndex + index - 1].author }}
                         </p>
                       </div>
-                    </template>
-                  </div>
+                    </div>
+                  </template>
                 </div>
               </div>
 
@@ -91,12 +91,12 @@
               <!-- 책 슬라이더 -->
               <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
-                  <div 
-                    v-for="index in displayCount" 
-                    :key="index"
-                    class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                  >
-                    <template v-if="recommendedBooks[recommendedIndex + index - 1]">
+                  <template v-for="index in displayCount" :key="index">
+                    <div 
+                      v-if="recommendedBooks[recommendedIndex + index - 1]?.bookItemId"
+                      class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      @click="recommendedBooks[recommendedIndex + index - 1]?.bookItemId && router.push(`/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`)"
+                    >
                       <div class="relative">
                         <img :src="recommendedBooks[recommendedIndex + index - 1].image" 
                              :alt="recommendedBooks[recommendedIndex + index - 1].title"
@@ -112,8 +112,8 @@
                           {{ recommendedBooks[recommendedIndex + index - 1].author }}
                         </p>
                       </div>
-                    </template>
-                  </div>
+                    </div>
+                  </template>
                 </div>
               </div>
 
@@ -148,8 +148,10 @@ import HeaderDesktop from '@/components/common/HeaderDesktop.vue'
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import axios from '@/api/axios'
 import { BookRankingResponse } from '@/types/api/bookHistory'
+import { useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
+const router = useRouter()
 
 const displayCount = ref(4)
 const prevDisplayCount = ref(4)
@@ -159,7 +161,7 @@ const monthlyBooks = ref<BookRankingResponse[]>([])
 const fetchMonthlyBooks = async () => {
   try {
     const response = await axios.get('/api/books/ranking');
-    console.log('API Response:', response.data);
+    console.log('Monthly Books Data Structure:', response.data[0]); // 첫 번째 아이템의 구조 확인
     monthlyBooks.value = response.data;
   } catch (error) {
     console.error('Error fetching monthly books:', error);

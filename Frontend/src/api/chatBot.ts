@@ -28,7 +28,7 @@ export const sendMessage = async (request: ChatbotRequest) => {
 };
 
 // 챗봇 피드백 전송
-export const sendChatbotFeedback = async (request: ChatbotFeedbackRequest): Promise<string> => {
+export const sendFeedback = async (request: ChatbotFeedbackRequest): Promise<string> => {
     try {
         const response = await axios.post<string>(
             `${API_URL}/chatbot/feedback`,
