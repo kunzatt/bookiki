@@ -71,4 +71,8 @@ public class BookInformationEntity {
 		this.description = description;
 		this.category = category;
 	}
+
+	public void updateCategory(Integer category) {
+		this.category = category;
+	}
 }
