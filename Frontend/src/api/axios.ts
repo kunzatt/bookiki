@@ -11,20 +11,6 @@ const instance = axios.create({
   },
 });
 
-// // Request 인터셉터 추가
-// instance.interceptors.request.use(
-//   (config) => {
-//     const token = localStorage.getItem('token');
-//     if (token) {
-//       config.headers.Authorization = `Bearer ${token}`;
-//     }
-//     return config;
-//   },
-//   (error) => {
-//     return Promise.reject(error);
-//   }
-// );
-
 // Request 인터셉터
 instance.interceptors.request.use(
   (config) => {
@@ -36,20 +22,6 @@ instance.interceptors.request.use(
   }
 );
 
-// // Response 인터셉터 추가
-// instance.interceptors.response.use(
-//   (response) => {
-//     return response;
-//   },
-//   (error) => {
-//     console.error('API Error:', {
-//       status: error.response?.status,
-//       data: error.response?.data,
-//       config: error.config
-//     });
-//     return Promise.reject(error);
-//   }
-// );
 // Response 인터셉터
 instance.interceptors.response.use(
   (response) => {
