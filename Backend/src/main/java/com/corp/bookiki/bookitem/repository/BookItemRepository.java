@@ -1,6 +1,7 @@
 package com.corp.bookiki.bookitem.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -80,4 +81,7 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 	List<Integer> findIdsByBookInformationIdFromBookItemId(@Param("bookItemId") Integer bookItemId);
 
 	List<Integer> findIdsByBookStatus(BookStatus bookStatus);
+
+	@Query("SELECT bi FROM BookItemEntity bi JOIN FETCH bi.bookInformation WHERE bi.id = :id")
+	Optional<BookItemEntity> findByIdWithBookInformation(@Param("id") Integer id);
 }
