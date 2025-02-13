@@ -23,7 +23,7 @@ interface ButtonProps {
   text?: string;
 }
 
-const buttonProps = withDefaults(defineProps<ButtonProps>(), {
+const props = withDefaults(defineProps<ButtonProps>(), {
   size: 'M',
   isEnabled: true,
   disabled: false,

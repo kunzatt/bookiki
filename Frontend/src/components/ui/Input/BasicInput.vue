@@ -33,7 +33,7 @@ interface InputProps {
   buttonText?: string;
 }
 
-const inputProps = withDefaults(defineProps<InputProps>(), {
+const props = withDefaults(defineProps<InputProps>(), {
   type: 'full',
   inputType: 'text',
   placeholder: '',
