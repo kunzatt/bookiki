@@ -7,15 +7,14 @@ import { useRouter } from 'vue-router'
 const authStore = useAuthStore()
 const router = useRouter()
 
-onMounted(async () => {
-  // localStorage에서 토큰 확인
-  const token = localStorage.getItem('token')
-  if (token) {
-    // 토큰이 있으면 user 정보도 복원
-    const userStr = localStorage.getItem('user')
-    if (userStr) {
-      authStore.user = JSON.parse(userStr)
-    }
+onMounted(() => {
+  // sessionStorage에서 유저 정보 복구
+  authStore.initializeFromStorage()
+
+  // 현재 경로가 인증이 필요한 페이지인데 인증되지 않은 경우 로그인 페이지로 리다이렉트
+  const currentRoute = router.currentRoute.value
+  if (currentRoute.meta.requiresAuth && !authStore.isAuthenticated) {
+    router.push('/login')
   }
 })
 </script>

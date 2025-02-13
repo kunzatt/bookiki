@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api' // 베이스 URL을 설정합니다.
+const API_URL = '/api';
 
 import type { 
     ChatbotRequest,
@@ -9,12 +9,11 @@ import type {
     ChatbotFeedbackResponse,
     UpdateFeedbackStatusRequest
 } from '@/types/api/chatbot';
-
-import { FeedbackStatus } from '@/types/enums/feedbackStatus'
-import type { PageResponse } from '@/types/common/pagination'
+import { FeedbackStatus } from '@/types/enums/feedbackStatus';
+import type { PageResponse } from '@/types/common/pagination';
 
 // 챗봇 메시지 전송
-export const sendMessage = async (request: ChatbotRequest) => {
+export const sendMessage = async (request: ChatbotRequest): Promise<ChatbotResponse> => {
     try {
         const response = await axios.post<ChatbotResponse>(
             `${API_URL}/chatbot/message`,
@@ -39,26 +38,29 @@ export const sendFeedback = async (request: ChatbotFeedbackRequest): Promise<str
         console.error('챗봇 피드백 전송 실패:', error);
         throw error;
     }
- };
+};
 
- // 피드백 목록 조회
+// 피드백 목록 조회
 export const selectFeedbacks = async (
-    status?: FeedbackStatus,
-    category?: string,
-    startDate?: string,
-    endDate?: string,
-    page: number = 0,
-    size: number = 20
- ): Promise<PageResponse<ChatbotFeedbackResponse>> => {
+    params: {
+        status?: FeedbackStatus;
+        category?: string;
+        startDate?: string;
+        endDate?: string;
+        pageable?: {
+            page?: number;
+            size?: number;
+            sort?: string;
+            direction?: 'asc' | 'desc';
+        };
+    }
+): Promise<PageResponse<ChatbotFeedbackResponse>> => {
     try {
+        const { pageable, ...restParams } = params;
         const response = await axios.get<PageResponse<ChatbotFeedbackResponse>>(`${API_URL}/admin/feedback`, {
             params: {
-                status,
-                category,
-                startDate,
-                endDate,
-                page,
-                size
+                ...restParams,
+                ...pageable
             }
         });
         return response.data;
@@ -66,9 +68,9 @@ export const selectFeedbacks = async (
         console.error('피드백 목록 조회 실패:', error);
         throw error;
     }
- };
+};
 
- // 특정 피드백 조회
+// 특정 피드백 조회
 export const selectFeedbackById = async (id: number): Promise<ChatbotFeedbackResponse> => {
     try {
         const response = await axios.get<ChatbotFeedbackResponse>(`${API_URL}/admin/feedback/${id}`);
@@ -77,13 +79,13 @@ export const selectFeedbackById = async (id: number): Promise<ChatbotFeedbackRes
         console.error('피드백 상세 조회 실패:', error);
         throw error;
     }
- };
- 
- // 피드백 상태 업데이트
- export const updateFeedbackStatus = async (
-    id: number, 
+};
+
+// 피드백 상태 업데이트
+export const updateFeedbackStatus = async (
+    id: number,
     request: UpdateFeedbackStatusRequest
- ): Promise<ChatbotFeedbackResponse> => {
+): Promise<ChatbotFeedbackResponse> => {
     try {
         const response = await axios.patch<ChatbotFeedbackResponse>(
             `${API_URL}/admin/feedback/${id}/status`,
@@ -94,10 +96,10 @@ export const selectFeedbackById = async (id: number): Promise<ChatbotFeedbackRes
         console.error('피드백 상태 업데이트 실패:', error);
         throw error;
     }
- };
- 
- // 사용자별 피드백 조회
- export const selectFeedbackByUserId = async (userId: number): Promise<ChatbotFeedbackResponse[]> => {
+};
+
+// 사용자별 피드백 조회
+export const selectFeedbackByUserId = async (userId: number): Promise<ChatbotFeedbackResponse[]> => {
     try {
         const response = await axios.get<ChatbotFeedbackResponse[]>(
             `${API_URL}/admin/feedback/user/${userId}`
@@ -107,4 +109,4 @@ export const selectFeedbackById = async (id: number): Promise<ChatbotFeedbackRes
         console.error('사용자별 피드백 조회 실패:', error);
         throw error;
     }
- };
+};

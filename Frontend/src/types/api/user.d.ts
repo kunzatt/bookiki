@@ -9,7 +9,7 @@ export interface AuthUser {
 }
 
 // 구글 인증 요청
-export interface GoogleOAuth2Request  {
+export interface GoogleOAuth2Request extends OAuth2Request {
     email: string;
     name: string;
 }
@@ -23,25 +23,45 @@ export interface LoginRequest {
 // 로그인 응답
 export interface LoginResponse {
     id: number;
+    username: string;
     role: Role;
 }
 
 // 네이버 인증 요청
-export interface NaverOAuth2Request {
+export interface NaverOAuth2Request extends OAuth2Request {
     email: string;
     name: string;
 }
 
 // OAuth 요청
-export interface OAuth2Request  {
+export interface OAuth2Request {
     email: string;
     name: string;
 }
 
 // OAuth 회원가입 요청
-export interface OAuth2SignUpRequest  {
+export interface OAuth2SignUpRequest {
     companyId: string;
     userName: string;
+}
+
+// 비밀번호 재설정 이메일 요청
+export interface PasswordResetEmailRequest {
+    email: string;
+    userName: string;
+}
+
+// 비밀번호 재설정 요청
+export interface PasswordResetRequest {
+    newPassword: string;
+    newPasswordConfirm: string;
+}
+
+// 비밀번호 변경 요청
+export interface PasswordUpdateRequest {
+    currentPassword: string;
+    newPassword: string;
+    newPasswordConfirm: string;
 }
 
 // 프로필 응답
@@ -62,7 +82,6 @@ export interface TestAccountRequest {
     companyId: string;
 }
 
-
 // 관리자용 사용자정보 요청
 export interface UserInformationForAdminRequest {
     activeAt: string;
@@ -77,8 +96,8 @@ export interface UserInformationForAdminResponse {
     role: string;
     createdAt: string;
     updatedAt: string;
-    acticeAt: string;
-    prifileImage: string;
+    activeAt: string | null;
+    profileImage: string;
     provider: string;
 }
 
