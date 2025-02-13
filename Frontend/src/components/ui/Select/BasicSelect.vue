@@ -11,7 +11,7 @@ interface SelectProps {
   modelValue: string | number;
 }
 
-const selectProps = withDefaults(defineProps<SelectProps>(), {
+const props = withDefaults(defineProps<SelectProps>(), {
   size: 'M',
   disabled: false,
   placeholder: '선택해주세요',

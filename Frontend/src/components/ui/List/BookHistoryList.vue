@@ -5,7 +5,7 @@ interface BookHistoryProps {
   items: BookBorrowResponse[];
 }
 
-const bookhistoryProps = defineProps<BookHistoryProps>();
+const props = defineProps<BookHistoryProps>();
 
 // 날짜 포맷팅 함수 (YYYY.MM.DD)
 const formatDate = (dateString: string) => {
