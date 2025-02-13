@@ -40,7 +40,11 @@ const router = useRouter();
 // 메뉴 클릭 핸들러 함수 수정
 const handleMenuClick = (item: MenuItem) => {
   if (item.name === '홈') {
-    router.push('/main');
+    if (router.currentRoute.value.path === '/main') {
+      window.location.reload();
+    } else {
+      router.push('/main');
+    }
   } else if (item.hasToggle) {
     toggleSubMenu(item.name);
   } else if (item.path) {
@@ -70,16 +74,16 @@ const handleMenuClick = (item: MenuItem) => {
       <ul class="space-y-1">
         <li v-for="item in filteredMenuItems" :key="item.path">
           <!-- 메인 메뉴 아이템 -->
-          <router-link 
+          <div 
             v-if="item.name === '홈'" 
-            to="/main"
+            @click="handleMenuClick(item)"
             class="block"
           >
             <div class="px-6 py-4 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors">
               <span class="material-icons mr-3 text-[#344E41]">{{ item.icon }}</span>
               <span class="text-[#344E41]">{{ item.name }}</span>
             </div>
-          </router-link>
+          </div>
 
           <div
             v-else

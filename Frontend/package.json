@@ -22,6 +22,7 @@
     "@vueuse/core": "^12.5.0",
     "@zxing/library": "^0.21.3",
     "axios": "^1.7.9",
+    "bookiki": "file:",
     "chart.js": "^4.4.7",
     "dayjs": "^1.11.13",
     "element-plus": "^2.9.3",

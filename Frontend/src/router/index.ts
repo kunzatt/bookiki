@@ -22,6 +22,12 @@ const router = createRouter({
       component: () => import('@/views/MainView.vue'),
       meta: { requiresAuth: true }
     },
+    {
+      path: '/books/:id',
+      name: 'book-detail',
+      component: () => import('@/views/BookDetailView.vue'),
+      meta: { requiresAuth: false }
+    },
     // 404 페이지
     // {
     //   path: '/:pathMatch(.*)*',
