@@ -62,4 +62,6 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 		"WHERE bi.bookInformation.id = " +
 		"(SELECT b.bookInformation.id FROM BookItemEntity b WHERE b.id = :bookItemId)")
 	List<Integer> findIdsByBookInformationIdFromBookItemId(@Param("bookItemId") Integer bookItemId);
+
+	List<Integer> findIdsByBookStatus(BookStatus bookStatus);
 }

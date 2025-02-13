@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.favorite.service.BookFavoriteService;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.NotificationException;
@@ -41,6 +44,7 @@ public class NotificationService {
 	private final UserService userService;
 	private final BookFavoriteService bookFavoriteService;
 	private final BookHistoryService bookHistoryService;
+	private final BookItemRepository bookItemRepository;
 
 	// 카메라/통신 오류 알림 생성
 	@Transactional
@@ -62,12 +66,22 @@ public class NotificationService {
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 
-	// 도서 분실 알림 생성
 	@Transactional
-	public void addLostBookNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
-		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
-		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
-		saveNotificationForUsers(notificationEntity, admins);
+	public void addLostBookNotification(List<Integer> lostBookItemIds) {
+		// 1. 한 번에 모든 도서 정보를 조회
+		List<BookItemEntity> bookItems = bookItemRepository.findAllById(lostBookItemIds);
+
+		// 2. 알림 엔티티들을 한 번에 생성
+		List<NotificationEntity> notifications = bookItems.stream()
+			.map(bookItem -> createNotificationEntity(
+				NotificationInformation.LOST_BOOK,
+				bookItem.getBookInformation().getTitle(),
+				bookItem.getId()
+			))
+			.collect(Collectors.toList());
+
+		// 3. 한 번의 데이터베이스 작업으로 모든 알림을 저장
+		notificationRepository.saveAll(notifications);
 	}
 
 	// 도서 정리 알림 생성

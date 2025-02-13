@@ -3,9 +3,11 @@ package com.corp.bookiki.bookhistory.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.context.event.EventListener;
@@ -18,6 +20,7 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.global.error.exception.BookItemException;
@@ -43,6 +46,7 @@ public class BookReturnService {
 	private final NotificationService notificationService;
 	private final NoticeService noticeService;
 	private static List<BookItemEntity> mismatchedBooks;
+	private static Map<Integer, List<Integer>> shelfBookItemsMap;
 
 	// OCR 결과 유사성 분석을 위한 내부 클래스
 	private static class OcrSimilarityAnalyzer {
@@ -126,7 +130,7 @@ public class BookReturnService {
 	private List<String> previousOcrResults = new ArrayList<>();
 
 	public void processScanResults(BookReturnRequest bookReturnRequest) {
-		Map<Integer, List<Integer>> shelfBookItemsMap = bookReturnRequest.getShelfBookItemsMap();
+		shelfBookItemsMap = bookReturnRequest.getShelfBookItemsMap();
 		Integer status = shelfBookItemsMap.get(0).get(0);
 
 		if(status != 0) {
@@ -159,10 +163,12 @@ public class BookReturnService {
 
 		List<BookItemEntity> allReturnedBooks = new ArrayList<>();
 
-		shelfBookItemsMap.forEach((shelfId, bookItemIds) -> {
-			List<BookItemEntity> shelfBooks = validateAndReturnBooks(shelfId, bookItemIds);
-			allReturnedBooks.addAll(shelfBooks);
-		});
+		shelfBookItemsMap.entrySet().stream()
+			.filter(entry -> entry.getKey() != 0)
+			.forEach(entry -> {
+				List<BookItemEntity> shelfBooks = validateAndReturnBooks(entry.getKey(), entry.getValue());
+				allReturnedBooks.addAll(shelfBooks);
+			});
 
 		allReturnedBooks.forEach(bookItem ->
 			notificationService.addFavoriteBookAvailableNotification(
@@ -205,6 +211,25 @@ public class BookReturnService {
 				.collect(Collectors.joining(", "));
 			notificationService.addBooKArrangementNotification(NotificationInformation.BOOK_ARRANGEMENT, titles);
 		}
+	}
+
+	public void lostBooksAlarms() {
+		List<Integer> bookItemIds = shelfBookItemsMap.entrySet().stream()
+			.filter(entry -> entry.getKey() != 0)
+			.flatMap(entry -> entry.getValue().stream())
+			.collect(Collectors.toList());
+
+		List<Integer> availableBookItemIds = bookItemRepository.findIdsByBookStatus(BookStatus.AVAILABLE);
+
+		// 성능을 위해 Set으로 변환
+		Set<Integer> availableIdsSet = new HashSet<>(availableBookItemIds);
+
+		// availableIdsSet에 없는 bookItemIds를 찾음 (= 분실 의심 도서)
+		List<Integer> lostBookItemIds = bookItemIds.stream()
+			.filter(id -> !availableIdsSet.contains(id))
+			.collect(Collectors.toList());
+
+		notificationService.addLostBookNotification(lostBookItemIds);
 	}
 
 	private void processReturn(BookItemEntity bookItemEntity) {
