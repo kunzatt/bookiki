@@ -22,7 +22,7 @@ export interface BookHistoryRequest {
 }
 
 // 책 이력 응답
-export interface BookBorrowResponse {
+export interface BookHistoryResponse {
     id: number;
     bookItemId: number;
     userId: number;
@@ -41,16 +41,10 @@ export interface BookReturnRequest {
 
 // 책 순위 응답
 export interface BookRankingResponse {
-  /** 도서 아이템 ID */
   bookItemId: number
-  /** 도서 제목 */
   title: string
-  /** 도서 저자 */
   author: string
-  /** 도서 카테고리 코드 */
   category: number
-  /** 도서 이미지 URL */
   image: string
-  /** 도서 대출 횟수 */
   borrowCount: number
 }

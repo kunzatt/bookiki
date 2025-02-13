@@ -1,0 +1,5 @@
+export enum IotMessageType {
+    BOOK_RETURN = 'BOOK_RETURN',
+    LOCATION_UPDATE = 'LOCATION_UPDATE',
+    BOOK_LOCATION = 'BOOK_LOCATION'
+}

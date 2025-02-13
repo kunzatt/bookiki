@@ -3,7 +3,7 @@ import axios from './axios'
 const API_URL = '/api' // 베이스 URL을 설정합니다.
 
 import type {
-    SendEmailRequest ,
+    SendEmailRequest,
     VerifyCodeRequest,
     LoginRequest,
     LoginResponse,
@@ -12,7 +12,9 @@ import type {
     UserInformationForAdminResponse,
     UserInformationForAdminRequest,
     UserSignUpRequest,
-
+    PasswordResetEmailRequest,
+    PasswordResetRequest,
+    PasswordUpdateRequest
 } from '@/types/api/user'
 
 // 이메일 회원가입
@@ -89,28 +91,25 @@ export const verifyCode = async (email: string, request: VerifyCodeRequest): Pro
 export const login = async (request: LoginRequest): Promise<LoginResponse> => {
     try {
         const response = await axios.post<LoginResponse>(
-            '/api/auth/login',
+            `${API_URL}/auth/login`,
             request
         );
-        console.log('로그인 request: ', request);
-        console.log('response: ', response);
         return response.data;
     } catch (error) {
         console.error('로그인 실패:', error);
         throw error;
     }
- };
+};
 
  // 로그아웃
  export const logout = async (): Promise<void> => {
     try {
-        const response = await axios.post(
-            `${API_URL}/auth/logout`);
+        await axios.post(`${API_URL}/auth/logout`);
     } catch (error) {
         console.error('로그아웃 실패:', error);
         throw error;
     }
- };
+};
 
  // OAuth2 회원가입
  export const completeOAuth2SignUp = async (
@@ -245,6 +244,57 @@ export const deleteUser = async (
     }
  };
 
+// 비밀번호 재설정 이메일 발송
+export const sendPasswordResetEmail = async (request: PasswordResetEmailRequest): Promise<void> => {
+    try {
+        await axios.post(
+            `${API_URL}/password/reset-email`,
+            request
+        );
+    } catch (error) {
+        console.error('비밀번호 재설정 이메일 발송 실패:', error);
+        throw error;
+    }
+};
+
+// 비밀번호 재설정
+export const resetPassword = async (
+    token: string,
+    request: PasswordResetRequest
+): Promise<void> => {
+    try {
+        await axios.put(
+            `${API_URL}/password/reset/${token}`,
+            request
+        );
+    } catch (error) {
+        console.error('비밀번호 재설정 실패:', error);
+        throw error;
+    }
+};
+
+
+// 비밀번호 변경
+export const updatePassword = async (request: PasswordUpdateRequest): Promise<void> => {
+    try {
+        await axios.put(
+            `${API_URL}/password/update`,
+            request
+        );
+    } catch (error) {
+        console.error('비밀번호 변경 실패:', error);
+        throw error;
+    }
+};
+
+export const reissueToken = async (): Promise<void> => {
+    try {
+        await axios.post(`${API_URL}/auth/reissue`);
+    } catch (error) {
+        console.error('토큰 재발급 실패:', error);
+        throw error;
+    }
+};
 
  export const setToken = async (temporaryToken: string): Promise<LoginResponse> => {
     try {

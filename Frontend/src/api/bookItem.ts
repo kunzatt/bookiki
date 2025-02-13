@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api' // 베이스 URL을 설정합니다.
+const API_URL = '/api';
 
 import type { 
     BookItemListResponse, 
@@ -8,8 +8,8 @@ import type {
     BookItemRequest, 
     BookItemResponse,
 } from '@/types/api/bookItem';
-
-import { SearchType } from '@/types/enums/searchType'
+import { SearchType } from '@/types/enums/searchType';
+import type { PageResponse } from '@/types/common/pagination';
 
 // 도서 아이템 목록 검색
 export const selectBooks = async (
@@ -17,9 +17,9 @@ export const selectBooks = async (
     size: number = 10,
     type: SearchType,
     keyword?: string
-) => {
+): Promise<PageResponse<BookItemListResponse>> => {
     try {
-        const response = await axios.get<BookItemListResponse>(`${API_URL}/books/search`, {
+        const response = await axios.get<PageResponse<BookItemListResponse>>(`${API_URL}/books/search`, {
             params: { page, size, type, keyword }
         });
         return response.data;
@@ -34,11 +34,11 @@ export const selectBooksByKeyword = async (
     page: number = 0,
     size: number = 10,
     sortBy: string = 'id',
-    direction: string = 'desc',
+    direction: 'asc' | 'desc' = 'desc',
     keyword?: string
-) => {
+): Promise<PageResponse<BookItemDisplayResponse>> => {
     try {
-        const response = await axios.get<BookItemDisplayResponse>(`${API_URL}/books/search/list`, {
+        const response = await axios.get<PageResponse<BookItemDisplayResponse>>(`${API_URL}/books/search/list`, {
             params: { page, size, sortBy, direction, keyword }
         });
         return response.data;
@@ -48,8 +48,8 @@ export const selectBooksByKeyword = async (
     }
 };
 
-// 특정 도서 아이템 조회
-export const getBookItemById = async (id: number) => {
+// 도서 아이템 ID로 조회
+export const getBookItemById = async (id: number): Promise<BookItemResponse> => {
     try {
         const response = await axios.get<BookItemResponse>(`${API_URL}/books/search/qrcodes/${id}`);
         return response.data;
@@ -59,19 +59,8 @@ export const getBookItemById = async (id: number) => {
     }
 };
 
-// QR 코드로 도서 아이템 조회
-export const getBookByQrCode = async (id: number): Promise<BookItemResponse> => {
-    try {
-        const response = await axios.get<BookItemResponse>(`${API_URL}/books/search/qrcodes/${id}`);
-        return response.data;
-    } catch (error) {
-        console.error('QR 코드로 도서 조회 실패:', error);
-        throw error;
-    }
-};
-
 // 도서 아이템 삭제
-export const deleteBookItem = async (id: number) => {
+export const deleteBookItem = async (id: number): Promise<BookItemResponse> => {
     try {
         const response = await axios.delete<BookItemResponse>(`${API_URL}/books/search/${id}`);
         return response.data;
@@ -82,10 +71,10 @@ export const deleteBookItem = async (id: number) => {
 };
 
 // 도서 아이템 등록
-export const addBookItem = async (id: number, bookItemRequest: BookItemRequest) => {
+export const addBookItem = async (bookItemRequest: BookItemRequest): Promise<BookItemResponse> => {
     try {
         const response = await axios.post<BookItemResponse>(
-            `${API_URL}/admin/books/search/${id}`, 
+            `${API_URL}/admin/books/search`, 
             bookItemRequest
         );
         return response.data;

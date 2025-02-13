@@ -1,3 +1,5 @@
+import { Category } from "../enums/category";
+
 // 책 정보 응답
 export interface BookInformationResponse {
     id: number;
@@ -8,5 +10,5 @@ export interface BookInformationResponse {
     publishedAt: string;
     image: string;
     description: string;
-    category: number;
+    category: Category;
 }
