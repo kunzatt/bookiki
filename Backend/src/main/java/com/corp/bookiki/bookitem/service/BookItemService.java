@@ -1,5 +1,7 @@
 package com.corp.bookiki.bookitem.service;
 
+import java.util.List;
+
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
 import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
@@ -96,5 +98,15 @@ public class BookItemService {
 		BookItemEntity savedBookItem = bookItemRepository.save(bookItem);
 
 		return BookItemResponse.from(savedBookItem);
+	}
+
+	@Transactional(readOnly = true)
+	public List<BookItemEntity> getBooksSameBookInformation(Integer bookItemId){
+		return bookItemRepository.findByBookInformationIdFromBookItemId(bookItemId);
+	}
+
+	@Transactional(readOnly = true)
+	public List<Integer> getBooksIdSameBookInformation(Integer bookItemId){
+		return bookItemRepository.findIdsByBookInformationIdFromBookItemId(bookItemId);
 	}
 }

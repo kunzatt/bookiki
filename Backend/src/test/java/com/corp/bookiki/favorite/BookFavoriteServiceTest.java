@@ -23,6 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.favorite.dto.BookFavoriteResponse;
 import com.corp.bookiki.favorite.entity.FavoriteEntity;
 import com.corp.bookiki.favorite.repository.FavoriteRepository;
@@ -47,6 +48,9 @@ class BookFavoriteServiceTest {
 	private UserRepository userRepository;
 
 	@Mock
+	private BookItemService bookItemService;
+
+	@Mock
 	private BookItemRepository bookItemRepository;
 
 	@Nested
@@ -57,42 +61,48 @@ class BookFavoriteServiceTest {
 		@DisplayName("좋아요 추가 성공")
 		void toggleFavorite_AddSuccess() {
 			// given
-			UserEntity user = createUser(2);
-			BookItemEntity bookItem = createBookItem(100);
-			FavoriteEntity favorite = createFavorite(user, bookItem);
+			Integer userId = 2;
+			Integer bookItemId = 100;
+			UserEntity user = createUser(userId);
+			BookItemEntity bookItem = createBookItem(bookItemId);
+			BookItemEntity sameBookItem = createBookItem(101); // 같은 bookInformation을 가진 다른 bookItem
 
-			given(favoriteRepository.existsByUserIdAndBookItemId(2, 100))
+			given(favoriteRepository.existsByUserIdAndBookItemId(userId, bookItemId))
 				.willReturn(false);
-			given(userRepository.findById(2))
+			given(userRepository.findById(userId))
 				.willReturn(Optional.of(user));
-			given(bookItemRepository.findById(100))
-				.willReturn(Optional.of(bookItem));
-			given(favoriteRepository.save(any(FavoriteEntity.class)))
-				.willReturn(favorite);
+			given(bookItemService.getBooksSameBookInformation(bookItemId))
+				.willReturn(List.of(bookItem, sameBookItem));
 
 			// when
-			BookFavoriteResponse response = bookFavoriteService.toggleFavorite(2, 100);
+			String result = bookFavoriteService.toggleFavorite(userId, bookItemId);
 
 			// then
-			assertThat(response).isNotNull();
-			assertThat(response.getUserId()).isEqualTo(2);
-			assertThat(response.getBookItemId()).isEqualTo(100);
-			verify(favoriteRepository).save(any(FavoriteEntity.class));
+			assertThat(result).isEqualTo("좋아요 추가");
+			verify(favoriteRepository).saveAll(anyList());
+			verify(bookItemService).getBooksSameBookInformation(bookItemId);
 		}
 
 		@Test
 		@DisplayName("좋아요 취소 성공")
 		void toggleFavorite_DeleteSuccess() {
 			// given
-			given(favoriteRepository.existsByUserIdAndBookItemId(2, 100))
+			Integer userId = 2;
+			Integer bookItemId = 100;
+			List<Integer> bookItemIds = List.of(100, 101); // 같은 bookInformation을 가진 bookItem들의 ID
+
+			given(favoriteRepository.existsByUserIdAndBookItemId(userId, bookItemId))
 				.willReturn(true);
+			given(bookItemService.getBooksIdSameBookInformation(bookItemId))
+				.willReturn(bookItemIds);
 
 			// when
-			BookFavoriteResponse response = bookFavoriteService.toggleFavorite(2, 100);
+			String result = bookFavoriteService.toggleFavorite(userId, bookItemId);
 
 			// then
-			assertThat(response).isNull();
-			verify(favoriteRepository).deleteByUserIdAndBookItemId(2, 100);
+			assertThat(result).isEqualTo("좋아요 삭제");
+			verify(favoriteRepository).deleteByUserIdAndBookItemIdIn(userId, bookItemIds);
+			verify(bookItemService).getBooksIdSameBookInformation(bookItemId);
 		}
 	}
 

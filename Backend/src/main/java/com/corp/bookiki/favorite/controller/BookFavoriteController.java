@@ -103,13 +103,14 @@ public class BookFavoriteController {
 			)
 		)
 	})
-	public ResponseEntity<BookFavoriteResponse> toggleFavorite(
+	public ResponseEntity<String> toggleFavorite(
 		@CurrentUser AuthUser authUser,
 		@Parameter(description = "도서 ID", required = true, example = "1")
 		@PathVariable Integer bookItemId) {
 
 		log.info("도서 좋아요 토글: userId={}, bookItemId={}", authUser.getId(), bookItemId);
-		return ResponseEntity.ok(bookFavoriteService.toggleFavorite(authUser.getId(), bookItemId));
+		String success = bookFavoriteService.toggleFavorite(authUser.getId(), bookItemId);
+		return ResponseEntity.ok().body(success + " 성공");
 	}
 
 	@GetMapping("/count/{bookItemId}")

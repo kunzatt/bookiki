@@ -204,6 +204,11 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		@Param("overdue") Boolean overdue
 	);
 
+	@Query("SELECT bh FROM BookHistoryEntity bh " +
+		"WHERE bh.returnedAt IS NULL " +
+		"AND DATE(bh.borrowedAt) = DATE(:targetDate)")
+	List<BookHistoryEntity> findByBorrowedAtAndNotReturned(@Param("targetDate") LocalDateTime targetDate);
+
 	@Query("""
     SELECT 
         bi.id as bookItemId,

@@ -2,6 +2,7 @@ package com.corp.bookiki.qna;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaException;
+import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.qna.dto.QnaRequest;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
@@ -52,6 +53,9 @@ class QnaServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private NotificationService notificationService;
 
     @Mock
     private UserService userService;
