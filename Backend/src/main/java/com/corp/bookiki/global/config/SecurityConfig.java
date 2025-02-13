@@ -113,7 +113,8 @@ public class SecurityConfig {
 								"/api/configuration/**",
 								"/iot/**",
 								"/api/ws/**",
-								"/ws/**"
+								"/ws/**",
+								"/api/iot-storage"
 						).permitAll()   //  인증 없이 사용
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")  // Role에 따라 권한 부여
 						.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
