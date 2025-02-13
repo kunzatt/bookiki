@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from './axios'
 
 const API_URL = '/api' // 베이스 URL을 설정합니다.
 
@@ -240,4 +240,3 @@ export const deleteUser = async (
         throw error;
     }
  };
-

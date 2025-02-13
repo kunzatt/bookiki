@@ -4,9 +4,8 @@ import type { AuthUser, LoginRequest, LoginResponse } from '@/types/api/user';
 import { login as loginApi, logout as logoutApi } from '@/api/user';
 import { useRouter } from 'vue-router';
 
-
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<LoginResponse  | null>(null);
+  const user = ref<LoginResponse | null>(null);
 
   // 로그인 처리
   const login = async (loginRequest: LoginRequest) => {
@@ -15,9 +14,10 @@ export const useAuthStore = defineStore('auth', () => {
       const response: LoginResponse = await loginApi(loginRequest);
       
       // User 정보 설정
-      user.value = response; 
+      user.value = response;
+      // localStorage에 사용자 정보 저장
+      localStorage.setItem('user', JSON.stringify(response));
       
-      //await router.push('/main');
       return response;
     } catch (error) {
       console.error('Login failed:', error);
@@ -31,6 +31,9 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       await logoutApi();
       user.value = null;
+      // localStorage에서 사용자 정보 삭제
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
       await router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
