@@ -41,6 +41,35 @@ const router = createRouter({
       component: () => import('@/views/auth/OAuth2Callback.vue')
     }
   ]
+      path: '/books/:id',
+      name: 'book-detail',
+      component: () => import('@/views/BookDetailView.vue'),
+      meta: { requiresAuth: false }
+    },
+    // 404 페이지
+    // {
+    //   path: '/:pathMatch(.*)*',
+    //   name: 'not-found',
+    //   component: () => import('@/views/NotFoundView.vue')
+    // }
+    // {
+    //   path: '/',
+    //   name: 'home',
+    //   component: HomeView,
+    // },
+    {
+      path: '/library',
+      name: 'VirtualShelf',
+      component: () => import('@/views/book/VirtualShelfView.vue')
+    },
+
+    // 책 상세페이지 만든 사람이 수정하기!
+    {
+      path: '/books/:id',
+      name: 'BookItemDetail',
+      component: () => import('@/views/book/BookItemDetailView.vue')
+    }
+  ],
 });
 
 // 네비게이션 가드
