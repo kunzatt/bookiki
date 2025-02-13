@@ -9,7 +9,7 @@ interface TableProps {
   minWidth?: string;
 }
 
-const tableProps = withDefaults(defineProps<TableProps>(), {
+const props = withDefaults(defineProps<TableProps>(), {
   hoverable: true,
   loading: false,
   minWidth: '1024px' // 기본 최소 너비 설정
