@@ -205,12 +205,29 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 	);
 
 	@Query("""
-    SELECT DISTINCT bi
+    SELECT 
+        bi.id as bookItemId,
+        bi_info.title as title,
+        bi_info.author as author,
+        bi_info.category as category,
+        bi_info.image as image,
+        COUNT(bh.id) as borrowCount
     FROM BookItemEntity bi
-    JOIN FETCH bi.bookInformation bi_info
-    LEFT JOIN FETCH bi.bookHistories
+    JOIN bi.bookInformation bi_info
+    LEFT JOIN bi.bookHistories bh
+        ON bh.borrowedAt BETWEEN :startDate AND :endDate
+        AND bh.returnedAt IS NULL
+    GROUP BY 
+        bi.id,
+        bi_info.title,
+        bi_info.author,
+        bi_info.category,
+        bi_info.image
+    HAVING COUNT(bh.id) > 0
+    ORDER BY COUNT(bh.id) DESC
+    FETCH FIRST 10 ROWS ONLY
     """)
-	List<BookItemEntity> findBorrowedBooksFromBookItems(
+	List<Object[]> findTopMostBorrowedBooks(
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate
 	);
