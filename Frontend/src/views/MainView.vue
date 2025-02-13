@@ -19,52 +19,113 @@
           <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-xl lg:text-2xl font-medium">이달의 도서</h2>
-              <router-link 
-                to="/monthly-books" 
-                class="text-sm text-[#344E41] hover:text-[#588157] flex items-center"
-              >
-                더보기
-                <span class="material-icons text-sm ml-1">arrow_forward</span>
-              </router-link>
             </div>
-            <div class="w-full px-2 lg:px-4">
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-                <div v-for="book in displayBooks" 
-                     :key="book.id"
-                     class="book-card w-full max-w-[220px] mx-auto"
-                >
-                  <div class="relative">
-                    <img :src="book.imageUrl" 
-                         :alt="book.title"
-                         class="w-full h-44 object-cover rounded-t-lg"
-                    />
-                  </div>
-                  <div class="p-4">
-                    <h3 class="font-semibold text-base mb-2 truncate">{{ book.title }}</h3>
-                    <p class="text-gray-600 text-sm mb-1">{{ book.author }}</p>
-                    <p class="text-gray-500 text-sm">{{ book.publisher }}</p>
+            <div class="w-full relative flex items-center justify-center px-8">
+              <!-- 왼쪽 화살표 -->
+              <button 
+                @click="slideLeft"
+                class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{ 'opacity-50 cursor-not-allowed': currentIndex === 0 }"
+                :disabled="currentIndex === 0"
+              >
+                <span class="material-icons">chevron_left</span>
+              </button>
+
+              <!-- 책 슬라이더 -->
+              <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
+                  <div 
+                    v-for="index in displayCount" 
+                    :key="index"
+                    class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    <template v-if="monthlyBooks[currentIndex + index - 1]">
+                      <div class="relative">
+                        <img :src="monthlyBooks[currentIndex + index - 1].image" 
+                             :alt="monthlyBooks[currentIndex + index - 1].title"
+                             class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                             @error="handleImageError"
+                        />
+                      </div>
+                      <div class="p-3 sm:p-4">
+                        <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                          {{ monthlyBooks[currentIndex + index - 1].title }}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-600 truncate">
+                          {{ monthlyBooks[currentIndex + index - 1].author }}
+                        </p>
+                      </div>
+                    </template>
                   </div>
                 </div>
               </div>
+
+              <!-- 오른쪽 화살표 -->
+              <button 
+                @click="slideRight"
+                class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{ 'opacity-50 cursor-not-allowed': currentIndex >= monthlyBooks.length - displayCount }"
+                :disabled="currentIndex >= monthlyBooks.length - displayCount"
+              >
+                <span class="material-icons">chevron_right</span>
+              </button>
             </div>
           </section>
 
           <!-- 추천 도서 섹션 -->
           <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
-            <h2 class="text-xl lg:text-2xl font-medium mb-6">추천 도서</h2>
-            <div class="grid grid-cols-2 lg:flex lg:gap-6 lg:h-[calc(100%-3rem)]">
-              <div v-for="book in recommendedBooks" :key="book.id" class="book-card lg:w-1/5">
-                <img 
-                  :src="book.image" 
-                  :alt="book.title"
-                  class="w-full aspect-[3/4] lg:h-[80%] object-cover rounded-lg"
-                >
-                <div class="p-2 lg:h-[20%] flex flex-col justify-center">
-                  <h3 class="text-sm font-medium leading-tight">{{ book.title }}</h3>
-                  <p class="text-xs text-gray-500 mt-1">{{ book.author }}</p>
-                  <p class="text-xs text-gray-500">{{ book.category }}</p>
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl lg:text-2xl font-medium">추천 도서</h2>
+            </div>
+            <div class="w-full relative flex items-center justify-center px-8">
+              <!-- 왼쪽 화살표 -->
+              <button 
+                @click="slideLeftRecommended"
+                class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex === 0 }"
+                :disabled="recommendedIndex === 0"
+              >
+                <span class="material-icons">chevron_left</span>
+              </button>
+
+              <!-- 책 슬라이더 -->
+              <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
+                  <div 
+                    v-for="index in displayCount" 
+                    :key="index"
+                    class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                  >
+                    <template v-if="recommendedBooks[recommendedIndex + index - 1]">
+                      <div class="relative">
+                        <img :src="recommendedBooks[recommendedIndex + index - 1].image" 
+                             :alt="recommendedBooks[recommendedIndex + index - 1].title"
+                             class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                             @error="handleImageError"
+                        />
+                      </div>
+                      <div class="p-3 sm:p-4">
+                        <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                          {{ recommendedBooks[recommendedIndex + index - 1].title }}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-600 truncate">
+                          {{ recommendedBooks[recommendedIndex + index - 1].author }}
+                        </p>
+                      </div>
+                    </template>
+                  </div>
                 </div>
               </div>
+
+              <!-- 오른쪽 화살표 -->
+              <button 
+                @click="slideRightRecommended"
+                class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex >= recommendedBooks.length - displayCount }"
+                :disabled="recommendedIndex >= recommendedBooks.length - displayCount"
+              >
+                <span class="material-icons">chevron_right</span>
+              </button>
             </div>
           </section>
         </div>
@@ -86,100 +147,120 @@ import HeaderMobile from '@/components/common/HeaderMobile.vue'
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue'
 import { ref, onMounted, computed, onUnmounted } from 'vue'
 import axios from '@/api/axios'
+import { BookRankingResponse } from '@/types/api/bookHistory'
 
 const authStore = useAuthStore()
 
-interface Book {
-  id: number;
-  title: string;
-  author: string;
-  imageUrl: string;
-  isbn: string;
-  publisher: string;
-  publicationDate: string;
-  ranking: number;
-  // 백엔드에서 제공하는 다른 필드들도 추가
-}
+const displayCount = ref(4)
+const prevDisplayCount = ref(4)
 
-const monthlyBooks = ref<Book[]>([])
+const monthlyBooks = ref<BookRankingResponse[]>([])
 
 const fetchMonthlyBooks = async () => {
   try {
     const response = await axios.get('/api/books/ranking');
-    console.log('API Response:', response);
-    
-    if (response.data && Array.isArray(response.data)) {
-      monthlyBooks.value = response.data;
-    } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
-      monthlyBooks.value = response.data.data;
-    } else if (response.data && response.data.content && Array.isArray(response.data.content)) {
-      monthlyBooks.value = response.data.content;
-    } else {
-      console.error('API Response structure:', response.data);
-      monthlyBooks.value = [];
-    }
+    console.log('API Response:', response.data);
+    monthlyBooks.value = response.data;
   } catch (error) {
-    console.error('이달의 도서를 불러오는데 실패했습니다:', error);
-    if (axios.isAxiosError(error)) {
-      console.error('API Error details:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers
-        }
-      });
-    }
-    monthlyBooks.value = [];
+    console.error('Error fetching monthly books:', error);
+  }
+};
+
+const currentIndex = ref(0)
+
+// 왼쪽으로 슬라이드
+const slideLeft = () => {
+  if (currentIndex.value > 0) {
+    currentIndex.value--
   }
 }
 
-// 화면 크기에 따라 보여줄 도서 개수 결정
-const getDisplayCount = () => {
-  if (window.innerWidth >= 1024) return 4;  // lg 이상
-  if (window.innerWidth >= 768) return 3;   // md
-  return 2;                                 // 모바일
+// 오른쪽으로 슬라이드
+const slideRight = () => {
+  if (currentIndex.value < monthlyBooks.value.length - displayCount.value) {
+    currentIndex.value++
+  }
 }
 
-// 화면 크기 변경 감지
-const displayCount = ref(getDisplayCount());
+const recommendedBooks = ref([])
+const recommendedIndex = ref(0)
 
+// 추천 도서 슬라이드 함수
+const slideLeftRecommended = () => {
+  if (recommendedIndex.value > 0) {
+    recommendedIndex.value--
+  }
+}
+
+const slideRightRecommended = () => {
+  if (recommendedIndex.value < recommendedBooks.value.length - displayCount.value) {
+    recommendedIndex.value++
+  }
+}
+
+// 추천 도서 데이터 가져오기
+const fetchRecommendedBooks = async () => {
+  try {
+    const response = await axios.get('/api/books/ranking');
+    console.log('Recommended Books Response:', response.data);
+    recommendedBooks.value = response.data;
+  } catch (error) {
+    console.error('Error fetching recommended books:', error);
+  }
+};
+
+// 화면 크기에 따라 보여줄 도서 개수 조정
 const updateDisplayCount = () => {
-  displayCount.value = getDisplayCount();
+  const containerWidth = window.innerWidth - 48 // 좌우 패딩 24px씩 제외
+  const cardWidth = 175 // 카드 크기
+  const gap = 32 // 고정 간격
+  const safetyMargin = 20 // 여유 마진
+  const hysteresis = 100 // 전환 시점 조절을 위한 히스테리시스 값
+  const earlyTransition = 80 // 4->3 전환을 더 빠르게 하기 위한 추가 마진
+
+  // 한 줄에 들어갈 수 있는 최대 카드 수 계산
+  let maxCards
+  if (prevDisplayCount.value === 4) {
+    // 4개에서 3개로 전환: 더 일찍 전환 (더 큰 마진)
+    maxCards = Math.floor((containerWidth + gap - safetyMargin - hysteresis - earlyTransition) / (cardWidth + gap))
+  } else {
+    // 3개에서 4개로 전환: 더 늦게 전환 (더 작은 마진)
+    maxCards = Math.floor((containerWidth + gap - safetyMargin + hysteresis) / (cardWidth + gap))
+  }
+
+  // 화면 크기별로 적절한 카드 수 결정
+  let newDisplayCount
+  if (window.innerWidth >= 1024) { // lg
+    newDisplayCount = Math.min(4, maxCards)
+  } else if (window.innerWidth >= 768) { // md
+    newDisplayCount = Math.min(3, maxCards)
+  } else if (window.innerWidth >= 640) { // sm
+    newDisplayCount = Math.min(2, maxCards)
+  } else { // xs
+    newDisplayCount = 1
+  }
+
+  // 이전 상태 저장 후 새로운 값 설정
+  prevDisplayCount.value = displayCount.value
+  displayCount.value = newDisplayCount
 }
 
-// 화면 크기 변경 이벤트 리스너
 onMounted(() => {
-  fetchMonthlyBooks();
-  window.addEventListener('resize', updateDisplayCount);
+  fetchMonthlyBooks()
+  fetchRecommendedBooks()
+  updateDisplayCount()
+  window.addEventListener('resize', updateDisplayCount)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', updateDisplayCount);
+  window.removeEventListener('resize', updateDisplayCount)
 })
 
-// 화면 크기에 따라 도서 개수 조절
-const displayBooks = computed(() => {
-  return monthlyBooks.value.slice(0, displayCount.value);
-});
-
-const recommendedBooks = ref([
-  {
-    id: 1,
-    title: '초보자를 위한 디버깅',
-    author: '홍길동',
-    category: '기술/공학',
-    image: '/images/book1.jpg'
-  },
-  {
-    id: 2,
-    title: '디자인 엔지니어링 전략',
-    author: '김철수',
-    category: '기술/공학',
-    image: '/images/book2.jpg'
-  }
-])
+// 이미지 로드 실패 시 기본 이미지로 대체
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  target.src = '/default-book-cover.svg'; // 기본 이미지 경로로 대체
+}
 </script>
 
 <style scoped>
@@ -192,26 +273,11 @@ const recommendedBooks = ref([
   .grid {
     @apply grid-cols-3;
   }
-  .book-card {
-    @apply max-w-[200px];
-  }
 }
 
 @media screen and (min-width: 1024px) {
   .grid {
     @apply grid-cols-4;
-  }
-  .book-card {
-    @apply max-w-[180px];
-  }
-}
-
-@media screen and (max-width: 767px) {
-  .grid {
-    @apply grid-cols-2;
-  }
-  .book-card {
-    @apply max-w-[160px];
   }
 }
 
