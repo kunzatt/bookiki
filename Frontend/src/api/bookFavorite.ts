@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api' // 베이스 URL을 설정합니다.
+const API_URL = '/api/favorites' // 베이스 URL을 설정합니다.
 
 import type { BookFavoriteResponse } from '@/types/api/favorite';
 import type { PageResponse } from '@/types/common/pagination';
@@ -8,7 +8,7 @@ import type { PageResponse } from '@/types/common/pagination';
 // 도서 좋아요 여부 확인
 export const checkFavorite = async (bookItemId: number): Promise<boolean> => {
     try {
-        const response = await axios.get<boolean>(`${API_URL}/favorites/${bookItemId}`);
+        const response = await axios.get<boolean>(`${API_URL}/${bookItemId}`);
         return response.data;
     } catch (error) {
         console.error('도서 좋아요 여부 확인 실패:', error);

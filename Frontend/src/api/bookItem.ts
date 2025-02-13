@@ -12,7 +12,7 @@ import type {
 import { SearchType } from '@/types/enums/searchType'
 
 // 도서 아이템 목록 검색
-export const searchBooks = async (
+export const selectBooks = async (
     page: number = 0,
     size: number = 10,
     type: SearchType,
@@ -30,7 +30,7 @@ export const searchBooks = async (
 };
 
 // 도서 아이템 목록 조회 (키워드 검색)
-export const getBooksByKeyword = async (
+export const selectBooksByKeyword = async (
     page: number = 0,
     size: number = 10,
     sortBy: string = 'id',
@@ -49,7 +49,7 @@ export const getBooksByKeyword = async (
 };
 
 // 특정 도서 아이템 조회
-export const getBookById = async (id: number) => {
+export const getBookItemById = async (id: number) => {
     try {
         const response = await axios.get<BookItemResponse>(`${API_URL}/books/search/qrcodes/${id}`);
         return response.data;
@@ -60,7 +60,7 @@ export const getBookById = async (id: number) => {
 };
 
 // 도서 아이템 삭제
-export const deleteBook = async (id: number) => {
+export const deleteBookItem = async (id: number) => {
     try {
         const response = await axios.delete<BookItemResponse>(`${API_URL}/books/search/${id}`);
         return response.data;
@@ -71,7 +71,7 @@ export const deleteBook = async (id: number) => {
 };
 
 // 도서 아이템 등록
-export const addBook = async (id: number, bookItemRequest: BookItemRequest) => {
+export const addBookItem = async (id: number, bookItemRequest: BookItemRequest) => {
     try {
         const response = await axios.post<BookItemResponse>(
             `${API_URL}/admin/books/search/${id}`, 
