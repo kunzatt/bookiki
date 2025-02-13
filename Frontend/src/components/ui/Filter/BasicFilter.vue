@@ -14,10 +14,10 @@ interface FilterProps {
   modelValue: Record<string, any>;
 }
 
-const filterProps = defineProps<FilterProps>();
+const props = defineProps<FilterProps>();
 const emit = defineEmits(['update:modelValue', 'apply']);
 
-const localFilters = ref({ ...filterProps.modelValue });
+const localFilters = ref({ ...props.modelValue });
 
 const updateFilter = (key: string, value: any) => {
   localFilters.value[key] = value;
@@ -26,7 +26,7 @@ const updateFilter = (key: string, value: any) => {
 
 const resetFilters = () => {
   const resetValue: Record<string, any> = {};
-    filterProps.filters.forEach(filter => {
+    props.filters.forEach(filter => {
     resetValue[filter.key] = filter.multiple ? [] : '';
   });
   localFilters.value = resetValue;

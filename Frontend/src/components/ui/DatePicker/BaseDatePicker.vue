@@ -10,7 +10,7 @@ interface DateProps {
   format?: string
 }
 
-const dateProps = withDefaults(defineProps<DateProps>(), {
+const props = withDefaults(defineProps<DateProps>(), {
   disabled: false,
   format: 'YYYY.MM.DD'
 })
@@ -53,7 +53,7 @@ const tabOptions = [
 
 const formatDate = (date: Date | null) => {
   if (!date) return ''
-  return dayjs(date).format(dateProps.format)
+  return dayjs(date).format(props.format)
 }
 
 const handleTabChange = (tab: string) => {

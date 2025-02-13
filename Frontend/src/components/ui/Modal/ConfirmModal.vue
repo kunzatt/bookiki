@@ -11,7 +11,7 @@
   cancelText?: string;
 }
 
-const confirmModalProps = withDefaults(defineProps<ConfirmModalProps>(), {
+const props = withDefaults(defineProps<ConfirmModalProps>(), {
   title: '',
   content: '',
   icon: 'help',

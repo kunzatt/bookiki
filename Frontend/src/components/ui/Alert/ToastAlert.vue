@@ -12,7 +12,7 @@ interface ToastProps {
   duration?: number;
 }
 
-const toastProps = withDefaults(defineProps<ToastProps>(), {
+const props = withDefaults(defineProps<ToastProps>(), {
   type: 'info',
   duration: 3000
 });
@@ -21,7 +21,7 @@ const localVisible = ref(false);
 let timeoutId: number | null = null;
 
 // isVisible prop이 변경될 때마다 타이머 설정
-watch(() => toastProps.isVisible, (newValue) => {
+watch(() => props.isVisible, (newValue) => {
   if (newValue) {
     localVisible.value = true;
     
@@ -33,7 +33,7 @@ watch(() => toastProps.isVisible, (newValue) => {
     // 새로운 타이머 설정
     timeoutId = window.setTimeout(() => {
       localVisible.value = false;
-    }, toastProps.duration);
+    }, props.duration);
   } else {
     localVisible.value = false;
     if (timeoutId !== null) {
