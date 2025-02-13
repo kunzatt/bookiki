@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -154,12 +155,15 @@ public class SecurityConfig {
 							.successHandler(oAuth2AuthenticationSuccessHandler)
 							.failureHandler(oAuth2AuthenticationFailureHandler);
 				})
-			.logout(AbstractHttpConfigurer::disable)
-			.logout(logout -> {
-				logout
-					.logoutUrl("/api/auth/logout")
-					.permitAll();
-			});
+				.logout(logout -> logout
+						.logoutUrl("/api/auth/logout")
+						.logoutSuccessHandler((request, response, authentication) -> {
+							response.setStatus(HttpStatus.OK.value());
+						})
+						.invalidateHttpSession(true)
+						.deleteCookies("JSESSIONID")
+						.permitAll()
+				);
 		//            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
 
 
