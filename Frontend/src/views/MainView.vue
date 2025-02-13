@@ -85,7 +85,7 @@ import Sidebar from '@/components/common/Sidebar.vue'
 import HeaderMobile from '@/components/common/HeaderMobile.vue'
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue'
 import { ref, onMounted, computed, onUnmounted } from 'vue'
-import axios from 'axios'
+import axios from '@/api/axios'
 
 const authStore = useAuthStore()
 
@@ -105,10 +105,33 @@ const monthlyBooks = ref<Book[]>([])
 
 const fetchMonthlyBooks = async () => {
   try {
-    const response = await axios.get('/api/books/ranking')
-    monthlyBooks.value = response.data
+    const response = await axios.get('/api/books/ranking');
+    console.log('API Response:', response);
+    
+    if (response.data && Array.isArray(response.data)) {
+      monthlyBooks.value = response.data;
+    } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+      monthlyBooks.value = response.data.data;
+    } else if (response.data && response.data.content && Array.isArray(response.data.content)) {
+      monthlyBooks.value = response.data.content;
+    } else {
+      console.error('API Response structure:', response.data);
+      monthlyBooks.value = [];
+    }
   } catch (error) {
-    console.error('이달의 도서를 불러오는데 실패했습니다:', error)
+    console.error('이달의 도서를 불러오는데 실패했습니다:', error);
+    if (axios.isAxiosError(error)) {
+      console.error('API Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+    }
+    monthlyBooks.value = [];
   }
 }
 
