@@ -26,7 +26,8 @@ const router = createRouter({
       path: '/signup',
       name: 'SignUp',
       component: () => import('@/views/auth/SignupView.vue')
-    }
+    },
+    {
       path: '/oauth2/signup',
       name: 'OAuth2SignUp',
       component: () => import('@/views/auth/OAuth2SignUp.vue'),
@@ -43,8 +44,8 @@ const router = createRouter({
       path: '/oauth2/callback',
       name: 'OAuth2Callback',
       component: () => import('@/views/auth/OAuth2Callback.vue')
-    }
-  ]
+    },
+    {
       path: '/books/:id',
       name: 'book-detail',
       component: () => import('@/views/BookDetailView.vue'),
@@ -73,7 +74,7 @@ const router = createRouter({
       name: 'BookItemDetail',
       component: () => import('@/views/book/BookItemDetailView.vue')
     }
-  ],
+  ]
 });
 
 // 네비게이션 가드
