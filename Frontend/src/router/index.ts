@@ -67,6 +67,16 @@ const router = createRouter({
       name: 'VirtualShelf',
       component: () => import('@/views/book/VirtualShelfView.vue')
     },
+    {
+      path: '/notice/create',
+      name: 'NoticeCreate',
+      component: () => import('@/views/notice/NoticeCreateView.vue')
+    },
+    {
+      path: '/notices',
+      name: 'NoticeList',
+      component: () => import('@/views/notice/NoticeList.vue')
+    },
   ],
 });
 
