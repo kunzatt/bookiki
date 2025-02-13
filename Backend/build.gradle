@@ -106,6 +106,9 @@ dependencies {
     implementation 'com.google.cloud:google-cloud-dialogflow:4.63.0'
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // Gemini
+    implementation 'com.google.cloud:google-cloud-vertexai:0.2.0'
 }
 
 tasks.named('test') {

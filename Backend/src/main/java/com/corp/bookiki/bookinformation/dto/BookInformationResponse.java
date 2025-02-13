@@ -2,6 +2,7 @@ package com.corp.bookiki.bookinformation.dto;
 
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 
+import com.corp.bookiki.bookinformation.entity.Category;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -57,7 +58,7 @@ public class BookInformationResponse {
 	private String description;
 
 	@Schema(description = "카테고리 코드")
-	private Integer category;
+	private Category category;
 
 	@Schema(name = "BookInformationResponse", description = "책 정보 응답")
 	public static BookInformationResponse from(
@@ -73,7 +74,7 @@ public class BookInformationResponse {
 		response.setPublishedAt(entity.getPublishedAt().toString());
 		response.setImage(entity.getImage());
 		response.setDescription(entity.getDescription());
-		response.setCategory(entity.getCategory());
+		response.setCategory(Category.ofCode(entity.getCategory()));
 		return response;
 	}
 }

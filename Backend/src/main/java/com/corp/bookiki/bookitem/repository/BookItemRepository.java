@@ -12,6 +12,8 @@ import org.springframework.stereotype.Repository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
 
+import java.util.List;
+
 @Repository
 public interface BookItemRepository extends JpaRepository<BookItemEntity, Integer> {
 	Page<BookItemEntity> findByDeletedFalse(Pageable pageable);
@@ -52,6 +54,20 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 	);
 
 	int countByBookStatus(BookStatus bookStatus);
+
+	// 인기 도서 조회 (대출 횟수 기준)
+	@Query("SELECT bi FROM BookItemEntity bi " +
+			"LEFT JOIN BookHistoryEntity bh ON bi.id = bh.bookItem.id " +
+			"WHERE bi.bookStatus = :status " +
+			"AND (:category IS NULL OR bi.bookInformation.category = :category) " +
+			"AND bi.deleted = false " +
+			"GROUP BY bi.id " +
+			"ORDER BY COUNT(bh.id) DESC")
+	List<BookItemEntity> findPopularBooks(
+			@Param("category") Integer category,
+			@Param("status") BookStatus status,
+			Pageable pageable
+	);
 
 	@Query("SELECT bi FROM BookItemEntity bi " +
 		"WHERE bi.bookInformation.id = " +

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.corp.bookiki.recommendation.service.GeminiService;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +45,7 @@ public class BookInformationService {
 	private final RestTemplate restTemplate;
 	private final BookInformationRepository bookInformationRepository;
 	private final ObjectMapper objectMapper;
+	private final GeminiService geminiService;
 
 	// 책 정보를 추가하는 메서드
 	@Transactional
@@ -55,6 +57,7 @@ public class BookInformationService {
 		}
 		try {
 			BookInformationEntity newBookInfo = callNaverBookApi(isbn);
+			geminiService.getCategoryForBook(newBookInfo);
 			bookInformationRepository.save(newBookInfo); // 새로운 BookInformation 저장
 			return BookInformationResponse.from(newBookInfo);
 		} catch (BookInformationException e) {
