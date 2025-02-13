@@ -33,6 +33,18 @@ const router = createRouter({
     //   name: 'home',
     //   component: HomeView,
     // },
+    {
+      path: '/library',
+      name: 'VirtualShelf',
+      component: () => import('@/views/book/VirtualShelfView.vue')
+    },
+
+    // 책 상세페이지 만든 사람이 수정하기!
+    {
+      path: '/books/:id',
+      name: 'BookItemDetail',
+      component: () => import('@/views/book/BookItemDetailView.vue')
+    }
   ],
 });
 
