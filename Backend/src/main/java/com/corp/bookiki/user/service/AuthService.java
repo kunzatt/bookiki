@@ -238,12 +238,15 @@ public class AuthService {
     // OAuth2 회원가입 처리
     @Transactional
     public void completeOAuth2SignUp(String temporaryToken, OAuth2SignUpRequest request, HttpServletResponse response) {
+        if (temporaryToken.startsWith("Bearer ")) {
+            temporaryToken = temporaryToken.substring(7);
+        }
         // 1. 임시 토큰 검증 및 정보 추출
         if (!jwtService.validateToken(temporaryToken)) {
             throw new JWTException("유효하지 않은 임시 토큰입니다.");
         }
         Claims claims = jwtService.extractAllClaims(temporaryToken);
-        String email = claims.getSubject().replace(jwtProperties.getSubjectPrefix(), "");
+        String email = claims.getSubject();
         Provider provider = Provider.valueOf(claims.get("provider", String.class));
 
         // 2. 회원 정보 검증(추가 정보 입력)
