@@ -183,19 +183,16 @@ public class BookItemController {
 			)
 		)
 	})
-	@PostMapping("/admin/books/search/{id}")
+	@PostMapping("/admin/books/search")
 	public ResponseEntity<BookItemResponse> addBookItem(
-		@Parameter(description = "등록할 도서의 도서 정보 ID", required = true, example = "1")
-		@PathVariable Integer id,
-
 		@Parameter(description = "도서 구매 정보", required = true)
 		@RequestBody BookItemRequest bookItemRequest
 	) {
 		log.info("도서 아이템 등록: bookInformationId={}, purchaseAt={}",
-			id, bookItemRequest.getPurchaseAt());
+			bookItemRequest.getBookInformationId(), bookItemRequest.getPurchaseAt());
 
 		bookItemRequest = BookItemRequest.builder()
-			.bookInformationId(id)
+			.bookInformationId(bookItemRequest.getBookInformationId())
 			.purchaseAt(bookItemRequest.getPurchaseAt())
 			.build();
 

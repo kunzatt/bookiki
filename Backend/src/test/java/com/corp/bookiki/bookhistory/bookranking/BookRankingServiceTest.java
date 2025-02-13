@@ -1,15 +1,17 @@
 package com.corp.bookiki.bookhistory.bookranking;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,11 +19,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.corp.bookiki.bookhistory.dto.BookRankingResponse;
-import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookhistory.service.BookRankingService;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.repository.BookItemRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BookRankingServiceTest {
@@ -31,126 +33,55 @@ class BookRankingServiceTest {
 	@Mock
 	private BookHistoryRepository bookHistoryRepository;
 
-	@Nested
-	@DisplayName("도서 랭킹 조회 테스트")
-	class GetBookRankingTest {
+	@Mock
+	private BookItemRepository bookItemRepository;
 
-		@Test
-		@DisplayName("성공적인 도서 랭킹 조회")
-		void getBookRanking_Success() {
-			// Given
-			LocalDateTime now = LocalDateTime.now();
+	@Mock
+	private BookInformationEntity bookInformation;
 
-			BookInformationEntity testBookInfo = mock(BookInformationEntity.class);
-			when(testBookInfo.getTitle()).thenReturn("Test Book");
-			when(testBookInfo.getAuthor()).thenReturn("Test Author");
-			when(testBookInfo.getCategory()).thenReturn(100);
-			when(testBookInfo.getImage()).thenReturn("test-image.jpg");
+	@Mock
+	private BookItemEntity bookItem;
 
-			BookItemEntity testBookItem = mock(BookItemEntity.class);
-			when(testBookItem.getId()).thenReturn(1);
-			when(testBookItem.getBookInformation()).thenReturn(testBookInfo);
+	@BeforeEach
+	void setUp() {
+		when(bookInformation.getAuthor()).thenReturn("Test Author");
+		when(bookInformation.getCategory()).thenReturn(100);
+		when(bookInformation.getImage()).thenReturn("test-image.jpg");
+		when(bookItem.getBookInformation()).thenReturn(bookInformation);
+	}
 
-			List<BookHistoryEntity> bookHistories = new ArrayList<>();
-			for (int i = 0; i < 5; i++) {
-				BookHistoryEntity history = mock(BookHistoryEntity.class);
-				when(history.getBorrowedAt()).thenReturn(now.minusDays(i));
-				bookHistories.add(history);
-			}
+	@Test
+	@DisplayName("성공적인 도서 랭킹 조회")
+	void getBookRanking_Success() {
+		// Given
+		int bookItemId = 1;
+		String title = "Test Book";
+		long borrowCount = 5L;
 
-			when(testBookItem.getBookHistories()).thenReturn(bookHistories);
-			List<BookItemEntity> mockBookItems = List.of(testBookItem);
+		Object[] rankingRow = new Object[]{bookItemId, title, borrowCount};
+		List<Object[]> rankingRows = new ArrayList<>();
+		rankingRows.add(rankingRow);
 
-			given(bookHistoryRepository.findBorrowedBooksFromBookItems(
-				any(LocalDateTime.class),
-				any(LocalDateTime.class)
-			)).willReturn(mockBookItems);
+		when(bookHistoryRepository.findTopMostBorrowedBooks(
+			any(LocalDateTime.class),
+			any(LocalDateTime.class)
+		)).thenReturn(rankingRows);
 
-			// When
-			List<BookRankingResponse> result = bookRankingService.getBookRanking();
+		when(bookItemRepository.findByIdWithBookInformation(bookItemId))
+			.thenReturn(Optional.of(bookItem));
 
-			// Then
-			assertThat(result).hasSize(1);
-			BookRankingResponse response = result.get(0);
-			assertThat(response.getBookItemId()).isEqualTo(testBookItem.getId());
-			assertThat(response.getTitle()).isEqualTo(testBookInfo.getTitle());
-			assertThat(response.getAuthor()).isEqualTo(testBookInfo.getAuthor());
-			assertThat(response.getCategory()).isEqualTo(testBookInfo.getCategory());
-			assertThat(response.getImage()).isEqualTo(testBookInfo.getImage());
-			assertThat(response.getBorrowCount()).isEqualTo(5);
-		}
+		// When
+		List<BookRankingResponse> result = bookRankingService.getBookRanking();
 
-		@Test
-		@DisplayName("대출 기록이 없는 경우의 랭킹 조회")
-		void getBookRanking_WithNoHistory() {
-			// Given
-			BookInformationEntity testBookInfo = mock(BookInformationEntity.class);
-			when(testBookInfo.getTitle()).thenReturn("Test Book");
+		// Then
+		assertThat(result).hasSize(1);
+		BookRankingResponse response = result.get(0);
 
-			BookItemEntity testBookItem = mock(BookItemEntity.class);
-			when(testBookItem.getBookInformation()).thenReturn(testBookInfo);
-			when(testBookItem.getBookHistories()).thenReturn(Collections.emptyList());
-
-			List<BookItemEntity> mockBookItems = List.of(testBookItem);
-
-			given(bookHistoryRepository.findBorrowedBooksFromBookItems(
-				any(LocalDateTime.class),
-				any(LocalDateTime.class)
-			)).willReturn(mockBookItems);
-
-			// When
-			List<BookRankingResponse> result = bookRankingService.getBookRanking();
-
-			// Then
-			assertThat(result).isEmpty();
-		}
-
-		@Test
-		@DisplayName("기간 외 대출 기록만 있는 경우의 랭킹 조회")
-		void getBookRanking_WithOnlyOutOfRangeHistory() {
-			// Given
-			LocalDateTime now = LocalDateTime.now();
-
-			BookInformationEntity testBookInfo = mock(BookInformationEntity.class);
-			when(testBookInfo.getTitle()).thenReturn("Test Book");
-
-			BookItemEntity testBookItem = mock(BookItemEntity.class);
-			when(testBookItem.getBookInformation()).thenReturn(testBookInfo);
-
-			List<BookHistoryEntity> oldHistories = new ArrayList<>();
-			BookHistoryEntity oldHistory = mock(BookHistoryEntity.class);
-			when(oldHistory.getBorrowedAt()).thenReturn(now.minusMonths(2));
-			oldHistories.add(oldHistory);
-
-			when(testBookItem.getBookHistories()).thenReturn(oldHistories);
-			List<BookItemEntity> mockBookItems = List.of(testBookItem);
-
-			given(bookHistoryRepository.findBorrowedBooksFromBookItems(
-				any(LocalDateTime.class),
-				any(LocalDateTime.class)
-			)).willReturn(mockBookItems);
-
-			// When
-			List<BookRankingResponse> result = bookRankingService.getBookRanking();
-
-			// Then
-			assertThat(result).isEmpty();
-		}
-
-		@Test
-		@DisplayName("대출 데이터가 없을 경우 빈 리스트 반환")
-		void getBookRanking_WhenNoData_ReturnsEmptyList() {
-			// Given
-			given(bookHistoryRepository.findBorrowedBooksFromBookItems(
-				any(LocalDateTime.class),
-				any(LocalDateTime.class)
-			)).willReturn(Collections.emptyList());
-
-			// When
-			List<BookRankingResponse> result = bookRankingService.getBookRanking();
-
-			// Then
-			assertThat(result).isEmpty();
-		}
+		assertThat(response.getBookItemId()).isEqualTo(bookItemId);
+		assertThat(response.getTitle()).isEqualTo(title);
+		assertThat(response.getAuthor()).isEqualTo("Test Author");
+		assertThat(response.getCategory()).isEqualTo(100);
+		assertThat(response.getImage()).isEqualTo("test-image.jpg");
+		assertThat(response.getBorrowCount()).isEqualTo(borrowCount);
 	}
 }

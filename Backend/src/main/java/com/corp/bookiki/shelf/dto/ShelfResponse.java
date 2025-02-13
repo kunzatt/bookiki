@@ -1,5 +1,6 @@
 package com.corp.bookiki.shelf.dto;
 
+import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.shelf.entity.ShelfEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -33,10 +34,10 @@ public class ShelfResponse {
     private Integer lineNumber;
 
     @Schema(
-            description = "카테고리",
-            example = "100"
+            description = "카테고리 이름",
+            example = "컴퓨터과학"
     )
-    private Integer category;
+    private Category category;
 
     @Schema(name = "ShelfResponse", description = "책장 정보 응답")
     public static ShelfResponse from(
@@ -47,7 +48,7 @@ public class ShelfResponse {
         response.setId(entity.getId());
         response.setShelfNumber(entity.getShelfNumber());
         response.setLineNumber(entity.getLineNumber());
-        response.setCategory(entity.getCategory());
+        response.setCategory(Category.ofCode(entity.getCategory()));
         return response;
     }
 }

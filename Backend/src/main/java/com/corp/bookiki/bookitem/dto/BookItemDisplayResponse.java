@@ -19,10 +19,9 @@ public class BookItemDisplayResponse {
     private String image;
 
     public static BookItemDisplayResponse from(BookItemEntity bookItemEntity) {
-        BookInformationEntity bookinfo = bookItemEntity.getBookInformation();
         BookItemDisplayResponse response = new BookItemDisplayResponse();
-        response.id = bookinfo.getId();
-        response.image = bookinfo.getImage();
+        response.id = bookItemEntity.getId();
+        response.image = bookItemEntity.getBookInformation().getImage();
         return response;
     }
 }

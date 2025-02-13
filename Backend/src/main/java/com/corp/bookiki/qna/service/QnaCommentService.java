@@ -84,6 +84,7 @@ public class QnaCommentService {
             String qnaTitle = savedComment.getQna().getTitle();
             Integer qnaId = savedComment.getQna().getId();
             Integer userId = savedComment.getQna().getUser().getId();
+
             notificationService.addQnaAnsweredNotification(NotificationInformation.QNA_ANSWERED,qnaTitle, qnaId, userId);
 
             return savedComment.getId();

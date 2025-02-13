@@ -64,7 +64,7 @@ public class ShelfService {
             shelfEntity.update(
                     request.getShelfNumber(),
                     request.getLineNumber(),
-                    request.getCategory()
+                    request.getCategory().getCode()
             );
 
             shelfRepository.save(shelfEntity);

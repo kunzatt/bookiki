@@ -1,5 +1,6 @@
 package com.corp.bookiki.shelf;
 
+import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.shelf.entity.ShelfEntity;
 import com.corp.bookiki.shelf.repository.ShelfRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ class ShelfRepositoryTest {
         ShelfEntity shelf = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(Category.COMPUTER_SCIENCE.getCode())
                 .build();
 
         // when
@@ -39,7 +40,7 @@ class ShelfRepositoryTest {
         assertThat(savedShelf.getId()).isNotNull();
         assertThat(savedShelf.getShelfNumber()).isEqualTo(1);
         assertThat(savedShelf.getLineNumber()).isEqualTo(2);
-        assertThat(savedShelf.getCategory()).isEqualTo(100);
+        assertThat(savedShelf.getCategory()).isEqualTo(0);
     }
 
     @Test
@@ -49,7 +50,7 @@ class ShelfRepositoryTest {
         ShelfEntity shelf = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(0)
                 .build();
 
         ShelfEntity savedShelf = shelfRepository.save(shelf);
@@ -61,7 +62,7 @@ class ShelfRepositoryTest {
         assertThat(found).isPresent();
         assertThat(found.get().getShelfNumber()).isEqualTo(1);
         assertThat(found.get().getLineNumber()).isEqualTo(2);
-        assertThat(found.get().getCategory()).isEqualTo(100);
+        assertThat(found.get().getCategory()).isEqualTo(0);
     }
 
     @Test
@@ -81,13 +82,13 @@ class ShelfRepositoryTest {
         ShelfEntity shelf1 = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(0)
                 .build();
 
         ShelfEntity shelf2 = ShelfEntity.builder()
                 .shelfNumber(2)
                 .lineNumber(3)
-                .category(200)
+                .category(1)
                 .build();
 
         shelfRepository.save(shelf1);
@@ -109,7 +110,7 @@ class ShelfRepositoryTest {
         ShelfEntity shelf = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(Category.COMPUTER_SCIENCE.getCode())
                 .build();
 
         ShelfEntity savedShelf = shelfRepository.save(shelf);
@@ -118,13 +119,13 @@ class ShelfRepositoryTest {
         savedShelf.update(
                 savedShelf.getShelfNumber(),  // 기존 값 유지
                 savedShelf.getLineNumber(),   // 기존 값 유지
-                200                           // 변경할 카테고리 값
+                Category.PHILOSOPHY_PSYCHOLOGY.getCode()    // 변경할 카테고리 값
         );
 
         ShelfEntity updatedShelf = shelfRepository.save(savedShelf);
 
         // then
-        assertThat(updatedShelf.getCategory()).isEqualTo(200);
+        assertThat(updatedShelf.getCategory()).isEqualTo(1);
         assertThat(updatedShelf.getId()).isEqualTo(savedShelf.getId());
     }
 
@@ -135,7 +136,7 @@ class ShelfRepositoryTest {
         ShelfEntity shelf = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(Category.COMPUTER_SCIENCE.getCode())
                 .build();
 
         ShelfEntity savedShelf = shelfRepository.save(shelf);

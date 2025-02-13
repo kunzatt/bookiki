@@ -433,7 +433,7 @@ class BookItemControllerTest {
 			log.info("Mock 서비스 설정 완료: 도서 아이템 등록");
 
 			// when & then
-			mockMvc.perform(post("/api/admin/books/search/{id}", id)
+			mockMvc.perform(post("/api/admin/books/search")
 					.with(csrf())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
@@ -458,7 +458,7 @@ class BookItemControllerTest {
 			log.info("Mock 서비스 설정 완료: 존재하지 않는 도서 정보");
 
 			// when & then
-			mockMvc.perform(post("/api/admin/books/search/{id}", id)
+			mockMvc.perform(post("/api/admin/books/search")
 					.with(csrf())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))

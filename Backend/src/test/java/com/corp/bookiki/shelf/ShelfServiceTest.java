@@ -1,5 +1,6 @@
 package com.corp.bookiki.shelf;
 
+import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.ShelfException;
 import com.corp.bookiki.shelf.dto.ShelfCreateRequest;
@@ -39,12 +40,12 @@ class ShelfServiceTest {
         ShelfEntity shelf1 = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(Category.COMPUTER_SCIENCE.getCode())
                 .build();
         ShelfEntity shelf2 = ShelfEntity.builder()
                 .shelfNumber(2)
                 .lineNumber(3)
-                .category(200)
+                .category(Category.PHILOSOPHY_PSYCHOLOGY.getCode())
                 .build();
 
         when(shelfRepository.findAll()).thenReturn(Arrays.asList(shelf1, shelf2));
@@ -55,7 +56,7 @@ class ShelfServiceTest {
         // then
         assertThat(responses).hasSize(2);
         assertThat(responses.get(0).getShelfNumber()).isEqualTo(1);
-        assertThat(responses.get(0).getCategory()).isEqualTo(100);
+        assertThat(responses.get(0).getCategory()).isEqualTo(Category.COMPUTER_SCIENCE);
     }
 
     @Test
@@ -65,7 +66,7 @@ class ShelfServiceTest {
         ShelfCreateRequest request = new ShelfCreateRequest();
         request.setShelfNumber(0);
         request.setLineNumber(2);
-        request.setCategory(100);
+        request.setCategory(Category.COMPUTER_SCIENCE);
 
         // when & then
         assertThatThrownBy(() -> shelfService.createShelf(request))
@@ -83,7 +84,7 @@ class ShelfServiceTest {
         ShelfCreateRequest request = new ShelfCreateRequest();
         request.setShelfNumber(1);
         request.setLineNumber(0);
-        request.setCategory(100);
+        request.setCategory(Category.COMPUTER_SCIENCE);
 
         // when & then
         assertThatThrownBy(() -> shelfService.createShelf(request))
@@ -100,12 +101,12 @@ class ShelfServiceTest {
         ShelfCreateRequest request = new ShelfCreateRequest();
         request.setShelfNumber(1);
         request.setLineNumber(2);
-        request.setCategory(100);
+        request.setCategory(Category.COMPUTER_SCIENCE);
 
         ShelfEntity savedShelf = ShelfEntity.builder()
                 .shelfNumber(1)
                 .lineNumber(2)
-                .category(100)
+                .category(Category.COMPUTER_SCIENCE.getCode())
                 .build();
 
         ReflectionTestUtils.setField(savedShelf, "id", 1);
