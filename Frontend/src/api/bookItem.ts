@@ -59,6 +59,17 @@ export const getBookById = async (id: number) => {
     }
 };
 
+// QR 코드로 도서 아이템 조회
+export const getBookByQrCode = async (id: number): Promise<BookItemResponse> => {
+    try {
+        const response = await axios.get<BookItemResponse>(`${API_URL}/books/search/qrcodes/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error('QR 코드로 도서 조회 실패:', error);
+        throw error;
+    }
+};
+
 // 도서 아이템 삭제
 export const deleteBook = async (id: number) => {
     try {
