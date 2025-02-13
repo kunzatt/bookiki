@@ -203,8 +203,8 @@ const slideRightRecommended = () => {
 // 추천 도서 데이터 가져오기
 const fetchRecommendedBooks = async () => {
   try {
-    const response = await axios.get('/api/books/ranking');
-    console.log('Recommended Books Data Structure:', response.data[0]); // 첫 번째 아이템의 구조 확인
+    const response = await axios.get('/api/recommendations');
+    console.log('Recommended Books Response:', response.data);
     recommendedBooks.value = response.data;
   } catch (error) {
     console.error('Error fetching recommended books:', error);
