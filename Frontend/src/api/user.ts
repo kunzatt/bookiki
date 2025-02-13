@@ -122,7 +122,7 @@ export const login = async (request: LoginRequest): Promise<LoginResponse> => {
         const token = temporaryToken.startsWith('Bearer ') 
             ? temporaryToken 
             : `Bearer ${temporaryToken}`;
-
+            
         const response = await axios.post<string>(
             `${API_URL}/auth/oauthsignup`,
             request,
