@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { getBookByQrCode } from '@/api/bookItem';
 import { getBookInformation } from '@/api/bookInformation';
-import { borrowBook } from '@/api/bookHistory';
 import { getFavoriteStatus, toggleFavorite } from '@/api/favorites';
 import type { BookItemResponse } from '@/types/api/bookItem';
 import type { BookInformationResponse } from '@/types/api/bookInformation';
@@ -20,9 +19,10 @@ const authStore = useAuthStore();
 const bookItem = ref<BookItemResponse | null>(null);
 const bookInfo = ref<BookInformationResponse | null>(null);
 const showLoginModal = ref(false);
-const showBorrowModal = ref(false);
+const showLocationModal = ref(false);
 const showErrorModal = ref(false);
 const errorMessage = ref('');
+const locationMessage = ref('');
 const isFavorite = ref(false);
 
 // 윈도우 너비 관리를 위한 ref
@@ -53,46 +53,46 @@ const fetchBookData = async () => {
   }
 };
 
-const handleBorrowClick = async () => {
+const handleLocationClick = async () => {
   if (!authStore.isLoggedIn) {
     showLoginModal.value = true;
     return;
   }
 
-  if (bookItem.value?.bookStatus === 'AVAILABLE') {
-    showBorrowModal.value = true;
-  } else {
-    errorMessage.value = '현재 책을 빌릴 수 없습니다.';
-    showErrorModal.value = true;
-  }
-};
-
-const confirmBorrow = async () => {
   try {
     if (bookItem.value?.id) {
-      await borrowBook(bookItem.value.id);
-      router.push('/mypage'); // 대출 성공 후 마이페이지로 이동
+      if (bookItem.value.bookStatus !== 'AVAILABLE') {
+        errorMessage.value = '현재 책장에 없습니다.';
+        showErrorModal.value = true;
+        return;
+      }
+      
+      // API 호출 및 응답 처리
+      const response = await fetch(`/api/ws/book-location/${bookItem.value.id}`);
+      if (!response.ok) {
+        throw new Error('API 호출 실패');
+      }
+      
+      locationMessage.value = '책장을 확인해주세요';
+      showLocationModal.value = true;
     }
   } catch (error) {
-    console.error('도서 대출 실패:', error);
-    errorMessage.value = '도서 대출에 실패했습니다.';
+    console.error('책 위치 조회 실패:', error);
+    errorMessage.value = '책 위치 조회에 실패했습니다.';
     showErrorModal.value = true;
   }
-  showBorrowModal.value = false;
 };
 
-const goToLogin = () => {
-  router.push('/login');
-};
+// 컴포넌트 마운트 시 이벤트 리스너 등록
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+  fetchBookData();
+});
 
-// 출판일 포맷팅 함수
-const formatPublishDate = (dateStr: string) => {
-  const date = new Date(dateStr);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}년 ${month}월 ${day}일`;
-};
+// 컴포넌트 언마운트 시 이벤트 리스너 제거
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 // 좋아요 상태 확인
 const checkFavoriteStatus = async () => {
@@ -125,16 +125,18 @@ const handleFavorite = async () => {
   }
 };
 
-// 컴포넌트 마운트 시 이벤트 리스너 등록
-onMounted(() => {
-  window.addEventListener('resize', handleResize);
-  fetchBookData();
-});
+const goToLogin = () => {
+  router.push('/login');
+};
 
-// 컴포넌트 언마운트 시 이벤트 리스너 제거
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-});
+// 출판일 포맷팅 함수
+const formatPublishDate = (dateStr: string) => {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}년 ${month}월 ${day}일`;
+};
 </script>
 
 <template>
@@ -180,19 +182,14 @@ onUnmounted(() => {
                     </button>
                   </div>
                 </div>
-                <!-- Desktop-only borrow button -->
+                <!-- Desktop-only location button -->
                 <div class="mt-8 hidden lg:block">
                   <button
-                    @click="handleBorrowClick"
-                    :class="{
-                      'bg-blue-600 hover:bg-blue-700': bookItem?.bookStatus === 'AVAILABLE',
-                      'bg-gray-400 cursor-not-allowed': bookItem?.bookStatus !== 'AVAILABLE'
-                    }"
-                    class="w-full text-white px-6 py-4 rounded-lg
+                    @click="handleLocationClick"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg
                           transition-colors duration-200 font-medium text-lg shadow-md"
-                    :disabled="bookItem?.bookStatus !== 'AVAILABLE'"
                   >
-                    {{ bookItem?.bookStatus === 'AVAILABLE' ? '도서 대출하기' : '대출 불가능' }}
+                    책 위치 찾기
                   </button>
                 </div>
               </div>
@@ -273,16 +270,11 @@ onUnmounted(() => {
             {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
           </span>
           <button
-            @click="handleBorrowClick"
-            :class="{
-              'bg-blue-600 hover:bg-blue-700': bookItem?.bookStatus === 'AVAILABLE',
-              'bg-gray-400': bookItem?.bookStatus !== 'AVAILABLE'
-            }"
-            class="flex-1 text-white px-6 py-3 rounded-lg
-                  transition-colors duration-200 font-medium shadow-sm"
-            :disabled="bookItem?.bookStatus !== 'AVAILABLE'"
+            @click="handleLocationClick"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg
+                   transition-colors duration-200 font-medium shadow-sm"
           >
-            {{ bookItem?.bookStatus === 'AVAILABLE' ? '도서 대출하기' : '대출 불가능' }}
+            책 위치 찾기
           </button>
         </div>
       </div>
@@ -315,28 +307,6 @@ onUnmounted(() => {
     </div>
   </div>
 
-  <!-- 대출 확인 모달 -->
-  <div v-if="showBorrowModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
-      <h2 class="text-xl font-bold mb-4">대출 확인</h2>
-      <p class="text-gray-600 mb-6">이 도서를 대출하시겠습니까?</p>
-      <div class="flex justify-end gap-4">
-        <button
-          @click="showBorrowModal = false"
-          class="px-4 py-2 text-gray-600 hover:text-gray-800"
-        >
-          취소
-        </button>
-        <button
-          @click="confirmBorrow"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          대출하기
-        </button>
-      </div>
-    </div>
-  </div>
-
   <!-- 에러 모달 -->
   <div v-if="showErrorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
@@ -345,6 +315,22 @@ onUnmounted(() => {
       <div class="flex justify-end">
         <button
           @click="showErrorModal = false"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Location Modal -->
+  <div v-if="showLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
+      <h2 class="text-xl font-bold mb-4">책 위치 정보</h2>
+      <p class="text-gray-600 mb-6">{{ locationMessage }}</p>
+      <div class="flex justify-end">
+        <button
+          @click="showLocationModal = false"
           class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           확인
