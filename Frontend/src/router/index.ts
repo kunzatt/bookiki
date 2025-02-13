@@ -22,18 +22,25 @@ const router = createRouter({
       component: () => import('@/views/MainView.vue'),
       meta: { requiresAuth: true }
     },
-    // 404 페이지
-    // {
-    //   path: '/:pathMatch(.*)*',
-    //   name: 'not-found',
-    //   component: () => import('@/views/NotFoundView.vue')
-    // }
-    // {
-    //   path: '/',
-    //   name: 'home',
-    //   component: HomeView,
-    // },
-  ],
+    {
+      path: '/oauth2/signup',
+      name: 'OAuth2SignUp',
+      component: () => import('@/views/auth/OAuth2SignUp.vue'),
+      props: (route) => ({ 
+        token: route.query.token 
+      })
+    },
+    {
+      path: '/api/oauth2/error',
+      name: 'OAuth2Error',
+      component: () => import('@/views/auth/OAuth2Error.vue')
+    },
+    {
+      path: '/oauth2/callback',
+      name: 'OAuth2Callback',
+      component: () => import('@/views/auth/OAuth2Callback.vue')
+    }
+  ]
 });
 
 // 네비게이션 가드
