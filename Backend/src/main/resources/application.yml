@@ -8,7 +8,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 2
+        size: 5
       thread-name-prefix: bookiki-scheduler-
   autoconfigure:
     exclude:

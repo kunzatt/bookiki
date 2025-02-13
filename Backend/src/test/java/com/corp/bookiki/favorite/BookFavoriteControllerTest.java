@@ -185,27 +185,17 @@ class BookFavoriteControllerTest {
 		@WithMockUser
 		@DisplayName("좋아요 토글 성공")
 		void toggleFavorite_Success() throws Exception {
-			BookFavoriteResponse response = BookFavoriteResponse.builder()
-				.id(1)
-				.bookItemId(100)
-				.userId(2)
-				.bookTitle("테스트 도서")
-				.bookImage("test-image-url")
-				.createdAt(LocalDateTime.now())
-				.build();
-
+			// given
 			given(bookFavoriteService.toggleFavorite(eq(2), eq(100)))
-				.willReturn(response);
+				.willReturn("좋아요 추가 성공");
 			log.info("좋아요 토글 테스트 시작");
 
+			// when & then
 			mockMvc.perform(post("/api/favorites/{bookItemId}", 100)
 					.with(csrf())
 					.with(authentication(auth)))
 				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").exists())
-				.andExpect(jsonPath("$.bookItemId").value(100))
-				.andExpect(jsonPath("$.bookTitle").exists())
-				.andExpect(jsonPath("$.bookImage").exists());
+				.andExpect(content().string("좋아요 추가 성공 성공"));
 
 			log.info("좋아요 토글 테스트 완료");
 		}
@@ -214,14 +204,17 @@ class BookFavoriteControllerTest {
 		@WithMockUser
 		@DisplayName("좋아요 취소 성공")
 		void toggleFavorite_DeleteSuccess() throws Exception {
+			// given
 			given(bookFavoriteService.toggleFavorite(eq(2), eq(100)))
-				.willReturn(null);
+				.willReturn("좋아요 삭제");
 			log.info("좋아요 취소 테스트 시작");
 
+			// when & then
 			mockMvc.perform(post("/api/favorites/{bookItemId}", 100)
 					.with(csrf())
 					.with(authentication(auth)))
-				.andExpect(status().isOk());
+				.andExpect(status().isOk())
+				.andExpect(content().string("좋아요 삭제 성공"));
 
 			log.info("좋아요 취소 테스트 완료");
 		}

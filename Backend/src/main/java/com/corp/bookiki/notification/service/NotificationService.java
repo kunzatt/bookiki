@@ -1,5 +1,7 @@
 package com.corp.bookiki.notification.service;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -10,6 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
+import com.corp.bookiki.bookhistory.service.BookHistoryService;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.favorite.service.BookFavoriteService;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.NotificationException;
@@ -36,30 +43,45 @@ public class NotificationService {
 	private final NotificationRepository notificationRepository;
 	private final UserService userService;
 	private final BookFavoriteService bookFavoriteService;
+	private final BookHistoryService bookHistoryService;
+	private final BookItemRepository bookItemRepository;
 
 	// 카메라/통신 오류 알림 생성
 	@Transactional
 	public void addCameraErrorNotification(NotificationInformation notificationInformation) {
 		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
 		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, null, null);
+		LocalDateTime origin = getTopCreatedAtByType(notificationInformation);
+		LocalDateTime now = notificationEntity.getCreatedAt();
+		Duration duration = Duration.between(origin, now);
+		if(duration.toHours() <= 3) return;
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 
 	// QR 오류 알림 생성
 	@Transactional
 	public void addQrScanErrorNotification(NotificationInformation notificationInformation, String title) {
-
 		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
 		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, null);
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 
-	// 도서 분실 알림 생성
 	@Transactional
-	public void addLostBookNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
-		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
-		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
-		saveNotificationForUsers(notificationEntity, admins);
+	public void addLostBookNotification(List<Integer> lostBookItemIds) {
+		// 1. 한 번에 모든 도서 정보를 조회
+		List<BookItemEntity> bookItems = bookItemRepository.findAllById(lostBookItemIds);
+
+		// 2. 알림 엔티티들을 한 번에 생성
+		List<NotificationEntity> notifications = bookItems.stream()
+			.map(bookItem -> createNotificationEntity(
+				NotificationInformation.LOST_BOOK,
+				bookItem.getBookInformation().getTitle(),
+				bookItem.getId()
+			))
+			.collect(Collectors.toList());
+
+		// 3. 한 번의 데이터베이스 작업으로 모든 알림을 저장
+		notificationRepository.saveAll(notifications);
 	}
 
 	// 도서 정리 알림 생성
@@ -70,15 +92,15 @@ public class NotificationService {
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 
-	// 도서 연체 알림 생성(관리자한테)
+	// 도서 연체 알림 생성(관리자한테) - historyId가 담김
 	@Transactional
-	public void addBookOverdueNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
+	public void addAdminOverdueNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
 		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
 		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 	
-	// 문의 사항 등록 알림 생성
+	// 문의 사항 등록 알림 생성(관리자한테) - qnaId가 담김
 	@Transactional
 	public void addQnaCreatedNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
 		List<UserEntity> admins = userService.getUsersByRole(Role.ADMIN);
@@ -86,23 +108,32 @@ public class NotificationService {
 		saveNotificationForUsers(notificationEntity, admins);
 	}
 	
-	// 반납 기한 알림 생성
+	// 반납 기한 알림 생성 - bookItemId가 담김
 	@Transactional
-	public void addReturnDeadlineNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
+	public void addReturnDeadlineNotification() {
+		List<BookHistoryEntity> bookHistories = bookHistoryService.checkOneDayBeforeReturn();
+
+		bookHistories.forEach(history ->
+			saveNotification(
+				createNotificationEntity(
+					NotificationInformation.RETURN_DEADLINE,
+					history.getBookItem().getBookInformation().getTitle(),
+					history.getBookItem().getId()
+				),
+				history.getUser()
+			)
+		);
+	}
+
+	// 연체 알림 생성 - historyId가 담김
+	@Transactional
+	public void addUserOverDueNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
 		UserEntity user = userService.getUserById(userId);
 		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
 		saveNotification(notificationEntity, user);
 	}
 
-	// 연체 알림 생성
-	@Transactional
-	public void addOverDueNoticeNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
-		UserEntity user = userService.getUserById(userId);
-		NotificationEntity notificationEntity = createNotificationEntity(notificationInformation, title, notificationId);
-		saveNotification(notificationEntity, user);
-	}
-
-	// 관심 도서 대출 가능 알림 생성
+	// 관심 도서 대출 가능 알림 생성 - bookItemId가 담김
 	@Transactional
 	public void addFavoriteBookAvailableNotification(NotificationInformation notificationInformation, String title, Integer notificationId) {
 		List<Integer> userIds = bookFavoriteService.getAllFavoriteUserId(notificationId);
@@ -111,7 +142,7 @@ public class NotificationService {
 		saveNotificationForUsers(notificationEntity, users);
 	}
 
-	// 문의사항 답변 알림 생성
+	// 문의사항 답변 알림 생성 - qnaId가 담김
 	@Transactional
 	public void addQnaAnsweredNotification(NotificationInformation notificationInformation, String title, Integer notificationId, Integer userId) {
 		UserEntity user = userService.getUserById(userId);
@@ -150,6 +181,13 @@ public class NotificationService {
 		if(notificationEntity == null) throw new NotificationException(ErrorCode.NOTIFICATION_NOT_FOUND);
 		notificationEntity.delete();
 		notificationRepository.save(notificationEntity);
+	}
+
+	@Transactional(readOnly = true)
+	protected LocalDateTime getTopCreatedAtByType(NotificationInformation notificationInformation) {
+		String notificationType = notificationInformation.getType();
+		return notificationRepository.findLatestCreatedAtByNotificationType(notificationType)
+			.orElse(LocalDateTime.of(2000, 1, 1, 0, 0,0));
 	}
 
 	// 다수의 유저 알림 저장(직접 사용 x)

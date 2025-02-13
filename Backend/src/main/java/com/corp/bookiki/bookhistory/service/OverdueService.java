@@ -9,11 +9,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
+import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.global.error.exception.LoanPolicyException;
 import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
 import com.corp.bookiki.loanpolicy.repository.LoanPolicyRepository;
+import com.corp.bookiki.notification.entity.NotificationInformation;
+import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 
@@ -28,6 +32,7 @@ public class OverdueService {
 	private final BookHistoryRepository bookHistoryRepository;
 	private final UserRepository userRepository;
 	private final LoanPolicyRepository loanPolicyRepository;
+	private final NotificationService notificationService;
 
 	public void processOverdueBooks() {
 		LoanPolicyEntity loanPolicy = loanPolicyRepository.findById(1)
@@ -47,6 +52,12 @@ public class OverdueService {
 			bookHistoryRepository.save(history);
 
 			UserEntity user = history.getUser();
+			BookItemEntity bookItem = history.getBookItem();
+			BookInformationEntity bookInformationEntity = bookItem.getBookInformation();
+			String bookTitle = bookInformationEntity.getTitle();
+			notificationService.addAdminOverdueNotification(NotificationInformation.ADMIN_OVERDUE, bookTitle, history.getId());
+			notificationService.addUserOverDueNotification(NotificationInformation.USER_OVERDUE, bookTitle, history.getId(), user.getId());
+
 			LocalDateTime overdueDate = calculateOverdueDate(history, loanPolicy);
 			updateUserActiveAt(user, overdueDate);
 

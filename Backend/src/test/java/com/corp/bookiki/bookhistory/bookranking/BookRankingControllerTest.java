@@ -47,7 +47,7 @@ class BookRankingControllerTest {
 			"Test Author",
 			100,
 			"test-image.jpg",
-			5L
+			5
 		);
 	}
 
