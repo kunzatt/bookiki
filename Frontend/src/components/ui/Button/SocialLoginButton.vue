@@ -1,13 +1,19 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router';
+
 interface SocialLoginButtonProps {
   provider: 'naver' | 'google';
   text: string;
 }
 
 const props = defineProps<SocialLoginButtonProps>();
+const router = useRouter();
 
 const handleSocialLogin = (provider: string) => {
-  // TODO: OAuth 로그인 처리
+  // 백엔드의 OAuth2 인증 엔드포인트로 리다이렉트
+  const authUrl = `${import.meta.env.VITE_API_URL}/api/oauth2/authorization/${provider}`;
+  window.location.href = authUrl;
+
   console.log(`${provider} 로그인 시도`);
 };
 </script>

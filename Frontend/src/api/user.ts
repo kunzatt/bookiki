@@ -119,12 +119,16 @@ export const login = async (request: LoginRequest): Promise<LoginResponse> => {
     temporaryToken: string
 ): Promise<string> => {
     try {
+        const token = temporaryToken.startsWith('Bearer ') 
+            ? temporaryToken 
+            : `Bearer ${temporaryToken}`;
+            
         const response = await axios.post<string>(
-            `${API_URL}/auth/${provider}/oauthsignup`,
+            `${API_URL}/auth/oauthsignup`,
             request,
             {
                 headers: {
-                    Authorization: temporaryToken
+                    Authorization: `Bearer ${temporaryToken}`
                 }
             }
         );
@@ -240,3 +244,17 @@ export const deleteUser = async (
         throw error;
     }
  };
+
+
+ export const setToken = async (temporaryToken: string): Promise<LoginResponse> => {
+    try {
+      const response = await axios.post<LoginResponse>(
+        `${API_URL}/auth/token`,
+        { temporaryToken }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('토큰 설정 실패:', error);
+      throw error;
+    }
+  };

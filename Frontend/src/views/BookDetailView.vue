@@ -205,7 +205,7 @@ onUnmounted(() => {
                   v-if="$window.width >= 1024"
                   :class="{
                     'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-                    'bg-gray-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
+                    'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
                   }"
                   class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
                 >
@@ -266,7 +266,7 @@ onUnmounted(() => {
           <span 
             :class="{
               'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-              'bg-gray-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
+              'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
             }"
             class="px-4 py-2 rounded-full text-sm font-medium shadow-sm"
           >
@@ -298,7 +298,6 @@ onUnmounted(() => {
   <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
       <h2 class="text-xl font-bold mb-4">로그인이 필요합니다</h2>
-      <p class="text-gray-600 mb-6">도서를 대출하려면 로그인이 필요합니다.</p>
       <div class="flex justify-end gap-4">
         <button
           @click="showLoginModal = false"

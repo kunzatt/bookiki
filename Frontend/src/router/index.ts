@@ -23,6 +23,29 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/signup',
+      name: 'SignUp',
+      component: () => import('@/views/auth/SignupView.vue')
+    },
+    {
+      path: '/oauth2/signup',
+      name: 'OAuth2SignUp',
+      component: () => import('@/views/auth/OAuth2SignUp.vue'),
+      props: (route) => ({ 
+        token: route.query.token 
+      })
+    },
+    {
+      path: '/api/oauth2/error',
+      name: 'OAuth2Error',
+      component: () => import('@/views/auth/OAuth2Error.vue')
+    },
+    {
+      path: '/oauth2/callback',
+      name: 'OAuth2Callback',
+      component: () => import('@/views/auth/OAuth2Callback.vue')
+    },
+    {
       path: '/books/:id',
       name: 'book-detail',
       component: () => import('@/views/BookDetailView.vue'),
