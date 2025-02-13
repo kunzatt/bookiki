@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed  } from 'vue';
 import { RouterLink } from 'vue-router';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicWebPagination from '@/components/ui/pagination/BasicWebPagination.vue';
@@ -11,6 +11,7 @@ import { selectBooksByKeyword } from '@/api/bookItem';
 import type { BookItemDisplayResponse } from '@/types/api/bookItem';
 import type { Pageable } from '@/types/common/pagination';
 import DefaultBookCover from '@/assets/images/DEFAULT_BOOK_COVER.png';
+import { useRouter } from 'vue-router';
 
 const books = ref<BookItemDisplayResponse[]>([]);
 const searchKeyword = ref('');
@@ -54,6 +55,23 @@ const getBookCoverImage = (imageUrl: string | null) => {
   return imageUrl || DefaultBookCover;
 };
 
+const router = useRouter();
+
+const navigateToBook = (bookId: number) => {
+  if (bookId) {
+    router.push(`/books/${bookId}`);
+  }
+};
+
+// books 배열을 행으로 나누는 computed 속성 추가
+const bookRows = computed(() => {
+  const rows = [];
+  for (let i = 0; i < 5; i++) {
+    rows.push(books.value.slice(i * 4, (i + 1) * 4));
+  }
+  return rows;
+});
+
 watch(pageInfo, async () => {
   currentPage.value = pageInfo.value.pageNumber + 1;
   await fetchBooks();
@@ -95,41 +113,36 @@ onMounted(async () => {
           <div class="overflow-y-auto">
             <!-- 책장 -->
             <div v-if="books.length > 0" class="bg-[#8B4513] p-6 rounded-lg">
-            <div class="space-y-8">
-              <template v-for="row in 5" :key="row">
-                <div class="relative bg-[#F5E6D3] p-4 rounded">
-                  <!-- 책 그리드 -->
-                  <div class="grid grid-cols-4 gap-4">
-                    <div
-                      v-for="book in books.slice((row-1) * 4, row * 4)"
-                      :key="book?.id"
-                      class="aspect-[3/4] relative group cursor-pointer"
-                    >
-                      <div class="book absolute inset-0 transform transition-transform duration-200 group-hover:scale-105">
-                        <img
-                          v-if="book"
-                          :src="getBookCoverImage(book.image)"
-                          :alt="'Book cover ' + book.id"
-                          class="w-full h-full object-cover rounded shadow-lg"
-                        />
-                        <div 
-                          v-else 
-                          class="w-full h-full bg-gray-100 rounded"
-                        ></div>
-                        
-                        <!-- 책 등 효과 -->
-                        <div class="absolute top-0 left-0 w-2 h-full bg-black bg-opacity-10 rounded-l"></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- 선반 효과 -->
-                  <div class="absolute -bottom-4 left-0 right-0 h-4 bg-[#8B4513] shadow-md transform skew-y-1"></div>
-                  <div class="absolute -bottom-4 left-0 right-0 h-2 bg-[#5C2E0E] transform -skew-y-2"></div>
-                </div>
-              </template>
+    <div class="space-y-8">
+      <div 
+        v-for="(row, rowIndex) in bookRows" 
+        :key="rowIndex"
+        class="relative bg-[#F5E6D3] p-4 rounded"
+      >
+        <div class="grid grid-cols-4 gap-4">
+          <div
+            v-for="book in row"
+            :key="book.id"
+            class="aspect-[3/4] relative group"
+          >
+            <div class="book absolute inset-0 transform transition-transform duration-200 group-hover:scale-105">
+              <img
+                :src="getBookCoverImage(book.image)"
+                :alt="'Book cover ' + book.id"
+                class="w-full h-full object-cover rounded shadow-lg cursor-pointer"
+            @click="navigateToBook(book.id)"
+              />
+              <div class="absolute top-0 left-0 w-2 h-full bg-black bg-opacity-10 rounded-l"></div>
             </div>
           </div>
+        </div>
+
+        <!-- 선반 효과 -->
+        <div class="absolute -bottom-4 left-0 right-0 h-4 bg-[#8B4513] shadow-md transform skew-y-1"></div>
+        <div class="absolute -bottom-4 left-0 right-0 h-2 bg-[#5C2E0E] transform -skew-y-2"></div>
+      </div>
+    </div>
+  </div>
 
             <!-- 페이지네이션 -->
             <div v-if="books.length > 0" class="mt-8 mb-16 md:mb-8">
