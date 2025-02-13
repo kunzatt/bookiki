@@ -6,17 +6,25 @@ import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<LoginResponse | null>(null);
+  const router = useRouter();
+
+  // sessionStorage에서 유저 정보 복구
+  const initializeFromStorage = () => {
+    const storedUser = sessionStorage.getItem('user');
+    if (storedUser) {
+      user.value = JSON.parse(storedUser);
+    }
+  };
 
   // 로그인 처리
   const login = async (loginRequest: LoginRequest) => {
-    const router = useRouter();
     try {
       const response: LoginResponse = await loginApi(loginRequest);
       
       // User 정보 설정
       user.value = response;
-      // localStorage에 사용자 정보 저장
-      localStorage.setItem('user', JSON.stringify(response));
+      // sessionStorage에 사용자 정보 저장
+      sessionStorage.setItem('user', JSON.stringify(response));
       
       return response;
     } catch (error) {
@@ -27,13 +35,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 로그아웃 처리
   const logout = async () => {
-    const router = useRouter();
     try {
       await logoutApi();
       user.value = null;
-      // localStorage에서 사용자 정보 삭제
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      // sessionStorage에서 사용자 정보 삭제
+      sessionStorage.removeItem('user');
       await router.push('/login');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -51,5 +57,6 @@ export const useAuthStore = defineStore('auth', () => {
     userRole,
     login,
     logout,
+    initializeFromStorage
   };
 });
