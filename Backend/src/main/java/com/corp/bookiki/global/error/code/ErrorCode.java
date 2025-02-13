@@ -132,7 +132,10 @@ public enum ErrorCode {
 
 	// 개인화 관련
 	PERSONALIZATION_ERROR(500, "응답 개인화 중 오류가 발생했습니다"),
-	USER_PREFERENCE_NOT_FOUND(404, "사용자 선호도 정보를 찾을 수 없습니다");
+	USER_PREFERENCE_NOT_FOUND(404, "사용자 선호도 정보를 찾을 수 없습니다"),
+
+	// Gemini 관련
+	GEMINI_RESPONSE_ERROR(500, "Gemini 응답 오류가 발생했습니다.");
 
 	private final int status;
 	private final String message;

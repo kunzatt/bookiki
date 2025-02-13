@@ -7,6 +7,7 @@ import com.corp.bookiki.bookitem.dto.BookItemListResponse;
 import com.corp.bookiki.bookitem.dto.BookItemRequest;
 import com.corp.bookiki.bookitem.dto.BookItemResponse;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
@@ -18,6 +19,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -96,5 +100,13 @@ public class BookItemService {
 		BookItemEntity savedBookItem = bookItemRepository.save(bookItem);
 
 		return BookItemResponse.from(savedBookItem);
+	}
+
+	@Transactional(readOnly = true)
+	public List<BookItemListResponse> getPopularBooksByCategory(Integer category, int limit) {
+		return bookItemRepository.findPopularBooks(category, BookStatus.AVAILABLE, PageRequest.of(0, limit))
+				.stream()
+				.map(BookItemListResponse::from)
+				.collect(Collectors.toList());
 	}
 }
