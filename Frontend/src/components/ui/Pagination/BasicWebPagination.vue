@@ -10,7 +10,7 @@ interface PaginationProps {
   visiblePages?: number;
 }
 
-const paginationProps = withDefaults(defineProps<PaginationProps>(), {
+const props = withDefaults(defineProps<PaginationProps>(), {
   visiblePages: 7,
   sort: () => []
 });
@@ -21,12 +21,12 @@ const emit = defineEmits<{
 
 const pages = computed(() => {
   const pages: number[] = [];
-  let startPage = Math.max(1, paginationProps.currentPage - Math.floor(paginationProps.visiblePages / 2));
-  let endPage = Math.min(paginationProps.totalPages, startPage + paginationProps.visiblePages - 1);
+  let startPage = Math.max(1, props.currentPage - Math.floor(props.visiblePages / 2));
+  let endPage = Math.min(props.totalPages, startPage + props.visiblePages - 1);
   
   // 마지막 페이지가 총 페이지수를 초과하지 않도록 조정
-  if (endPage - startPage + 1 < paginationProps.visiblePages) {
-    startPage = Math.max(1, endPage - paginationProps.visiblePages + 1);
+  if (endPage - startPage + 1 < props.visiblePages) {
+    startPage = Math.max(1, endPage - props.visiblePages + 1);
   }
   
   for (let i = startPage; i <= endPage; i++) {
@@ -36,11 +36,11 @@ const pages = computed(() => {
 });
 
 const handlePageClick = (page: number) => {
-  if (page !== paginationProps.currentPage && page >= 1 && page <= paginationProps.totalPages) {
+  if (page !== props.currentPage && page >= 1 && page <= props.totalPages) {
     const pageInfo: Pageable = {
       pageNumber: page - 1, // 백엔드는 0-based index 사용
-      pageSize: paginationProps.pageSize,
-      sort: paginationProps.sort
+      pageSize: props.pageSize,
+      sort: props.sort
     };
     emit('update:pageInfo', pageInfo);
   }
