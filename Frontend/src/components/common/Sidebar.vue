@@ -51,12 +51,24 @@ const handleMenuClick = (item: MenuItem) => {
     router.push(item.path);
   }
 };
+
+// 로고 클릭 핸들러 추가
+const handleLogoClick = () => {
+  if (router.currentRoute.value.path === '/main') {
+    window.location.reload();
+  } else {
+    router.push('/main');
+  }
+};
 </script>
 
 <template>
   <aside class="w-64 h-screen bg-[#F6F6F3] shadow-lg">
-    <!-- 로고 -->
-    <div class="px-6 py-4 flex flex-col items-center justify-center">
+    <!-- 로고에 클릭 이벤트 추가 -->
+    <div 
+      class="px-6 py-4 flex flex-col items-center justify-center cursor-pointer"
+      @click="handleLogoClick"
+    >
       <img 
         :src="BookikiLogo" 
         alt="Bookiki Logo" 
