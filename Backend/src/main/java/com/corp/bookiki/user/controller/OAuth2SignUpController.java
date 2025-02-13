@@ -116,19 +116,18 @@ public class OAuth2SignUpController {
                     )
             )
     })
-    @PostMapping("/{provider}/oauthsignup")
+    @PostMapping("/oauthsignup")
     public ResponseEntity<?> completeOAuthSignUp(
-            @PathVariable String provider,
             @RequestHeader("Authorization") String temporaryToken,
             @RequestBody @Valid OAuth2SignUpRequest request,
             HttpServletResponse response) {
         try {
-            authService.completeOAuth2SignUp(provider, request, response);
+            authService.completeOAuth2SignUp(temporaryToken, request, response);
             return ResponseEntity.ok("회원가입이 완료되었습니다.");
-        } catch (Exception e) {
-            log.error("OAuth2 signup failed: ", e);
+        } catch (Exception ex) {
+            log.error("OAuth2 signup failed: ", ex);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("회원가입 처리 중 오류가 발생했습니다: " + e.getMessage());
+                    .body("회원가입 처리 중 오류가 발생했습니다: " + ex.getMessage());
         }
     }
 }

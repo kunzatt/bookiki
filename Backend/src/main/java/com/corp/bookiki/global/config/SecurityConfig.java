@@ -1,14 +1,13 @@
 package com.corp.bookiki.global.config;
 
+import com.corp.bookiki.global.security.handler.OAuth2AuthenticationFailureHandler;
+import com.corp.bookiki.global.security.handler.OAuth2AuthenticationSuccessHandler;
+import com.corp.bookiki.global.security.oauth.CustomOAuth2UserService;
 import com.corp.bookiki.jwt.filter.JwtFilter;
-import com.corp.bookiki.user.service.CustomOAuth2UserService;
 import com.corp.bookiki.user.service.CustomUserDetailsService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +25,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 @Configuration
 @EnableWebSecurity
@@ -37,6 +39,8 @@ public class SecurityConfig {
 	private final JwtFilter jwtFilter;
 	private final CustomUserDetailsService userDetailsService;
 	private final CustomOAuth2UserService customOAuth2UserService;
+	private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+	private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
 	@Value("${FRONTEND_URL}")
 	private String frontendUrl;
@@ -52,6 +56,7 @@ public class SecurityConfig {
 							.configurationSource(request -> {
 								CorsConfiguration configuration = new CorsConfiguration();
 								configuration.setAllowedOriginPatterns(List.of(frontendUrl,
+										"http://localhost:5173",
 										"http://i12a206.p.ssafy.io:8088",
 										"ws://70.12.246.118:8088"));
 
@@ -101,7 +106,13 @@ public class SecurityConfig {
 								"/api/user/login/**", // 이메일 인증
 								"/api/books/**",
 								"/api/users/books/**",
-								"/api/oauth2/**",
+//								"/login/oauth2/code/*",
+//								"/api/login/oauth2/code/*",
+//								"/api/oauth2/**",
+								"/api/oauth2/authorization/*",      // OAuth2 인증 시작 URL
+								"/api/login/oauth2/code/*",
+								"/api/oauth2/error",
+								"/oauth2/**",
 								"/api/login/**",
 								"/api/api-docs/**",
 								"/api/api-docs",
@@ -128,15 +139,21 @@ public class SecurityConfig {
 				})
 			)
 			.authenticationProvider(authenticationProvider())
-			.oauth2Login(oauth2 -> {
-				log.debug("OAuth2 로그인 설정 시작");
-				oauth2
-					.userInfoEndpoint(userInfo -> {
-						log.debug("OAuth2 사용자 서비스 설정");
-						userInfo.userService(customOAuth2UserService);
-					});
-				log.debug("OAuth2 로그인 설정 완료");
-			})
+				.oauth2Login(oauth2 -> {
+					oauth2
+//							.loginPage("/login")  // 로그인 페이지 설정 추가
+							.authorizationEndpoint(authorization ->
+									authorization.baseUri("/api/oauth2/authorization")  // /api 제거
+							)
+							.redirectionEndpoint(redirection ->
+									redirection.baseUri("/api/login/oauth2/code/*")  // provider 변수 사용
+							)
+							.userInfoEndpoint(userInfo ->
+									userInfo.userService(customOAuth2UserService)
+							)
+							.successHandler(oAuth2AuthenticationSuccessHandler)
+							.failureHandler(oAuth2AuthenticationFailureHandler);
+				})
 			.logout(AbstractHttpConfigurer::disable)
 			.logout(logout -> {
 				logout
