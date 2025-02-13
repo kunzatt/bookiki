@@ -14,7 +14,7 @@ public class LostBookSchedular {
 	private final BookReturnService bookReturnService;
 
 	@Scheduled(cron = "0 00 09 * * *")
-	public void checkOverdue() {
+	public void checkLostBooks() {
 		log.info("분실 도서 알림 생성");
 		bookReturnService.lostBooksAlarms();
 	}

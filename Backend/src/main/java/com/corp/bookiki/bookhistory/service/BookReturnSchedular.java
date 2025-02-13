@@ -14,7 +14,7 @@ public class BookReturnSchedular {
 	private final BookReturnService bookReturnService;
 
 	@Scheduled(cron = "0 00 09 * * *")
-	public void checkOverdue() {
+	public void checkMismatchedBooks() {
 		log.info("도서 정리 알림 생성");
 		bookReturnService.mismatchedBooksAlarms();
 	}
