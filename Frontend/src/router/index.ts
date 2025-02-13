@@ -27,6 +27,29 @@ const router = createRouter({
       name: 'SignUp',
       component: () => import('@/views/auth/SignupView.vue')
     }
+      path: '/oauth2/signup',
+      name: 'OAuth2SignUp',
+      component: () => import('@/views/auth/OAuth2SignUp.vue'),
+      props: (route) => ({ 
+        token: route.query.token 
+      })
+    },
+    {
+      path: '/api/oauth2/error',
+      name: 'OAuth2Error',
+      component: () => import('@/views/auth/OAuth2Error.vue')
+    },
+    {
+      path: '/oauth2/callback',
+      name: 'OAuth2Callback',
+      component: () => import('@/views/auth/OAuth2Callback.vue')
+    }
+  ]
+      path: '/books/:id',
+      name: 'book-detail',
+      component: () => import('@/views/BookDetailView.vue'),
+      meta: { requiresAuth: false }
+    },
     // 404 페이지
     // {
     //   path: '/:pathMatch(.*)*',
@@ -38,6 +61,18 @@ const router = createRouter({
     //   name: 'home',
     //   component: HomeView,
     // },
+    {
+      path: '/library',
+      name: 'VirtualShelf',
+      component: () => import('@/views/book/VirtualShelfView.vue')
+    },
+
+    // 책 상세페이지 만든 사람이 수정하기!
+    {
+      path: '/books/:id',
+      name: 'BookItemDetail',
+      component: () => import('@/views/book/BookItemDetailView.vue')
+    }
   ],
 });
 

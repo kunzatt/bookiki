@@ -1,4 +1,8 @@
 <script setup lang="ts">
+defineOptions({
+  name: 'SidebarMenu'
+});
+
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import type { MenuItem, User } from '../../types/common/sideBar';
@@ -29,12 +33,42 @@ const toggleSubMenu = (menuName: string) => {
 const isMenuOpen = (menuName: string): boolean => {
   return !!menuStates.value[menuName];
 };
+
+// router 인스턴스 생성
+const router = useRouter();
+
+// 메뉴 클릭 핸들러 함수 수정
+const handleMenuClick = (item: MenuItem) => {
+  if (item.name === '홈') {
+    if (router.currentRoute.value.path === '/main') {
+      window.location.reload();
+    } else {
+      router.push('/main');
+    }
+  } else if (item.hasToggle) {
+    toggleSubMenu(item.name);
+  } else if (item.path) {
+    router.push(item.path);
+  }
+};
+
+// 로고 클릭 핸들러 추가
+const handleLogoClick = () => {
+  if (router.currentRoute.value.path === '/main') {
+    window.location.reload();
+  } else {
+    router.push('/main');
+  }
+};
 </script>
 
 <template>
   <aside class="w-64 h-screen bg-[#F6F6F3] shadow-lg">
-    <!-- 로고 -->
-    <div class="px-6 py-4 flex flex-col items-center justify-center">
+    <!-- 로고에 클릭 이벤트 추가 -->
+    <div 
+      class="px-6 py-4 flex flex-col items-center justify-center cursor-pointer"
+      @click="handleLogoClick"
+    >
       <img 
         :src="BookikiLogo" 
         alt="Bookiki Logo" 
@@ -52,9 +86,21 @@ const isMenuOpen = (menuName: string): boolean => {
       <ul class="space-y-1">
         <li v-for="item in filteredMenuItems" :key="item.path">
           <!-- 메인 메뉴 아이템 -->
+          <div 
+            v-if="item.name === '홈'" 
+            @click="handleMenuClick(item)"
+            class="block"
+          >
+            <div class="px-6 py-4 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors">
+              <span class="material-icons mr-3 text-[#344E41]">{{ item.icon }}</span>
+              <span class="text-[#344E41]">{{ item.name }}</span>
+            </div>
+          </div>
+
           <div
+            v-else
             class="px-6 py-4 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors"
-            @click="item.hasToggle ? toggleSubMenu(item.name) : null"
+            @click="handleMenuClick(item)"
           >
             <span class="material-icons mr-3 text-[#344E41]">{{ item.icon }}</span>
             <span class="text-[#344E41]">{{ item.name }}</span>

@@ -1,5 +1,6 @@
 // types/book.ts
 export interface BookCardProps {
+    bookId: number;
     coverImage: string;
     title: string;
     variant: 'returnDueDate' | 'author' | 'borrowCount' | 'expectedReturnDate';
