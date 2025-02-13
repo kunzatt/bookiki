@@ -135,7 +135,7 @@ public enum ErrorCode {
 	USER_PREFERENCE_NOT_FOUND(404, "사용자 선호도 정보를 찾을 수 없습니다"),
 
 	// Gemini 관련
-	GEMINI_RESPONSE_ERROR(500, "Gemini 응답 오류가 발생했습니다.");
+	GEMINI_RESPONSE_ERROR(500, "Gemini 응답 오류가 발생했습니다."),
 
 	// 카메라/통신 관련
 	CAMERA_ERROR(503,"카메라 혹은 통신 오류가 발생하였습니다. 카메라 설치 환경을 확인 해주세요.");

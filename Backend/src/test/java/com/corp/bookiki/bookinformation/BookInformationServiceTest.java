@@ -29,6 +29,7 @@ import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
 import com.corp.bookiki.bookinformation.service.BookInformationService;
 import com.corp.bookiki.global.error.exception.BookInformationException;
+import com.corp.bookiki.recommendation.service.GeminiService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +51,9 @@ class BookInformationServiceTest {
 
 	@Mock
 	private ObjectMapper objectMapper;
+
+	@Mock
+	private GeminiService geminiService;
 
 	@Nested
 	@DisplayName("도서 정보 추가 테스트")

@@ -107,9 +107,10 @@ public class BookItemService {
 	@Transactional(readOnly = true)
 	public List<BookItemListResponse> getPopularBooksByCategory(Integer category, int limit) {
 		return bookItemRepository.findPopularBooks(category, BookStatus.AVAILABLE, PageRequest.of(0, limit))
-				.stream()
-				.map(BookItemListResponse::from)
-				.collect(Collectors.toList());
+			.stream()
+			.map(BookItemListResponse::from)
+			.collect(Collectors.toList());
+	}
 
 	public List<BookItemEntity> getBooksSameBookInformation(Integer bookItemId){
 		return bookItemRepository.findByBookInformationIdFromBookItemId(bookItemId);
