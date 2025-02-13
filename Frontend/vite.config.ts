@@ -19,8 +19,15 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:8088',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        secure: false,
+      ws: true,
+      timeout: 5000,
+        //rewrite: (path) => path.replace(/^\/api/, ''),
       },
+      '/auth': {  // auth 경로에 대한 프록시 추가
+      target: 'http://localhost:8088',
+      changeOrigin: true,
+    },
     },
   },
 })

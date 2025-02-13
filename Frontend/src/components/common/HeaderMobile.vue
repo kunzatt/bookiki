@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { defineProps, withDefaults } from 'vue';
-import type { MobileHeaderProps } from './Header';
+import type { MobileHeaderProps } from '../../types/common/header';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

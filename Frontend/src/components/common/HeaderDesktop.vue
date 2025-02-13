@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import type { DesktopHeaderProps } from './Header';
+import type { DesktopHeaderProps } from '../../types/common/header';
 import { defineProps, withDefaults } from 'vue';
 
 const props = withDefaults(defineProps<DesktopHeaderProps>(), {

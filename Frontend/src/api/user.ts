@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from './axios'
 
 const API_URL = '/api' // 베이스 URL을 설정합니다.
 
@@ -89,9 +89,11 @@ export const verifyCode = async (email: string, request: VerifyCodeRequest): Pro
 export const login = async (request: LoginRequest): Promise<LoginResponse> => {
     try {
         const response = await axios.post<LoginResponse>(
-            `${API_URL}/auth/login`,
+            '/api/auth/login',
             request
         );
+        console.log('로그인 request: ', request);
+        console.log('response: ', response);
         return response.data;
     } catch (error) {
         console.error('로그인 실패:', error);
@@ -238,4 +240,3 @@ export const deleteUser = async (
         throw error;
     }
  };
-
