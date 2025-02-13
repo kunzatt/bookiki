@@ -10,124 +10,126 @@
       <HeaderDesktop class="hidden lg:block" />
 
       <main class="flex-1 px-5 lg:px-8 pb-16 lg:pb-8 overflow-y-auto lg:overflow-hidden">
-        <div v-if="authStore.user" class="mb-4 text-sm text-gray-600">
-          환영합니다, {{ authStore.user.userName }}님!
-        </div>
+        <div class="max-w-[1440px] mx-auto">
+          <div v-if="authStore.user" class="mb-4 text-sm text-gray-600">
+            환영합니다, {{ authStore.user.userName }}님!
+          </div>
 
-        <div class="h-full lg:flex lg:flex-col lg:gap-8">
-          <!-- 이달의 도서 섹션 -->
-          <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-xl lg:text-2xl font-medium">이달의 도서</h2>
-            </div>
-            <div class="w-full relative flex items-center justify-center px-8">
-              <!-- 왼쪽 화살표 -->
-              <button 
-                @click="slideLeft"
-                class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                :class="{ 'opacity-50 cursor-not-allowed': currentIndex === 0 }"
-                :disabled="currentIndex === 0"
-              >
-                <span class="material-icons">chevron_left</span>
-              </button>
-
-              <!-- 책 슬라이더 -->
-              <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
-                  <template v-for="index in displayCount" :key="index">
-                    <div 
-                      v-if="monthlyBooks[currentIndex + index - 1]?.bookItemId"
-                      class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                      @click="monthlyBooks[currentIndex + index - 1]?.bookItemId && router.push(`/books/${monthlyBooks[currentIndex + index - 1].bookItemId}`)"
-                    >
-                      <div class="relative">
-                        <img :src="monthlyBooks[currentIndex + index - 1].image" 
-                             :alt="monthlyBooks[currentIndex + index - 1].title"
-                             class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
-                             @error="handleImageError"
-                        />
-                      </div>
-                      <div class="p-3 sm:p-4">
-                        <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                          {{ monthlyBooks[currentIndex + index - 1].title }}
-                        </h3>
-                        <p class="text-xs sm:text-sm text-gray-600 truncate">
-                          {{ monthlyBooks[currentIndex + index - 1].author }}
-                        </p>
-                      </div>
-                    </div>
-                  </template>
-                </div>
+          <div class="h-full lg:flex lg:flex-col lg:gap-8">
+            <!-- 이달의 도서 섹션 -->
+            <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
+              <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl lg:text-2xl font-medium">이달의 도서</h2>
               </div>
+              <div class="w-full relative flex items-center justify-center px-8">
+                <!-- 왼쪽 화살표 -->
+                <button 
+                  @click="slideLeft"
+                  class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                  :class="{ 'opacity-50 cursor-not-allowed': currentIndex === 0 }"
+                  :disabled="currentIndex === 0"
+                >
+                  <span class="material-icons">chevron_left</span>
+                </button>
 
-              <!-- 오른쪽 화살표 -->
-              <button 
-                @click="slideRight"
-                class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                :class="{ 'opacity-50 cursor-not-allowed': currentIndex >= monthlyBooks.length - displayCount }"
-                :disabled="currentIndex >= monthlyBooks.length - displayCount"
-              >
-                <span class="material-icons">chevron_right</span>
-              </button>
-            </div>
-          </section>
-
-          <!-- 추천 도서 섹션 -->
-          <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-xl lg:text-2xl font-medium">추천 도서</h2>
-            </div>
-            <div class="w-full relative flex items-center justify-center px-8">
-              <!-- 왼쪽 화살표 -->
-              <button 
-                @click="slideLeftRecommended"
-                class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex === 0 }"
-                :disabled="recommendedIndex === 0"
-              >
-                <span class="material-icons">chevron_left</span>
-              </button>
-
-              <!-- 책 슬라이더 -->
-              <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
-                  <template v-for="index in displayCount" :key="index">
-                    <div 
-                      v-if="recommendedBooks[recommendedIndex + index - 1]?.bookItemId"
-                      class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                      @click="recommendedBooks[recommendedIndex + index - 1]?.bookItemId && router.push(`/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`)"
-                    >
-                      <div class="relative">
-                        <img :src="recommendedBooks[recommendedIndex + index - 1].image" 
-                             :alt="recommendedBooks[recommendedIndex + index - 1].title"
-                             class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
-                             @error="handleImageError"
-                        />
+                <!-- 책 슬라이더 -->
+                <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
+                    <template v-for="index in displayCount" :key="index">
+                      <div 
+                        v-if="monthlyBooks[currentIndex + index - 1]?.bookItemId"
+                        class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                        @click="monthlyBooks[currentIndex + index - 1]?.bookItemId && router.push(`/books/${monthlyBooks[currentIndex + index - 1].bookItemId}`)"
+                      >
+                        <div class="relative">
+                          <img :src="monthlyBooks[currentIndex + index - 1].image" 
+                               :alt="monthlyBooks[currentIndex + index - 1].title"
+                               class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                               @error="handleImageError"
+                          />
+                        </div>
+                        <div class="p-3 sm:p-4">
+                          <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                            {{ monthlyBooks[currentIndex + index - 1].title }}
+                          </h3>
+                          <p class="text-xs sm:text-sm text-gray-600 truncate">
+                            {{ monthlyBooks[currentIndex + index - 1].author }}
+                          </p>
+                        </div>
                       </div>
-                      <div class="p-3 sm:p-4">
-                        <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                          {{ recommendedBooks[recommendedIndex + index - 1].title }}
-                        </h3>
-                        <p class="text-xs sm:text-sm text-gray-600 truncate">
-                          {{ recommendedBooks[recommendedIndex + index - 1].author }}
-                        </p>
-                      </div>
-                    </div>
-                  </template>
+                    </template>
+                  </div>
                 </div>
-              </div>
 
-              <!-- 오른쪽 화살표 -->
-              <button 
-                @click="slideRightRecommended"
-                class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex >= recommendedBooks.length - displayCount }"
-                :disabled="recommendedIndex >= recommendedBooks.length - displayCount"
-              >
-                <span class="material-icons">chevron_right</span>
-              </button>
-            </div>
-          </section>
+                <!-- 오른쪽 화살표 -->
+                <button 
+                  @click="slideRight"
+                  class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                  :class="{ 'opacity-50 cursor-not-allowed': currentIndex >= monthlyBooks.length - displayCount }"
+                  :disabled="currentIndex >= monthlyBooks.length - displayCount"
+                >
+                  <span class="material-icons">chevron_right</span>
+                </button>
+              </div>
+            </section>
+
+            <!-- 추천 도서 섹션 -->
+            <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
+              <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl lg:text-2xl font-medium">추천 도서</h2>
+              </div>
+              <div class="w-full relative flex items-center justify-center px-8">
+                <!-- 왼쪽 화살표 -->
+                <button 
+                  @click="slideLeftRecommended"
+                  class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                  :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex === 0 }"
+                  :disabled="recommendedIndex === 0"
+                >
+                  <span class="material-icons">chevron_left</span>
+                </button>
+
+                <!-- 책 슬라이더 -->
+                <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
+                    <template v-for="index in displayCount" :key="index">
+                      <div 
+                        v-if="recommendedBooks[recommendedIndex + index - 1]?.bookItemId"
+                        class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                        @click="recommendedBooks[recommendedIndex + index - 1]?.bookItemId && router.push(`/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`)"
+                      >
+                        <div class="relative">
+                          <img :src="recommendedBooks[recommendedIndex + index - 1].image" 
+                               :alt="recommendedBooks[recommendedIndex + index - 1].title"
+                               class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                               @error="handleImageError"
+                          />
+                        </div>
+                        <div class="p-3 sm:p-4">
+                          <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                            {{ recommendedBooks[recommendedIndex + index - 1].title }}
+                          </h3>
+                          <p class="text-xs sm:text-sm text-gray-600 truncate">
+                            {{ recommendedBooks[recommendedIndex + index - 1].author }}
+                          </p>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- 오른쪽 화살표 -->
+                <button 
+                  @click="slideRightRecommended"
+                  class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                  :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex >= recommendedBooks.length - displayCount }"
+                  :disabled="recommendedIndex >= recommendedBooks.length - displayCount"
+                >
+                  <span class="material-icons">chevron_right</span>
+                </button>
+              </div>
+            </section>
+          </div>
         </div>
       </main>
 
