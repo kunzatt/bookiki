@@ -57,7 +57,7 @@ public class BookInformationResponse {
 	@Schema(description = "책 설명")
 	private String description;
 
-	@Schema(description = "카테고리 코드")
+	@Schema(description = "카테고리")
 	private Category category;
 
 	@Schema(name = "BookInformationResponse", description = "책 정보 응답")

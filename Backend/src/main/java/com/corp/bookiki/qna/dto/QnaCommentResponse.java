@@ -25,9 +25,8 @@ public class QnaCommentResponse {
     @Schema(description = "내용", example = "안녕하세요. 도서관 운영시간은 평일 9시부터 18시까지입니다.")
     private String content;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id")
-    private UserEntity user;
+    @Schema(description = "작성자 ID", example = "1")
+    private Integer authorId;
 
     @Schema(description = "작성자 이름", example = "이싸피")
     private String authorName;
@@ -42,7 +41,7 @@ public class QnaCommentResponse {
         this.id = comment.getId();
         this.qnaId = comment.getQna().getId();
         this.content = comment.getContent();
-        this.user = comment.getUser();
+        this.authorId = comment.getUser().getId();
         this.authorName = comment.getUser().getUserName();
         this.createdAt = comment.getCreatedAt();
         this.updatedAt = comment.getUpdatedAt();

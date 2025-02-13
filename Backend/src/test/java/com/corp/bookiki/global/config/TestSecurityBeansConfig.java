@@ -1,10 +1,12 @@
 package com.corp.bookiki.global.config;
 
 
+import com.corp.bookiki.global.security.handler.OAuth2AuthenticationFailureHandler;
+import com.corp.bookiki.global.security.handler.OAuth2AuthenticationSuccessHandler;
+import com.corp.bookiki.global.security.oauth.CustomOAuth2UserService;
 import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.user.service.AuthService;
-import com.corp.bookiki.user.service.CustomOAuth2UserService;
 import com.corp.bookiki.user.service.CustomUserDetailsService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,7 +18,6 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
 import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.user.service.AuthService;
-import com.corp.bookiki.user.service.CustomOAuth2UserService;
 import com.corp.bookiki.user.service.CustomUserDetailsService;
 
 @TestConfiguration
@@ -45,4 +46,11 @@ public class TestSecurityBeansConfig {
 
 	@MockBean
 	private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+
+	@MockBean
+	private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+	@MockBean
+	private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
 }

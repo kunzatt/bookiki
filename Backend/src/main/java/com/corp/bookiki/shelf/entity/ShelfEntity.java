@@ -1,5 +1,6 @@
 package com.corp.bookiki.shelf.entity;
 
+import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.ShelfException;
 import jakarta.persistence.*;
@@ -41,7 +42,7 @@ public class ShelfEntity {
         this.category = category;
     }
 
-    public void update(int shelfNumber, int lineNumber, Integer category) {
+    public void update(Integer shelfNumber, Integer lineNumber, Integer category) {
         validateShelfNumber(shelfNumber);
         validateLineNumber(lineNumber);
 

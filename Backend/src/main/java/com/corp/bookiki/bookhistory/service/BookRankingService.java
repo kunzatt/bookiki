@@ -11,6 +11,8 @@ import com.corp.bookiki.bookhistory.dto.BookRankingResponse;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +41,7 @@ public class BookRankingService {
 				Long borrowCount = ((Number) result[2]).longValue();
 
 				BookItemEntity bookItem = bookItemRepository.findByIdWithBookInformation(bookItemId)
-					.orElseThrow(() -> new IllegalArgumentException("Book not found: " + bookItemId));
+					.orElseThrow(() -> new BookHistoryException(ErrorCode.BOOK_ITEM_NOT_FOUND));
 
 				return new BookRankingResponse(
 					bookItemId,

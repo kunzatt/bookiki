@@ -1,5 +1,6 @@
 package com.corp.bookiki.shelf;
 
+import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
@@ -56,13 +57,13 @@ class ShelfControllerTest {
         shelf1.setId(1);
         shelf1.setShelfNumber(1);
         shelf1.setLineNumber(2);
-        shelf1.setCategory(100);
+        shelf1.setCategory(Category.COMPUTER_SCIENCE);
 
         ShelfResponse shelf2 = new ShelfResponse();
         shelf2.setId(2);
         shelf2.setShelfNumber(2);
         shelf2.setLineNumber(3);
-        shelf2.setCategory(200);
+        shelf2.setCategory(Category.PHILOSOPHY_PSYCHOLOGY);
 
         List<ShelfResponse> responses = Arrays.asList(shelf1, shelf2);
 
@@ -87,7 +88,7 @@ class ShelfControllerTest {
         ShelfCreateRequest request = new ShelfCreateRequest();
         request.setShelfNumber(1);
         request.setLineNumber(2);
-        request.setCategory(100);
+        request.setCategory(Category.COMPUTER_SCIENCE);
 
         when(shelfService.createShelf(any(ShelfCreateRequest.class))).thenReturn(1);
 
@@ -108,7 +109,7 @@ class ShelfControllerTest {
         ShelfCreateRequest request = new ShelfCreateRequest();
         request.setShelfNumber(0);
         request.setLineNumber(2);
-        request.setCategory(100);
+        request.setCategory(Category.COMPUTER_SCIENCE);
 
         when(shelfService.createShelf(any(ShelfCreateRequest.class)))
                 .thenThrow(new ShelfException(ErrorCode.INVALID_SHELF_NUMBER));
@@ -131,7 +132,7 @@ class ShelfControllerTest {
         request.setId(1);
         request.setShelfNumber(2);
         request.setLineNumber(3);
-        request.setCategory(200);
+        request.setCategory(Category.PHILOSOPHY_PSYCHOLOGY);
 
         doNothing().when(shelfService).updateShelf(any(ShelfUpdateRequest.class));
 
@@ -152,7 +153,7 @@ class ShelfControllerTest {
         request.setId(999);
         request.setShelfNumber(2);
         request.setLineNumber(3);
-        request.setCategory(200);
+        request.setCategory(Category.PHILOSOPHY_PSYCHOLOGY);
 
         doThrow(new ShelfException(ErrorCode.SHELF_NOT_FOUND))
                 .when(shelfService).updateShelf(any(ShelfUpdateRequest.class));
