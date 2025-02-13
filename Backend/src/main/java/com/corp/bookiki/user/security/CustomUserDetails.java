@@ -1,5 +1,6 @@
 package com.corp.bookiki.user.security;
 
+import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.UserEntity;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,6 +45,10 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
         return Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
+    public boolean needsAdditionalInfo() {
+        return user.getCompanyId() == null;
+    }
+
     @Override
     public String getPassword() {
         return user.getPassword();
@@ -84,5 +89,13 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
 
     public String getCompanyId() {
         return user.getCompanyId();
+    }
+
+    public UserEntity getUser() {
+        return user;  // user는 클래스의 필드로 저장된 UserEntity
+    }
+
+    public Provider getProvider() {
+        return user.getProvider();
     }
 }

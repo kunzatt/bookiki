@@ -63,7 +63,7 @@ public class JwtService {
         Date expiryDate = calculateExpirationDate(jwtProperties.getTemporaryTokenExpiration());
 
         return Jwts.builder()
-                .setSubject(jwtProperties.getSubjectPrefix() + email)
+                .setSubject(email)
                 .setIssuer(jwtProperties.getIssuer())
                 .claim("provider", provider.name())
                 .setIssuedAt(now)
