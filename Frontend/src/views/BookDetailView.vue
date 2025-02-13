@@ -139,9 +139,9 @@ onUnmounted(() => {
 
 <template>
   <div class="flex min-h-screen bg-gray-100">
-    <Sidebar class="hidden lg:block" />
+    <Sidebar class="hidden lg:block fixed left-0 top-0 h-screen" />
     
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col lg:ml-64">
       <HeaderDesktop 
         class="hidden lg:block"
         title="도서 상세"
@@ -157,7 +157,7 @@ onUnmounted(() => {
           <div class="flex flex-col lg:flex-row gap-8 lg:gap-20">
             <!-- Book Image Section -->
             <div class="w-full lg:w-[400px]">
-              <div class="lg:sticky lg:top-24">
+              <div>
                 <div class="relative">
                   <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
                     <img 
@@ -201,18 +201,19 @@ onUnmounted(() => {
             <!-- Book Info Section -->
             <div class="flex-1 lg:py-4">
               <div class="lg:max-w-3xl">
+                <span 
+                  v-if="$window.width >= 1024"
+                  :class="{
+                    'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
+                    'bg-gray-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
+                  }"
+                  class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
+                >
+                  {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
+                </span>
+
                 <div class="flex items-center gap-4 mb-4">
                   <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
-                  <span 
-                    v-if="$window.width >= 1024"
-                    :class="{
-                      'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-                      'bg-gray-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
-                    }"
-                    class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm self-start mt-2"
-                  >
-                    {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
-                  </span>
                 </div>
                 
                 <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
