@@ -1,7 +1,9 @@
 package com.corp.bookiki.favorite.service;
 
 import java.awt.print.Book;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.favorite.dto.BookFavoriteRequest;
 import com.corp.bookiki.favorite.dto.BookFavoriteResponse;
 import com.corp.bookiki.favorite.entity.FavoriteEntity;
@@ -30,6 +33,7 @@ public class BookFavoriteService {
 	private final FavoriteRepository favoriteRepository;
 	private final UserRepository userRepository;
 	private final BookItemRepository bookItemRepository;
+	private final BookItemService bookItemService;
 
 	// 특정 유저의 전체 좋아요 조회
 	@Transactional(readOnly = true)
@@ -61,39 +65,43 @@ public class BookFavoriteService {
 		return favoriteRepository.findUserIdByBookItemId(bookItemId);
 	}
 
-	// 좋아요 추가
+	// 좋아요(같은 bookInformationId을 가진 모든 책) 추가
 	@Transactional
-	public BookFavoriteResponse addFavorite(Integer userId, Integer bookItemId) {
+	public void addFavorite(Integer userId, Integer bookItemId) {
 		UserEntity userEntity = userRepository.findById(userId)
 			.orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
 
-		BookItemEntity bookItemEntity = bookItemRepository.findById(bookItemId)
-			.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+		// 한 번의 쿼리로 같은 bookInformation을 가진 모든 bookItem을 가져옴
+		List<BookItemEntity> bookItemList = bookItemService.getBooksSameBookInformation(bookItemId);
 
-		FavoriteEntity favoriteEntity = FavoriteEntity.create(userEntity, bookItemEntity);
-		favoriteRepository.save(favoriteEntity);
-		return BookFavoriteResponse.from(favoriteEntity);
+		if(bookItemList.isEmpty()) throw new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND);
+
+		// 모든 FavoriteEntity 객체를 한 번에 생성
+		List<FavoriteEntity> favoriteEntities = bookItemList.stream()
+			.map(bookItem -> FavoriteEntity.create(userEntity, bookItem))
+			.collect(Collectors.toList());
+
+		// saveAll을 사용하여 한 번의 트랜잭션으로 모든 데이터 저장
+		favoriteRepository.saveAll(favoriteEntities);
+
 	}
 
-	// 좋아요 삭제
+	// 좋아요(같은 bookInformationId을 가진 모든 책) 삭제
 	@Transactional
 	public void deleteFavorite(Integer userId, Integer bookItemId) {
-		if(!favoriteRepository.existsByUserIdAndBookItemId(userId, bookItemId)) {
-			throw new FavoriteException(ErrorCode.FAVORITE_NOT_FOUND);
-		}
-		favoriteRepository.deleteByUserIdAndBookItemId(userId, bookItemId);
+		List<Integer> bookItemList = bookItemService.getBooksIdSameBookInformation(bookItemId);
+		favoriteRepository.deleteByUserIdAndBookItemIdIn(userId, bookItemList);
 	}
 
 	// 좋아요 여부 확인 후 좋아요 취소 or 좋아요 동작
 	@Transactional
-	public BookFavoriteResponse toggleFavorite(Integer userId, Integer bookItemId) {
+	public String toggleFavorite(Integer userId, Integer bookItemId) {
 		boolean isFavorite = checkFavorite(userId, bookItemId);
-
 		if(isFavorite) {
 			deleteFavorite(userId, bookItemId);
-			return null;
+			return "좋아요 삭제";
 		}
-
-		return addFavorite(userId, bookItemId);
+		addFavorite(userId, bookItemId);
+		return "좋아요 추가";
 	}
 }

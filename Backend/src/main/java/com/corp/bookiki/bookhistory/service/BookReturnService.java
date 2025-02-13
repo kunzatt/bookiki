@@ -1,12 +1,16 @@
 package com.corp.bookiki.bookhistory.service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +20,14 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.global.error.exception.BookItemException;
 import com.corp.bookiki.global.error.exception.ShelfException;
+import com.corp.bookiki.notice.service.NoticeService;
+import com.corp.bookiki.notification.entity.NotificationInformation;
+import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.shelf.entity.ShelfEntity;
 import com.corp.bookiki.shelf.repository.ShelfRepository;
 
@@ -34,6 +43,10 @@ public class BookReturnService {
 	private final BookItemRepository bookItemRepository;
 	private final BookHistoryRepository bookHistoryRepository;
 	private final ShelfRepository shelfRepository;
+	private final NotificationService notificationService;
+	private final NoticeService noticeService;
+	private static List<BookItemEntity> mismatchedBooks;
+	private static Map<Integer, List<Integer>> shelfBookItemsMap;
 
 	// OCR 결과 유사성 분석을 위한 내부 클래스
 	private static class OcrSimilarityAnalyzer {
@@ -117,9 +130,17 @@ public class BookReturnService {
 	private List<String> previousOcrResults = new ArrayList<>();
 
 	public void processScanResults(BookReturnRequest bookReturnRequest) {
+		shelfBookItemsMap = bookReturnRequest.getShelfBookItemsMap();
+		Integer status = shelfBookItemsMap.get(0).get(0);
+
+		if(status != 0) {
+			notificationService.addCameraErrorNotification(NotificationInformation.CAMERA_ERROR);
+			throw new BookHistoryException(ErrorCode.CAMERA_ERROR);
+		}
+
 		// 1. Shelf별로 도서 반납 처리 및 카테고리 검증
 		List<BookItemEntity> returnedBooks = processReturnsByShelf(
-			bookReturnRequest.getShelfBookItemsMap()
+			shelfBookItemsMap
 		);
 
 		// 2. OCR 결과 분석
@@ -129,21 +150,33 @@ public class BookReturnService {
 
 		// 3. 반납된 도서가 없고 새로운 OCR 결과가 있다면 관리자에게 알림
 		if (returnedBooks.isEmpty() && !newOcrTexts.isEmpty()) {
-			// TODO: 관리자 알림 구현 필요
+			for(String newOcrText : newOcrTexts) {
+				notificationService.addQrScanErrorNotification(NotificationInformation.QR_SCAN_ERROR, newOcrText);
+			}
 		}
 	}
 
 	private List<BookItemEntity> processReturnsByShelf(Map<Integer, List<Integer>> shelfBookItemsMap) {
-		if (shelfBookItemsMap == null || shelfBookItemsMap.isEmpty()) {
+		if (shelfBookItemsMap.isEmpty()) {
 			return new ArrayList<>();
 		}
 
 		List<BookItemEntity> allReturnedBooks = new ArrayList<>();
 
-		shelfBookItemsMap.forEach((shelfId, bookItemIds) -> {
-			List<BookItemEntity> shelfBooks = validateAndReturnBooks(shelfId, bookItemIds);
-			allReturnedBooks.addAll(shelfBooks);
-		});
+		shelfBookItemsMap.entrySet().stream()
+			.filter(entry -> entry.getKey() != 0)
+			.forEach(entry -> {
+				List<BookItemEntity> shelfBooks = validateAndReturnBooks(entry.getKey(), entry.getValue());
+				allReturnedBooks.addAll(shelfBooks);
+			});
+
+		allReturnedBooks.forEach(bookItem ->
+			notificationService.addFavoriteBookAvailableNotification(
+				NotificationInformation.FAVORITE_BOOK_AVAILABLE,
+				bookItem.getBookInformation().getTitle(),
+				bookItem.getId()
+			)
+		);
 
 		return allReturnedBooks;
 	}
@@ -158,14 +191,9 @@ public class BookReturnService {
 
 		List<BookItemEntity> allBooks = bookItemRepository.findAllById(bookItemIds);
 
-		List<BookItemEntity> mismatchedBooks = allBooks.stream()
+		mismatchedBooks = allBooks.stream()
 			.filter(book -> !Objects.equals(book.getBookInformation().getCategory(), shelf.getCategory()))
 			.collect(Collectors.toList());
-
-		if (!mismatchedBooks.isEmpty()) {
-			// TODO: 관리자 알림 구현 필요
-
-		}
 
 		List<BookItemEntity> borrowedBooks = allBooks.stream()
 			.filter(book -> book.getBookStatus() == BookStatus.BORROWED && !book.getDeleted())
@@ -174,6 +202,34 @@ public class BookReturnService {
 		borrowedBooks.forEach(this::processReturn);
 
 		return borrowedBooks;
+	}
+
+	public void mismatchedBooksAlarms() {
+		if(!mismatchedBooks.isEmpty()) {
+			String titles = mismatchedBooks.stream()
+				.map(book -> book.getBookInformation().getTitle())
+				.collect(Collectors.joining(", "));
+			notificationService.addBooKArrangementNotification(NotificationInformation.BOOK_ARRANGEMENT, titles);
+		}
+	}
+
+	public void lostBooksAlarms() {
+		List<Integer> bookItemIds = shelfBookItemsMap.entrySet().stream()
+			.filter(entry -> entry.getKey() != 0)
+			.flatMap(entry -> entry.getValue().stream())
+			.collect(Collectors.toList());
+
+		List<Integer> availableBookItemIds = bookItemRepository.findIdsByBookStatus(BookStatus.AVAILABLE);
+
+		// 성능을 위해 Set으로 변환
+		Set<Integer> availableIdsSet = new HashSet<>(availableBookItemIds);
+
+		// availableIdsSet에 없는 bookItemIds를 찾음 (= 분실 의심 도서)
+		List<Integer> lostBookItemIds = bookItemIds.stream()
+			.filter(id -> !availableIdsSet.contains(id))
+			.collect(Collectors.toList());
+
+		notificationService.addLostBookNotification(lostBookItemIds);
 	}
 
 	private void processReturn(BookItemEntity bookItemEntity) {

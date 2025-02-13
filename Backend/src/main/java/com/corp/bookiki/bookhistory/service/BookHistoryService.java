@@ -2,6 +2,7 @@ package com.corp.bookiki.bookhistory.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -15,6 +16,8 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
+import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
+import com.corp.bookiki.loanpolicy.service.LoanPolicyService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BookHistoryService {
 	private final BookHistoryRepository bookHistoryRepository;
+	private final LoanPolicyService loanPolicyService;
 
 	public Page<BookHistoryResponse> getAdminBookHistories(
 		LocalDate startDate,
@@ -92,6 +96,17 @@ public class BookHistoryService {
 			log.error("사용자 대출 기록 조회 중 오류 발생 - 사용자ID: {}", userId, e);
 			throw new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND);
 		}
+	}
+
+	public List<BookHistoryEntity> checkOneDayBeforeReturn() {
+		Integer loanPeriod = loanPolicyService.getCurrentPolicy().getLoanPeriod();
+
+		// 현재 날짜로부터 (대출기간-2)일 전에 빌린 책들을 찾음
+		LocalDateTime targetDate = LocalDateTime.now()
+			.minusDays(loanPeriod - 2)
+			.with(LocalTime.MIN); // 해당 날짜의 시작시간으로 설정
+
+		return bookHistoryRepository.findByBorrowedAtAndNotReturned(targetDate);
 	}
 
 	public boolean isBookCurrentlyBorrowed(BookItemEntity bookItem) {
