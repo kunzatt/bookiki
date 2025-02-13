@@ -2,6 +2,7 @@ package com.corp.bookiki.qna;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaCommentException;
+import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.qna.dto.QnaCommentRequest;
 import com.corp.bookiki.qna.dto.QnaCommentResponse;
 import com.corp.bookiki.qna.dto.QnaCommentUpdate;
@@ -43,6 +44,9 @@ class QnaCommentServiceTest {
 
     @Mock
     private QnaService qnaService;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private QnaCommentService qnaCommentService;

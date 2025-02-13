@@ -24,7 +24,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteEntity, Intege
 
 	int countByBookItemId(Integer bookItemId);
 
-	void deleteByUserIdAndBookItemId(Integer userId, Integer bookItemId);
+	void deleteByUserIdAndBookItemIdIn(Integer userId, List<Integer> bookItemIds);
 
 	int countByUserId(Integer userId);
 
