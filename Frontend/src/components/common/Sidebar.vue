@@ -78,7 +78,7 @@ const handleLogoClick = () => {
 
     <!-- 사용자 환영 메시지 -->
     <div class="px-6 py-3 border-b border-[#F6F6F3]">
-      <p class="text-sm text-gray-700">{{ authStore.user?.userName }}님 안녕하세요!</p>
+      <p class="text-sm text-gray-700">{{ authStore.user.username }}님 안녕하세요!</p>
     </div>
 
     <!-- 메뉴 목록 -->
