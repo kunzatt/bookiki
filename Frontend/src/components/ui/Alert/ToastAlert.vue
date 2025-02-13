@@ -4,7 +4,7 @@ import { ref, watch, onBeforeUnmount } from 'vue';
 interface ToastProps {
   isVisible: boolean;
   message: string;
-  type?: 'success' | 'info';
+  type: 'success' | 'info';
   /**
    * Toast가 표시되는 시간 (밀리초)
    * @default 3000
