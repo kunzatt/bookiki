@@ -105,6 +105,28 @@ const router = createRouter({
       meta: { requiresAuth: true }, // 인증이 필요한 페이지로 설정
     },
     {
+      path: '/qnas',
+      name: 'QnaList',
+      component: () => import('@/views/qna/QnaListView.vue'),
+      // meta: { requiresAuth: true },
+    },
+    {
+      path: '/qnas/create',
+      name: 'QnaCreate',
+      component: () => import('@/views/qna/QnaCreateView.vue'),
+      // meta: { requiresAuth: true },
+    },
+    {
+      path: '/qnas/:id',
+      name: 'QnaDetail',
+      component: () => import('@/views/qna/QnaDetailView.vue'),
+      // meta: { requiresAuth: true },
+    },
+    {
+      path: '/qnas/:id/edit',
+      name: 'QnaEdit',
+      component: () => import('@/views/qna/QnaCreateView.vue'),
+    },
       path: '/mypage',
       name: 'mypage',
       component: () => import('@/views/mypage/MyPage.vue'),
