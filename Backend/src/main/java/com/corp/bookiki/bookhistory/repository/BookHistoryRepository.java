@@ -232,4 +232,6 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 		@Param("startDate") LocalDateTime startDate,
 		@Param("endDate") LocalDateTime endDate
 	);
+
+	Integer countByUserIdAndReturnedAtIsNull(Integer userId);
 }
