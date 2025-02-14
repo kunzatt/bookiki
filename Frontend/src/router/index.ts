@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth';
-import HomeView from '../views/HomeView.vue';
+import { useAuthStore } from '@/stores/auth'
+import HomeView from '../views/HomeView.vue'
 import MainView from '@/views/MainView.vue'
 
 const router = createRouter({
@@ -8,48 +8,48 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/login'
+      redirect: '/login',
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('@/views/auth/LoginView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     {
       path: '/main',
       name: 'main',
       component: () => import('@/views/MainView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/signup',
       name: 'SignUp',
-      component: () => import('@/views/auth/SignupView.vue')
+      component: () => import('@/views/auth/SignupView.vue'),
     },
     {
       path: '/oauth2/signup',
       name: 'OAuth2SignUp',
       component: () => import('@/views/auth/OAuth2SignUp.vue'),
-      props: (route) => ({ 
-        token: route.query.token 
-      })
+      props: (route) => ({
+        token: route.query.token,
+      }),
     },
     {
       path: '/api/oauth2/error',
       name: 'OAuth2Error',
-      component: () => import('@/views/auth/OAuth2Error.vue')
+      component: () => import('@/views/auth/OAuth2Error.vue'),
     },
     {
       path: '/oauth2/callback',
       name: 'OAuth2Callback',
-      component: () => import('@/views/auth/OAuth2Callback.vue')
+      component: () => import('@/views/auth/OAuth2Callback.vue'),
     },
     {
       path: '/books/:id',
       name: 'book-detail',
       component: () => import('@/views/BookDetailView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     // 404 페이지
     // {
@@ -65,25 +65,31 @@ const router = createRouter({
     {
       path: '/library',
       name: 'VirtualShelf',
-      component: () => import('@/views/book/VirtualShelfView.vue')
+      component: () => import('@/views/book/VirtualShelfView.vue'),
+    },
+    {
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('@/views/notification/NotificationView.vue'),
+      meta: { requiresAuth: true }, // 인증이 필요한 페이지로 설정
     },
   ],
-});
+})
 
 // 네비게이션 가드
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  const requiresAuth = to.meta.requiresAuth;
+  const authStore = useAuthStore()
+  const requiresAuth = to.meta.requiresAuth
 
   if (requiresAuth && !authStore.isAuthenticated) {
     // 인증이 필요한 페이지에 접근 시 로그인 상태가 아니면 로그인 페이지로 리다이렉트
-    next('/login');
+    next('/login')
   } else if (to.path === '/login' && authStore.isAuthenticated) {
     // 이미 로그인된 상태에서 로그인 페이지 접근 시 메인 페이지로 리다이렉트
-    next('/main');
+    next('/main')
   } else {
-    next();
+    next()
   }
-});
+})
 
 export default router
