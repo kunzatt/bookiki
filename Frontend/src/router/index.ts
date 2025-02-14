@@ -76,6 +76,28 @@ const router = createRouter({
       component: () => import('@/views/book/VirtualShelfView.vue'),
     },
     {
+      path: '/notices/create',
+      name: 'NoticeCreate',
+      component: () => import('@/views/notice/NoticeCreateView.vue'),
+      // meta: { requiresAuth: true }, // 인증 필요 추가
+    },
+    {
+      path: '/notices',
+      name: 'NoticeList',
+      component: () => import('@/views/notice/NoticeListView.vue'),
+      // meta: { requiresAuth: true }, // 인증 필요 추가
+    },
+    {
+      path: '/notices/:id',
+      name: 'NoticeDetail',
+      component: () => import('@/views/notice/NoticeDetailView.vue'),
+      // meta: { requiresAuth: true },
+    },
+    {
+      path: '/notices/:id/edit',
+      name: 'NoticeEdit',
+      component: () => import('@/views/notice/NoticeCreateView.vue'),
+    },
       path: '/notifications',
       name: 'notifications',
       component: () => import('@/views/notification/NotificationView.vue'),

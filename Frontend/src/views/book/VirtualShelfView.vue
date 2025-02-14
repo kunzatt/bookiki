@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed  } from 'vue';
-import { RouterLink } from 'vue-router';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
-import BasicWebPagination from '@/components/ui/pagination/BasicWebPagination.vue';
+import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import BottomNav from '@/components/common/BottomNav.vue';

@@ -5,18 +5,25 @@ import type { PostType } from '@/types/common/postForm';
 interface MobilePostFormProps {
   type: PostType;
   categories?: string[];
+  initialData?: {
+    title: string;
+    content: string;
+    category?: string;
+  };
+  submitButtonText?: string; // 추가
 }
 
-const mobilePostFormProps = defineProps<MobilePostFormProps>();
+const props = defineProps<MobilePostFormProps>();
+const emit = defineEmits(['submit', 'cancel']);
 
 const handleSubmit = (formData: { title: string; content: string; category?: string }) => {
+  emit('submit', formData);
   console.log('Mobile form submitted:', formData);
-  // 모바일용 제출 로직
 };
 
 const handleCancel = () => {
+  emit('cancel');
   console.log('Mobile form cancelled');
-  // 모바일용 취소 로직
 };
 </script>
 
@@ -27,6 +34,8 @@ const handleCancel = () => {
       <BasicPostForm
         :type="type"
         :categories="categories"
+        :initial-data="initialData"
+        :submit-button-text="submitButtonText"
         titlePlaceholder="제목을 입력해주세요"
         contentPlaceholder="내용을 입력해주세요"
         @submit="handleSubmit"
