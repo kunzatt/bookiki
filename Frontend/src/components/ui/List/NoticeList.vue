@@ -1,6 +1,6 @@
 <!-- src/components/Notice/NoticeList.vue -->
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { selectAllNotices } from '@/api/notice';
 import type { NoticeResponse } from '@/types/api/notice';
@@ -10,26 +10,16 @@ import BasicFilter from '@/components/ui/Filter/BasicFilter.vue';
 import type { FilterConfig } from '@/types/common/filter';
 import type { TableColumn } from '@/types/common/table';
 import { useAuthStore } from '@/stores/auth';
+import { formatDate } from '@/types/functions/dateFormats';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-// Refs
 const notices = ref<NoticeResponse[]>([]);
 const loading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const totalItems = ref(0);
-
-// Emits definition
-const emit = defineEmits<{
-  (e: 'delete', id: number): void;
-}>();
-
-// Watch notices for debugging
-watch(notices, (newValue) => {
-  console.log('notices updated:', newValue);
-});
 
 // Filter configuration
 const filters = ref<FilterConfig[]>([
@@ -47,7 +37,6 @@ const filterValues = ref({
 
 // Table columns configuration
 const columns: TableColumn[] = [
-  { key: 'id', label: '번호', width: '100px', align: 'center' },
   { key: 'title', label: '제목', align: 'left' },
   { key: 'createdAt', label: '등록일', width: '150px', align: 'center' },
   { key: 'viewCount', label: '조회수', width: '100px', align: 'center' },
@@ -58,12 +47,6 @@ const columns: TableColumn[] = [
 const loadNotices = async () => {
   loading.value = true;
   try {
-    console.log('Fetching notices with params:', {
-      keyword: filterValues.value.keyword,
-      page: currentPage.value - 1,
-      size: pageSize.value,
-    });
-
     const response = await selectAllNotices({
       keyword: filterValues.value.keyword,
       pageable: {
@@ -73,28 +56,10 @@ const loadNotices = async () => {
         direction: 'desc',
       },
     });
-
-    console.log('API Response:', response);
-
-    if (response && Array.isArray(response)) {
-      console.log('Setting array response');
-      notices.value = response;
-      totalItems.value = response.length;
-    } else if (response && response.content) {
-      console.log('Setting paginated response');
-      notices.value = response.content;
-      totalItems.value = response.totalElements;
-    } else {
-      console.log('No data found, setting empty array');
-      notices.value = [];
-      totalItems.value = 0;
-    }
-
-    console.log('Final notices value:', notices.value);
+    notices.value = response.content;
+    totalItems.value = response.totalElements;
   } catch (error) {
     console.error('공지사항 목록 조회 실패:', error);
-    notices.value = [];
-    totalItems.value = 0;
   } finally {
     loading.value = false;
   }
@@ -136,7 +101,7 @@ onMounted(() => {
       >
         <div class="flex justify-between items-start mb-2">
           <h3 class="text-lg font-medium">{{ notice.title }}</h3>
-          <span class="text-sm text-gray-500">{{ notice.createdAt }}</span>
+          <span class="text-sm text-gray-500">{{ formatDate(notice.createdAt) }}</span>
         </div>
         <div class="flex justify-between items-center">
           <span class="text-sm text-gray-500">조회수: {{ notice.viewCount }}</span>
@@ -157,7 +122,12 @@ onMounted(() => {
     <div class="mt-4">
       <BasicWebTable
         :columns="columns"
-        :data="notices || []"
+        :data="
+          notices.map((notice) => ({
+            ...notice,
+            createdAt: formatDate(notice.createdAt),
+          }))
+        "
         :loading="loading"
         @row-click="handleRowClick"
       >

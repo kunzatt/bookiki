@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import BasicButton from '../Button/BasicButton.vue';
 import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
 import type { PostType } from '@/types/common/postForm';
@@ -9,11 +9,18 @@ interface PostFormProps {
   categories?: string[];
   titlePlaceholder?: string;
   contentPlaceholder?: string;
+  initialData?: {
+    title: string;
+    content: string;
+    category?: string;
+  };
+  submitButtonText?: string; // 추가된 prop
 }
 
 const props = withDefaults(defineProps<PostFormProps>(), {
   titlePlaceholder: '제목을 입력하세요',
   contentPlaceholder: '내용을 입력하세요',
+  submitButtonText: '작성', // 기본값 설정
 });
 
 const emit = defineEmits<{
@@ -24,6 +31,21 @@ const emit = defineEmits<{
 const title = ref('');
 const content = ref('');
 const selectedCategory = ref('');
+
+// initialData가 변경될 때 form 데이터 업데이트
+watch(
+  () => props.initialData,
+  (newData) => {
+    if (newData) {
+      title.value = newData.title;
+      content.value = newData.content;
+      if (newData.category) {
+        selectedCategory.value = newData.category;
+      }
+    }
+  },
+  { immediate: true },
+);
 
 const handleSubmit = async (e: Event) => {
   e.preventDefault(); // 기본 제출 동작 방지
@@ -113,7 +135,7 @@ const getCommand = (icon: string) => {
 
       <div class="flex justify-end gap-2">
         <BasicButton type="button" size="M" text="취소" :isEnabled="false" @click="handleCancel" />
-        <BasicButton type="submit" size="M" text="작성" :isEnabled="true" />
+        <BasicButton type="submit" size="M" :text="submitButtonText" :isEnabled="true" />
       </div>
     </div>
   </form>

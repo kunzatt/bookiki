@@ -1,6 +1,5 @@
 import axios from 'axios';
 import type { NoticeRequest, NoticeResponse, NoticeUpdate } from '@/types/api/notice';
-import type { PageResponse } from '@/types/common/pagination';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -51,11 +50,11 @@ export const selectAllNotices = async (params: {
   try {
     console.log('Fetching notices with params:', params);
 
-    // URL 파라미터 구성
     const searchParams = new URLSearchParams();
 
     if (params.keyword) {
       searchParams.append('keyword', params.keyword);
+      console.log('Added keyword param:', params.keyword);
     }
 
     if (params.pageable) {
@@ -69,7 +68,10 @@ export const selectAllNotices = async (params: {
       }
     }
 
-    const response = await axiosInstance.get(`/api/notices?${searchParams.toString()}`);
+    const url = `/api/notices?${searchParams.toString()}`;
+    console.log('Final URL:', url);
+
+    const response = await axiosInstance.get(url);
     console.log('API response:', response.data);
     return response.data;
   } catch (error) {
