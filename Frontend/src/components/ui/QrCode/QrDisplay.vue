@@ -19,7 +19,7 @@ interface QrDisplayProps {
   showId?: boolean;
 }
 
-const qrDisplayProps = withDefaults(defineProps<QrDisplayProps>(), {
+const props = withDefaults(defineProps<QrDisplayProps>(), {
   size: 'M',
   showId: true
 });

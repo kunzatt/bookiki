@@ -15,7 +15,7 @@ interface NavigationMenuProps {
   isHighlighted?: boolean;
 }
 
-const navigationMenuProps = withDefaults(defineProps<NavigationMenuProps>(), {
+const props = withDefaults(defineProps<NavigationMenuProps>(), {
   to: '',
   isHighlighted: false
 });
