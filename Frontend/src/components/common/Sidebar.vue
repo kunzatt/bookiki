@@ -52,6 +52,19 @@ const handleMenuClick = (item: MenuItem) => {
   }
 };
 
+const handleSubItemClick = async (subItem: SubMenuItem) => {
+  if (subItem.action === 'logout') {
+    try {
+      await authStore.logout();
+      router.push('/login');  // 로그아웃 성공 후 로그인 페이지로 이동
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
+  } else if (subItem.path) {
+    router.push(subItem.path);
+  }
+};
+
 // 로고 클릭 핸들러 추가
 const handleLogoClick = () => {
   if (router.currentRoute.value.path === '/main') {
@@ -64,7 +77,7 @@ const handleLogoClick = () => {
 
 <template>
   <aside class="w-64 h-screen bg-[#F6F6F3] shadow-lg">
-    <!-- 로고에 클릭 이벤트 추가 -->
+    <!-- 로고 부분은 동일 -->
     <div 
       class="px-6 py-4 flex flex-col items-center justify-center cursor-pointer"
       @click="handleLogoClick"
@@ -104,10 +117,10 @@ const handleLogoClick = () => {
           >
             <span class="material-icons mr-3 text-[#344E41]">{{ item.icon }}</span>
             <span class="text-[#344E41]">{{ item.name }}</span>
-            <!-- 토글 화살표 (서브메뉴가 있는 경우) -->
+            <!-- 토글 화살표 -->
             <span
               v-if="item.hasToggle"
-              class="material-icons ml-auto transform transition-transform"
+              class="material-icons ml-auto transform transition-transform text-[#344E41]"
               :class="{ 'rotate-180': isMenuOpen(item.name) }"
             >
               expand_more
@@ -123,18 +136,19 @@ const handleLogoClick = () => {
               'max-h-screen': isMenuOpen(item.name)
             }"
           >
-            <li
-              v-for="subItem in item.subItems"
-              :key="subItem.path"
-              class="pl-14 pr-6 py-4 hover:bg-[#DAD7CD] transition-colors cursor-pointer"
+            <li 
+              v-for="subItem in item.subItems" 
+              :key="subItem.name"
+              @click.prevent="handleSubItemClick(subItem)"
+              class="px-6 py-3 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors pl-12"
             >
-              <router-link 
-                :to="subItem.path"
-                class="flex items-center text-gray-600"
+              <span 
+                v-if="subItem.icon" 
+                class="material-icons mr-3 text-[#344E41]"
               >
-                <span class="material-icons mr-3 text-sm">{{ subItem.icon }}</span>
-                <span class="text-sm">{{ subItem.name }}</span>
-              </router-link>
+                {{ subItem.icon }}
+              </span>
+              <span class="text-[#344E41] text-sm">{{ subItem.name }}</span>
             </li>
           </ul>
         </li>
