@@ -21,8 +21,16 @@ import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
+import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
+import com.corp.bookiki.jwt.service.JwtService;
+import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -47,11 +55,14 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @WebMvcTest(BookItemController.class)
-@Import({WebMvcConfig.class, SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class,
+	CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
 @DisplayName("도서 아이템 컨트롤러 테스트")
 class BookItemControllerTest {
@@ -68,13 +79,68 @@ class BookItemControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private JwtService jwtService;
+
+	private UserEntity testUserEntity;
+	private UserEntity testAdminEntity;
+	private String testUserEmail;
+	private String testAdminEmail;
+
 	@BeforeEach
 	void setup() {
+		// 일반 사용자 설정
+		testUserEmail = "user@example.com";
+		testUserEntity = UserEntity.builder()
+			.email(testUserEmail)
+			.userName("Test User")
+			.role(Role.USER)
+			.build();
+		ReflectionTestUtils.setField(testUserEntity, "id", 2);
+
+		// 관리자 설정
+		testAdminEmail = "admin@example.com";
+		testAdminEntity = UserEntity.builder()
+			.email(testAdminEmail)
+			.userName("Admin User")
+			.role(Role.ADMIN)
+			.build();
+		ReflectionTestUtils.setField(testAdminEntity, "id", 1);
+
+		// 일반 사용자 Claims 설정
+		Claims userClaims = mock(Claims.class);
+		given(userClaims.getSubject()).willReturn("user:" + testUserEmail);
+		given(userClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(userClaims.get("authorities", String.class)).willReturn("ROLE_USER");
+
+		// 관리자 Claims 설정
+		Claims adminClaims = mock(Claims.class);
+		given(adminClaims.getSubject()).willReturn("user:" + testAdminEmail);
+		given(adminClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(adminClaims.get("authorities", String.class)).willReturn("ROLE_USER,ROLE_ADMIN");
+
+		// JWT Service 모킹
+		given(jwtService.validateToken(eq("user-jwt-token"))).willReturn(true);
+		given(jwtService.validateToken(eq("admin-jwt-token"))).willReturn(true);
+		given(jwtService.extractAllClaims(eq("user-jwt-token"))).willReturn(userClaims);
+		given(jwtService.extractAllClaims(eq("admin-jwt-token"))).willReturn(adminClaims);
+		given(jwtService.extractEmail(eq("user-jwt-token"))).willReturn(testUserEmail);
+		given(jwtService.extractEmail(eq("admin-jwt-token"))).willReturn(testAdminEmail);
+		given(jwtService.isTokenExpired(anyString())).willReturn(false);
+
+		// UserRepository 모킹
+		given(userRepository.findByEmail(eq(testUserEmail)))
+			.willReturn(Optional.of(testUserEntity));
+		given(userRepository.findByEmail(eq(testAdminEmail)))
+			.willReturn(Optional.of(testAdminEntity));
+
 		mockMvc = MockMvcBuilders
 			.webAppContextSetup(context)
 			.apply(springSecurity())
 			.build();
-		log.info("MockMvc 설정이 완료되었습니다.");
 	}
 
 	@Nested
@@ -115,6 +181,7 @@ class BookItemControllerTest {
 					.param("sortBy", "id")
 					.param("direction", "desc")
 					.param("keyword", "test")
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk());
 
@@ -137,6 +204,7 @@ class BookItemControllerTest {
 							.param("sortBy", "id")
 							.param("direction", "desc")
 							.param("keyword", "존재하지않는도서")
+							.cookie(getUserJwtCookie())
 							.contentType(MediaType.APPLICATION_JSON))
 					.andExpect(status().isNotFound());
 
@@ -188,6 +256,7 @@ class BookItemControllerTest {
 							.param("size", "10")
 							.param("type", "TITLE")
 							.param("keyword", "test")
+							.cookie(getUserJwtCookie())
 							.contentType(MediaType.APPLICATION_JSON))
 					.andExpect(status().isOk());
 		}
@@ -202,6 +271,7 @@ class BookItemControllerTest {
 							.param("size", "10")
 							.param("type", "INVALID_TYPE")
 							.param("keyword", "test")
+							.cookie(getUserJwtCookie())
 							.contentType(MediaType.APPLICATION_JSON))
 					.andExpect(status().isInternalServerError());
 		}
@@ -244,6 +314,7 @@ class BookItemControllerTest {
 							.param("page", "0")
 							.param("size", "10")
 							.param("type", "TITLE")
+							.cookie(getUserJwtCookie())
 							.contentType(MediaType.APPLICATION_JSON))
 					.andExpect(status().isOk());
 		}
@@ -263,6 +334,7 @@ class BookItemControllerTest {
 							.param("size", "10")
 							.param("type", "TITLE")
 							.param("keyword", "존재하지않는도서")
+							.cookie(getUserJwtCookie())
 							.contentType(MediaType.APPLICATION_JSON))
 					.andExpect(status().isNotFound());
 
@@ -293,6 +365,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(get("/api/books/search/qrcodes/{id}", id)
 					.with(csrf())
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk());
 
@@ -312,6 +385,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(get("/api/books/search/qrcodes/{id}", id)
 					.with(csrf())
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isNotFound());
 
@@ -331,6 +405,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(get("/api/books/search/qrcodes/{id}", id)
 					.with(csrf())
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest());
 
@@ -361,6 +436,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(delete("/api/books/search/{id}", id)
 					.with(csrf())
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk());
 
@@ -380,6 +456,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(delete("/api/books/search/{id}", id)
 					.with(csrf())
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isNotFound());
 
@@ -399,6 +476,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(delete("/api/books/search/{id}", id)
 					.with(csrf())
+					.cookie(getUserJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest());
 
@@ -435,6 +513,7 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(post("/api/admin/books/search")
 					.with(csrf())
+					.cookie(getAdminJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isOk());
@@ -460,11 +539,24 @@ class BookItemControllerTest {
 			// when & then
 			mockMvc.perform(post("/api/admin/books/search")
 					.with(csrf())
+					.cookie(getAdminJwtCookie())
 					.contentType(MediaType.APPLICATION_JSON)
 					.content(objectMapper.writeValueAsString(request)))
 				.andExpect(status().isNotFound());
 
 			log.info("존재하지 않는 도서 정보로 도서 아이템 등록 테스트 성공");
 		}
+	}
+
+	private Cookie getUserJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "user-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
+	}
+
+	private Cookie getAdminJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "admin-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
 	}
 }

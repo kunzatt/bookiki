@@ -22,6 +22,8 @@ import com.corp.bookiki.bookhistory.service.BookBorrowService;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.loanpolicy.dto.LoanPolicyResponse;
 import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
 import com.corp.bookiki.loanpolicy.service.LoanPolicyService;
@@ -47,9 +49,6 @@ class BookBorrowServiceTest {
 	private UserRepository userRepository;
 
 	@Mock
-	private LoanPolicyService loanPolicyService;
-
-	@Mock
 	private BookHistoryService bookHistoryService;
 
 	@Nested
@@ -65,6 +64,7 @@ class BookBorrowServiceTest {
 
 			UserEntity user = mock(UserEntity.class);
 			when(user.getId()).thenReturn(userId);
+			when(user.getActiveAt()).thenReturn(LocalDateTime.now().minusDays(1)); // 활성 상태
 
 			BookItemEntity bookItem = mock(BookItemEntity.class);
 			when(bookItem.getId()).thenReturn(bookItemId);
@@ -82,25 +82,12 @@ class BookBorrowServiceTest {
 			given(bookHistoryRepository.save(any(BookHistoryEntity.class)))
 				.willReturn(history);
 
-			given(bookHistoryRepository.countByUserIdAndReturnedAtIsNull(userId))
-				.willReturn(0);  // 현재 대출 중인 책이 없다고 가정
-
-			LoanPolicyResponse mockPolicy = new LoanPolicyResponse();
-			mockPolicy.setMaxBooks(5);  // 최대 5권까지 대출 가능하다고 가정
-			mockPolicy.setLoanPeriod(14);  // 대출 기간 14일로 설정
-
-			given(loanPolicyService.getCurrentPolicy())
-				.willReturn(mockPolicy);
-
-			LocalDateTime before = LocalDateTime.now().minusDays(1);
-			when(user.getActiveAt()).thenReturn(before);
-
-			log.info("테스트 데이터 설정 완료: userId={}, bookItemId={}",
-				userId, bookItemId);
+			// 대출 가능한 책의 수 mocking
+			given(bookHistoryService.countCanBorrowBook(userId))
+				.willReturn(5);  // 5권 대출 가능
 
 			// when
 			BookBorrowResponse response = bookBorrowService.borrowBook(userId, bookItemId);
-			log.info("도서 대출 처리 완료: historyId={}", response.getId());
 
 			// then
 			assertThat(response).isNotNull();
@@ -108,7 +95,6 @@ class BookBorrowServiceTest {
 			assertThat(response.getUserId()).isEqualTo(userId);
 			verify(bookHistoryRepository).save(any(BookHistoryEntity.class));
 			verify(bookItem).borrow();
-			log.info("도서 대출 성공 검증 완료");
 		}
 	}
 }

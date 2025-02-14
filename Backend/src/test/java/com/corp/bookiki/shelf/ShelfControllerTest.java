@@ -3,15 +3,23 @@ package com.corp.bookiki.shelf;
 import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
+import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.ShelfException;
+import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.shelf.controller.ShelfController;
 import com.corp.bookiki.shelf.dto.ShelfCreateRequest;
 import com.corp.bookiki.shelf.dto.ShelfResponse;
 import com.corp.bookiki.shelf.dto.ShelfUpdateRequest;
 import com.corp.bookiki.shelf.service.ShelfService;
+import com.corp.bookiki.user.entity.Role;
+import com.corp.bookiki.user.entity.UserEntity;
+import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,23 +29,38 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class})
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
+import lombok.extern.slf4j.Slf4j;
+
 @WebMvcTest(ShelfController.class)
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class,
+    CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
-//@AutoConfigureMockMvc(addFilters = false)
-//@Import(TestSecurityBeansConfig.class)
+@DisplayName("선반 컨트롤러 테스트")
+@Slf4j
 class ShelfControllerTest {
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,6 +70,70 @@ class ShelfControllerTest {
 
     @MockBean
     private ShelfService shelfService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private JwtService jwtService;
+
+    private UserEntity testUserEntity;
+    private UserEntity testAdminEntity;
+    private String testUserEmail;
+    private String testAdminEmail;
+
+    @BeforeEach
+    void setup() {
+        // 일반 사용자 설정
+        testUserEmail = "user@example.com";
+        testUserEntity = UserEntity.builder()
+            .email(testUserEmail)
+            .userName("Test User")
+            .role(Role.USER)
+            .build();
+        ReflectionTestUtils.setField(testUserEntity, "id", 2);
+
+        // 관리자 설정
+        testAdminEmail = "admin@example.com";
+        testAdminEntity = UserEntity.builder()
+            .email(testAdminEmail)
+            .userName("Admin User")
+            .role(Role.ADMIN)
+            .build();
+        ReflectionTestUtils.setField(testAdminEntity, "id", 1);
+
+        // 일반 사용자 Claims 설정
+        Claims userClaims = mock(Claims.class);
+        given(userClaims.getSubject()).willReturn("user:" + testUserEmail);
+        given(userClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+        given(userClaims.get("authorities", String.class)).willReturn("ROLE_USER");
+
+        // 관리자 Claims 설정
+        Claims adminClaims = mock(Claims.class);
+        given(adminClaims.getSubject()).willReturn("user:" + testAdminEmail);
+        given(adminClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+        given(adminClaims.get("authorities", String.class)).willReturn("ROLE_USER,ROLE_ADMIN");
+
+        // JWT Service 모킹
+        given(jwtService.validateToken(eq("user-jwt-token"))).willReturn(true);
+        given(jwtService.validateToken(eq("admin-jwt-token"))).willReturn(true);
+        given(jwtService.extractAllClaims(eq("user-jwt-token"))).willReturn(userClaims);
+        given(jwtService.extractAllClaims(eq("admin-jwt-token"))).willReturn(adminClaims);
+        given(jwtService.extractEmail(eq("user-jwt-token"))).willReturn(testUserEmail);
+        given(jwtService.extractEmail(eq("admin-jwt-token"))).willReturn(testAdminEmail);
+        given(jwtService.isTokenExpired(anyString())).willReturn(false);
+
+        // UserRepository 모킹
+        given(userRepository.findByEmail(eq(testUserEmail)))
+            .willReturn(Optional.of(testUserEntity));
+        given(userRepository.findByEmail(eq(testAdminEmail)))
+            .willReturn(Optional.of(testAdminEntity));
+
+        mockMvc = MockMvcBuilders
+            .webAppContextSetup(context)
+            .apply(springSecurity())
+            .build();
+    }
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -71,7 +158,8 @@ class ShelfControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/admin/shelf/categories")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie()))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -95,6 +183,7 @@ class ShelfControllerTest {
         // when & then
         mockMvc.perform(post("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie())
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isCreated())
@@ -117,6 +206,7 @@ class ShelfControllerTest {
         // when & then
         mockMvc.perform(post("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie())
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -139,6 +229,7 @@ class ShelfControllerTest {
         // when & then
         mockMvc.perform(put("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie())
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -161,6 +252,7 @@ class ShelfControllerTest {
         // when & then
         mockMvc.perform(put("/api/admin/shelf/categories")
                         .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie())
                         .content(objectMapper.writeValueAsString(request)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
@@ -177,7 +269,8 @@ class ShelfControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/admin/shelf/categories/{id}", id)  // URL 패턴 수정
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie()))
                 .andDo(print())  // 실패 시 결과를 상세히 출력
                 .andExpect(status().isNoContent());
 
@@ -195,7 +288,8 @@ class ShelfControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/admin/shelf/categories/{id}", id)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON)
+                .cookie(getAdminJwtCookie()))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("책장을 찾을 수 없습니다"));
@@ -212,9 +306,22 @@ class ShelfControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/admin/shelf/categories/{id}", id)
+                .cookie(getAdminJwtCookie())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.message").value("서버 오류가 발생했습니다"));
+    }
+
+    private Cookie getUserJwtCookie() {
+        Cookie accessTokenCookie = new Cookie("access_token", "user-jwt-token");
+        accessTokenCookie.setPath("/");
+        return accessTokenCookie;
+    }
+
+    private Cookie getAdminJwtCookie() {
+        Cookie accessTokenCookie = new Cookie("access_token", "admin-jwt-token");
+        accessTokenCookie.setPath("/");
+        return accessTokenCookie;
     }
 }

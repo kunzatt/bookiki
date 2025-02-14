@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +43,7 @@ import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.dto.AuthUser;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
@@ -49,13 +51,16 @@ import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @WebMvcTest(BookFavoriteController.class)
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class,
+	CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
 @DisplayName("도서 좋아요 컨트롤러 테스트")
-@Import({WebMvcConfig.class, CurrentUserArgumentResolver.class, TestSecurityBeansConfig.class, SecurityConfig.class, CookieUtil.class})
 class BookFavoriteControllerTest {
 
 	@Autowired
@@ -72,35 +77,65 @@ class BookFavoriteControllerTest {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private JwtService jwtService;
+
 	private UserEntity testUserEntity;
-	private String testEmail;
-	private Authentication auth;
+	private UserEntity testAdminEntity;
+	private String testUserEmail;
+	private String testAdminEmail;
 
 	@BeforeEach
 	void setup() {
-		mockMvc = MockMvcBuilders
-			.webAppContextSetup(context)
-			.apply(springSecurity())
-			.build();
-
-		testEmail = "test@example.com";
+		// 일반 사용자 설정
+		testUserEmail = "user@example.com";
 		testUserEntity = UserEntity.builder()
-			.email(testEmail)
+			.email(testUserEmail)
 			.userName("Test User")
 			.role(Role.USER)
 			.build();
 		ReflectionTestUtils.setField(testUserEntity, "id", 2);
 
-		given(userRepository.findByEmail(eq(testEmail)))
+		// 관리자 설정
+		testAdminEmail = "admin@example.com";
+		testAdminEntity = UserEntity.builder()
+			.email(testAdminEmail)
+			.userName("Admin User")
+			.role(Role.ADMIN)
+			.build();
+		ReflectionTestUtils.setField(testAdminEntity, "id", 1);
+
+		// 일반 사용자 Claims 설정
+		Claims userClaims = mock(Claims.class);
+		given(userClaims.getSubject()).willReturn("user:" + testUserEmail);
+		given(userClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(userClaims.get("authorities", String.class)).willReturn("ROLE_USER");
+
+		// 관리자 Claims 설정
+		Claims adminClaims = mock(Claims.class);
+		given(adminClaims.getSubject()).willReturn("user:" + testAdminEmail);
+		given(adminClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(adminClaims.get("authorities", String.class)).willReturn("ROLE_USER,ROLE_ADMIN");
+
+		// JWT Service 모킹
+		given(jwtService.validateToken(eq("user-jwt-token"))).willReturn(true);
+		given(jwtService.validateToken(eq("admin-jwt-token"))).willReturn(true);
+		given(jwtService.extractAllClaims(eq("user-jwt-token"))).willReturn(userClaims);
+		given(jwtService.extractAllClaims(eq("admin-jwt-token"))).willReturn(adminClaims);
+		given(jwtService.extractEmail(eq("user-jwt-token"))).willReturn(testUserEmail);
+		given(jwtService.extractEmail(eq("admin-jwt-token"))).willReturn(testAdminEmail);
+		given(jwtService.isTokenExpired(anyString())).willReturn(false);
+
+		// UserRepository 모킹
+		given(userRepository.findByEmail(eq(testUserEmail)))
 			.willReturn(Optional.of(testUserEntity));
+		given(userRepository.findByEmail(eq(testAdminEmail)))
+			.willReturn(Optional.of(testAdminEntity));
 
-		auth = new UsernamePasswordAuthenticationToken(
-			testEmail,
-			null,
-			List.of(new SimpleGrantedAuthority("ROLE_USER"))
-		);
-
-		log.info("MockMvc 및 테스트 사용자 설정이 완료되었습니다.");
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
 	}
 
 	@Nested
@@ -132,7 +167,7 @@ class BookFavoriteControllerTest {
 
 			// when & then
 			mockMvc.perform(get("/api/favorites")
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content[0].id").exists())
 				.andExpect(jsonPath("$.content[0].bookItemId").value(100))
@@ -147,7 +182,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 조회 시도")
 		void getFavorites_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/favorites"))
-				.andExpect(status().is3xxRedirection());
+				.andExpect(status().isUnauthorized());
 		}
 	}
 
@@ -163,7 +198,7 @@ class BookFavoriteControllerTest {
 			log.info("좋아요 여부 확인 테스트 시작");
 
 			mockMvc.perform(get("/api/favorites/{bookItemId}", 100)
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").value(true));
 
@@ -174,7 +209,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 확인 시도")
 		void checkFavorite_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/favorites/100"))
-				.andExpect(status().is3xxRedirection());
+				.andExpect(status().isUnauthorized());
 		}
 	}
 
@@ -193,7 +228,7 @@ class BookFavoriteControllerTest {
 			// when & then
 			mockMvc.perform(post("/api/favorites/{bookItemId}", 100)
 					.with(csrf())
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(content().string("좋아요 추가 성공 성공"));
 
@@ -212,7 +247,7 @@ class BookFavoriteControllerTest {
 			// when & then
 			mockMvc.perform(post("/api/favorites/{bookItemId}", 100)
 					.with(csrf())
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(content().string("좋아요 삭제 성공"));
 
@@ -223,7 +258,7 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 토글 시도")
 		void toggleFavorite_Unauthorized() throws Exception {
 			mockMvc.perform(post("/api/favorites/100"))
-				.andExpect(status().is3xxRedirection());
+				.andExpect(status().isUnauthorized());
 		}
 	}
 
@@ -238,7 +273,8 @@ class BookFavoriteControllerTest {
 				.willReturn(5);
 			log.info("도서 좋아요 수 조회 테스트 시작");
 
-			mockMvc.perform(get("/api/favorites/count/{bookItemId}", 100))
+			mockMvc.perform(get("/api/favorites/count/{bookItemId}", 100)
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").value(5));
 
@@ -256,7 +292,7 @@ class BookFavoriteControllerTest {
 				.willReturn(3);
 
 			mockMvc.perform(get("/api/favorites/count")
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$").value(3));
 		}
@@ -265,7 +301,19 @@ class BookFavoriteControllerTest {
 		@DisplayName("인증되지 않은 사용자의 조회 시도")
 		void getUserFavoriteCount_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/favorites/count"))
-				.andExpect(status().is3xxRedirection());
+				.andExpect(status().isUnauthorized());
 		}
+	}
+
+	private Cookie getUserJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "user-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
+	}
+
+	private Cookie getAdminJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "admin-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
 	}
 }
