@@ -81,7 +81,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/api/swagger-resources") ||
                 path.startsWith("/api/configuration") ||
                 path.startsWith("/api/webjars") ||
-                path.startsWith("/iot/**") ||
+                path.startsWith("/iot") ||
                 path.equals("/error");
     }
 
