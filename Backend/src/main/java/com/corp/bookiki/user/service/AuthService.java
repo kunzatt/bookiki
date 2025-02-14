@@ -64,9 +64,15 @@ public class AuthService {
             return false;
         }
 
-        boolean isValid = savedToken.equals(refreshToken) && jwtService.validateToken(refreshToken);
-        log.debug("Refresh token validation result for user {}: {}", email, isValid);
-        return isValid;
+        log.debug("Redis에 저장된 refresh token: {}", savedToken);
+        log.debug("쿠키에서 받은 refresh token: {}", refreshToken);
+
+        boolean tokensMatch = savedToken.equals(refreshToken);
+        boolean isTokenValid = jwtService.validateToken(refreshToken);
+
+        log.debug("Tokens match: {}, Token valid: {}", tokensMatch, isTokenValid);
+
+        return tokensMatch && isTokenValid;
     }
 
     // 로그인 처리
@@ -104,7 +110,7 @@ public class AuthService {
             log.debug("토큰 생성 완료 - access token length: {}", accessToken.length());
 
             // 5. RefreshToken Redis에 저장
-            saveRefreshToken(authentication.getName(), accessToken);
+            saveRefreshToken(authentication.getName(), refreshToken);
             log.debug("Redis에 refresh token 저장 완료");
 
             // 6. 쿠키 설정
@@ -138,9 +144,9 @@ public class AuthService {
         accessTokenCookie.setMaxAge(30 * 60);
 
         Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setSecure(secureCookie);
-        accessTokenCookie.setPath("/");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setSecure(secureCookie);
+        refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(14 * 24 * 60 * 60);
 
         response.addCookie(accessTokenCookie);
@@ -193,21 +199,30 @@ public class AuthService {
 
     // Token 재발급
     @Transactional
-    public void reissueTokens(String refreshToken, HttpServletResponse response) {
-        // 1. Refresh Token에서 사용자 이메일 추출
-        String email = jwtService.generateRefreshToken(refreshToken);
-        // 2. Refresh Token 유효성 검증
-        if (!validateRefreshToken(email, refreshToken)) {
-            throw new JWTException("유효하지 않은 Refresh Token입니다.");
-        }
-        // 3. 새로운 Access Token 발급
-        String newAccessToken = reissueAccessToken(email, refreshToken);
-        // 4. 새로운 Refresh Token 발급 (RTR)
-        String newRefreshToken = rotateRefreshToken(email, refreshToken);
-        // 5. 쿠키 업데이트
-        setTokenCookies(response, newAccessToken, newRefreshToken);
+    public void reissueTokens(String email, String refreshToken, HttpServletResponse response) {
+        try {
+            // 2. Refresh Token 유효성 검증
+            if (!validateRefreshToken(email, refreshToken)) {
+                throw new JWTException("유효하지 않은 Refresh Token입니다.");
+            }
 
-        log.debug("Tokens reissued for user: {}", email);
+            // 3. 새로운 Access Token 발급
+            String newAccessToken = reissueAccessToken(email, refreshToken);
+
+            // 4. 새로운 Refresh Token 발급 (RTR)
+            String newRefreshToken = rotateRefreshToken(email, refreshToken);
+
+            // RefreshToken Redis에 저장
+            saveRefreshToken(email, newRefreshToken);
+
+            // 5. 쿠키 업데이트
+            setTokenCookies(response, newAccessToken, newRefreshToken);
+
+            log.debug("Tokens reissued for user: {}", email);
+        } catch (Exception e) {
+            log.error("Token reissue failed: {}", e.getMessage());
+            throw new JWTException("토큰 재발급 실패: " + e.getMessage());
+        }
     }
 
     // Refresh Token 재발급 (RTR 전략)
@@ -218,9 +233,15 @@ public class AuthService {
             throw new IllegalArgumentException("Invalid refresh token for rotation");
         }
 
+        // 기존 리프레시 토큰 삭제
+        refreshTokenRepository.delete(email);
+        log.debug("Old refresh token deleted for user: {}", email);
+
+        // 새로운 리프레시 토큰 생성 및 저장
         String newRefreshToken = jwtService.generateRefreshToken(email);
         refreshTokenRepository.save(email, newRefreshToken);
-        log.debug("Refresh token rotated for user: {}", email);
+        log.debug("New refresh token saved for user: {}", email);
+
         return newRefreshToken;
     }
 

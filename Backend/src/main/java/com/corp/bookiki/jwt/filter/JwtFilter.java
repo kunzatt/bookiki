@@ -1,6 +1,7 @@
 package com.corp.bookiki.jwt.filter;
 
 import com.corp.bookiki.jwt.service.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -31,41 +32,93 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     @Override
-    //HTTP 요청이 들어올 때마다 실행
-    //JWT 토큰 추출 → 검증 → Authentication 생성 순으로 처리
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
         log.debug("Request URL: {}", request.getRequestURL());
 
-        // 쿠키 확인 로깅
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            log.debug("=== 수신된 쿠키 ===");
-            for (Cookie cookie : cookies) {
-                log.debug("쿠키 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
-            }
-        } else {
-            log.debug("수신된 쿠키 없음!");
+        if (shouldSkipFilter(request)) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        // 1. Request Header에서 JWT 토큰 추출
         String jwt = resolveToken(request);
+        if (!StringUtils.hasText(jwt)) {
+            handleError(response, "토큰이 없습니다.");
+            return;
+        }
 
         try {
-            // 2. validateToken으로 토큰 유효성 검사
-            if (StringUtils.hasText(jwt) && jwtService.validateToken(jwt)) {
-                // 3. 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
-                Authentication authentication = getAuthentication(jwt);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                log.debug("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
-            }
+            jwtService.validateToken(jwt);  // 검증만 먼저 수행
+            Authentication authentication = getAuthentication(jwt);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);  // 검증 성공시에만 필터 체인 진행
+        } catch (ExpiredJwtException e) {
+            log.debug("토큰이 만료되었습니다: {}", e.getMessage());
+            handleTokenExpiredError(response);
+            // 여기서 return하여 필터 체인 중단
         } catch (Exception e) {
-            log.error("Cannot set user authentication: {}", e.getMessage());
+            log.error("토큰 처리 중 오류: {}", e.getMessage());
+            handleError(response, "유효하지 않은 토큰입니다.");
+            // 여기서도 return하여 필터 체인 중단
         }
-
-        filterChain.doFilter(request, response);
     }
+
+    private boolean shouldSkipFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.startsWith("/api/auth/") ||
+                path.startsWith("/api/oauth2/") ||
+                path.equals("/error");
+    }
+
+    private void handleTokenExpiredError(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\":\"token_expired\",\"message\":\"토큰이 만료되었습니다.\"}");
+    }
+
+    private void handleError(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(String.format("{\"error\":\"invalid_token\",\"message\":\"%s\"}", message));
+    }
+
+//    @Override
+//    //HTTP 요청이 들어올 때마다 실행
+//    //JWT 토큰 추출 → 검증 → Authentication 생성 순으로 처리
+//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+//            throws ServletException, IOException {
+//
+//        log.debug("Request URL: {}", request.getRequestURL());
+//
+//        // 쿠키 확인 로깅
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            log.debug("=== 수신된 쿠키 ===");
+//            for (Cookie cookie : cookies) {
+//                log.debug("쿠키 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
+//            }
+//        } else {
+//            log.debug("수신된 쿠키 없음!");
+//        }
+//
+//        // 1. Request Header에서 JWT 토큰 추출
+//        String jwt = resolveToken(request);
+//
+//        try {
+//            // 2. validateToken으로 토큰 유효성 검사
+//            if (StringUtils.hasText(jwt) && jwtService.validateToken(jwt)) {
+//                // 3. 토큰이 유효할 경우 토큰에서 Authentication 객체를 가지고 와서 SecurityContext에 저장
+//                Authentication authentication = getAuthentication(jwt);
+//                SecurityContextHolder.getContext().setAuthentication(authentication);
+//                log.debug("Security Context에 '{}' 인증 정보를 저장했습니다", authentication.getName());
+//            }
+//        } catch (Exception e) {
+//            log.error("Cannot set user authentication: {}", e.getMessage());
+//        }
+//
+//        filterChain.doFilter(request, response);
+//    }
 
     // Authorization 헤더에서 Bearer 토큰을 추출
     // "Bearer " 접두사 제거

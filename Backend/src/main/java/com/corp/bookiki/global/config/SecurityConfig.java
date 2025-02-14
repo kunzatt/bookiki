@@ -5,6 +5,7 @@ import com.corp.bookiki.global.security.handler.OAuth2AuthenticationSuccessHandl
 import com.corp.bookiki.global.security.oauth.CustomOAuth2UserService;
 import com.corp.bookiki.jwt.filter.JwtFilter;
 import com.corp.bookiki.user.service.CustomUserDetailsService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -160,10 +161,32 @@ public class SecurityConfig {
 				.logout(logout -> logout
 						.logoutUrl("/api/auth/logout")
 						.logoutSuccessHandler((request, response, authentication) -> {
+							log.debug("로그아웃 처리 시작");
+
+							// 루트 경로 쿠키 삭제
+							Cookie rootAccessToken = new Cookie("access_token", null);
+							rootAccessToken.setPath("/");
+							rootAccessToken.setMaxAge(0);
+							response.addCookie(rootAccessToken);
+							log.debug("access_token 쿠키 삭제됨 (path: /)");
+
+							Cookie rootRefreshToken = new Cookie("refresh_token", null);
+							rootRefreshToken.setPath("/");
+							rootRefreshToken.setMaxAge(0);
+							response.addCookie(rootRefreshToken);
+							log.debug("refresh_token 쿠키 삭제됨 (path: /)");
+
+							// /api/auth 경로 쿠키 삭제
+							Cookie authRefreshToken = new Cookie("refresh_token", null);
+							authRefreshToken.setPath("/api/auth");
+							authRefreshToken.setMaxAge(0);
+							response.addCookie(authRefreshToken);
+							log.debug("refresh_token 쿠키 삭제됨 (path: /api/auth)");
+
 							response.setStatus(HttpStatus.OK.value());
+							log.debug("로그아웃 처리 완료");
 						})
 						.invalidateHttpSession(true)
-						.deleteCookies("JSESSIONID")
 						.permitAll()
 				);
 		//            .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));

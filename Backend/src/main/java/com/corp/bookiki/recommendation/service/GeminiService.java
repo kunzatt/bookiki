@@ -41,7 +41,9 @@ public class GeminiService {
                         .append("\n");
             }
 
-            prompt.append("\nProvide only keywords separated by commas, no explanations.");
+            prompt.append("\nProvide only keywords separated by commas, no explanations. Provide it in Korean, " +
+                    "and ensure each keyword is a single searchable word without spaces, " +
+                    "suitable for use in an SQL LIKE statement.");
 
             String response = callGeminiAPI(prompt.toString());
             log.debug("Gemini 실제 응답: {}", response);

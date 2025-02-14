@@ -77,25 +77,41 @@ public class JwtService {
     // Token 검증
     public boolean validateToken(String token) {
         try {
-            log.debug("토큰 검증 시도: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
+            log.debug("토큰 검증 시도. 토큰: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
 
+            if (token == null) {
+                log.debug("토큰이 null입니다");
+                return false;
+            }
+
+            // 토큰 만료시간 체크
             Claims claims = Jwts.parser()
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
 
-            log.debug("토큰 검증 성공 - Subject: {}, Expiration: {}",
-                    claims.getSubject(),
-                    claims.getExpiration());
+            Date expiration = claims.getExpiration();
+            Date now = new Date();
 
+            log.debug("토큰 정보 - Subject: {}, 발급시간: {}, 만료시간: {}, 현재시간: {}",
+                    claims.getSubject(),
+                    claims.getIssuedAt(),
+                    expiration,
+                    now);
+
+            if (expiration != null && expiration.before(now)) {
+                log.debug("토큰이 만료되었습니다");
+                return false;
+            }
+
+            log.debug("토큰 검증 성공");
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             log.error("토큰 검증 실패: {}", e.getMessage());
             return false;
         }
     }
-
     // Claims 추출
     public Claims extractAllClaims(String token) {
         return Jwts.parser()
