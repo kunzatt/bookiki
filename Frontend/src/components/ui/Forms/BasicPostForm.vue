@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import BasicButton from '../Button/BasicButton.vue';
 import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
 import type { PostType } from '@/types/common/postForm';
+import { QnaType, QnaTypeDescriptions } from '@/types/enums/qnaType';
 import { marked } from 'marked'; // marked 라이브러리 추가 필요
 
 interface PostFormProps {
@@ -32,7 +33,7 @@ const emit = defineEmits<{
 
 const title = ref('');
 const content = ref('');
-const selectedCategory = ref('');
+const selectedQnaType = ref<QnaType>(QnaType.NORMAL);
 const isPreview = ref(false);
 
 // 마크다운 변환된 내용
@@ -46,8 +47,8 @@ watch(
     if (newData) {
       title.value = newData.title;
       content.value = newData.content;
-      if (newData.category) {
-        selectedCategory.value = newData.category;
+      if (newData.qnaType) {
+        selectedQnaType.value = newData.qnaType;
       }
     }
   },
@@ -59,7 +60,7 @@ const handleSubmit = async (e: Event) => {
   const formData = {
     title: title.value,
     content: content.value,
-    ...(props.type === 'qna' && { category: selectedCategory.value }),
+    qnaType: props.type === 'qna' ? selectedQnaType.value : undefined
   };
 
   emit('submit', formData);
@@ -78,15 +79,15 @@ const togglePreview = () => {
   <form @submit="handleSubmit" class="w-full" method="POST">
     <div class="w-full">
       <!-- 카테고리 부분 -->
-      <div v-if="type === 'inquiry'" class="mb-4 flex flex-wrap gap-2">
+      <div v-if="type === 'qna'" class="mb-4 flex flex-wrap gap-2">
         <BasicStatusBadge
-          v-for="category in categories"
-          :key="category"
-          :text="category"
-          :type="selectedCategory === category ? 'primary' : 'gray'"
-          :isEnabled="selectedCategory === category"
+          v-for="[type, description] in Object.entries(QnaTypeDescriptions)"
+          :key="type"
+          :text="description"
+          :type="selectedQnaType === type ? 'primary' : 'gray'"
+          :isEnabled="selectedQnaType === type"
           class="cursor-pointer"
-          @click="selectedCategory = category"
+          @click="selectedQnaType = type as QnaType"
         />
       </div>
 
