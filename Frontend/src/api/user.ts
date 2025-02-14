@@ -1,4 +1,6 @@
 import axios from './axios';
+import instance from '@/api/axios';
+
 
 const API_URL = '/api'; // 베이스 URL을 설정합니다.
 
@@ -8,6 +10,7 @@ import type {
   LoginRequest,
   LoginResponse,
   OAuth2SignUpRequest,
+  ProfileResponse,
   UserInformationForAdminResponse,
   UserInformationForAdminRequest,
   UserSignUpRequest,
@@ -88,7 +91,11 @@ export const login = async (request: LoginRequest): Promise<LoginResponse> => {
 // 로그아웃
 export const logout = async (): Promise<void> => {
   try {
-    await axios.post(`${API_URL}/auth/logout`);
+    await instance.post(`/api/auth/logout`);
+
+    // 수동으로 쿠키 삭제
+    document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
   } catch (error) {
     console.error('로그아웃 실패:', error);
     throw error;
