@@ -104,6 +104,24 @@ const router = createRouter({
       component: () => import('@/views/notification/NotificationView.vue'),
       meta: { requiresAuth: true }, // 인증이 필요한 페이지로 설정
     },
+    {
+      path: '/mypage',
+      name: 'mypage',
+      component: () => import('@/views/mypage/MyPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/loans',
+      name: 'loans',
+      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/favorites',
+      name: 'favorites',
+      component: () => import('@/views/mypage/MyFavoriteList.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
