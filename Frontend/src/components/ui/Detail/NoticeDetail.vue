@@ -7,6 +7,7 @@ import BasicButton from '../Button/BasicButton.vue';
 import { formatDateTime } from '@/types/functions/dateFormats';
 import { useAuthStore } from '@/stores/auth';
 import ConfirmModal from '../Modal/ConfirmModal.vue';
+import { marked } from 'marked';
 
 const props = defineProps<{
   noticeId: number;
@@ -35,6 +36,11 @@ const handleDelete = async () => {
   } catch (err) {
     error.value = '공지사항 삭제 중 오류가 발생했습니다.';
   }
+};
+
+// 마크다운으로 변환된 내용을 반환하는 함수
+const getRenderedContent = (content: string) => {
+  return marked(content);
 };
 
 onMounted(async () => {
@@ -68,10 +74,11 @@ onMounted(async () => {
         <span>조회 {{ notice.viewCount }}</span>
       </div>
     </div>
-    <!-- 내용 영역 -->
-    <div class="py-6 min-h-[200px] whitespace-pre-wrap text-gray-700">
-      {{ notice.content }}
-    </div>
+    <!-- 내용 영역 - 마크다운 렌더링 적용 -->
+    <div
+      class="py-6 min-h-[200px] prose prose-sm max-w-none text-gray-700"
+      v-html="getRenderedContent(notice.content)"
+    />
     <!-- 버튼 영역 -->
     <div class="flex justify-end gap-2 pt-4 border-t">
       <BasicButton size="S" :is-enabled="false" text="목록" @click="router.push('/notices')" />
