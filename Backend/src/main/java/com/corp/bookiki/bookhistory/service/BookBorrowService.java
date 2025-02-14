@@ -25,6 +25,7 @@ public class BookBorrowService {
 	private final BookHistoryRepository bookHistoryRepository;
 	private final BookItemRepository bookItemRepository;
 	private final UserRepository userRepository;
+	private final BookHistoryService bookHistoryService;
 
 	public BookBorrowResponse borrowBook(Integer userId, Integer bookItemId) {
 		BookItemEntity bookItem = bookItemRepository.findById(bookItemId)
@@ -37,7 +38,7 @@ public class BookBorrowService {
 			throw new BookHistoryException(ErrorCode.BOOK_ALREADY_BORROWED);
 		}
 
-		if (user.getActiveAt() != null && user.getActiveAt().isAfter(LocalDateTime.now())) {
+		if ((user.getActiveAt() != null && user.getActiveAt().isAfter(LocalDateTime.now())) || bookHistoryService.countCanBorrowBook(userId) <= 0) {
 			throw new BookHistoryException(ErrorCode.USER_NOT_ACTIVE);
 		}
 

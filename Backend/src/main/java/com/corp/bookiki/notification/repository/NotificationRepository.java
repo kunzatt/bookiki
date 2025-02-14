@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.notification.entity.NotificationEntity;
+import com.corp.bookiki.notification.entity.NotificationStatus;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<NotificationEntity, Integer> {
@@ -24,5 +25,7 @@ public interface NotificationRepository extends JpaRepository<NotificationEntity
 
 	@Query("SELECT n.createdAt FROM NotificationEntity n WHERE n.notificationType = :notificationType ORDER BY n.createdAt DESC LIMIT 1")
 	Optional<LocalDateTime> findLatestCreatedAtByNotificationType(@Param("notificationType") String notificationType);
+
+	boolean existsByUserIdAndNotificationStatus(Integer userId, NotificationStatus notificationStatus);
 
 }

@@ -118,4 +118,11 @@ public class BookHistoryService {
 			.map(BookHistoryEntity::getOverdue)
 			.orElseThrow(() -> new BookHistoryException(ErrorCode.HISTORY_NOT_FOUND));
 	}
+
+	public Integer countCanBorrowBook(Integer userId) {
+		Integer count = bookHistoryRepository.countByUserIdAndReturnedAtIsNull(userId);
+		if(count == null) count = 0;
+		Integer maxBooks = loanPolicyService.getCurrentPolicy().getMaxBooks();
+		return maxBooks-count;
+	}
 }

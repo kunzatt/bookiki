@@ -183,6 +183,11 @@ public class NotificationService {
 		notificationRepository.save(notificationEntity);
 	}
 
+	@Transactional(readOnly = true) // 하나라도 읽지 않은 알림이 있는지 판단
+	public boolean hasUnreadNotifications(Integer userId) {
+		return notificationRepository.existsByUserIdAndNotificationStatus(userId, NotificationStatus.UNREAD);
+	}
+
 	@Transactional(readOnly = true)
 	protected LocalDateTime getTopCreatedAtByType(NotificationInformation notificationInformation) {
 		String notificationType = notificationInformation.getType();
