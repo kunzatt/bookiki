@@ -14,12 +14,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/users/{userId}/profile-image")
+@RequestMapping("/api/users/profile-image")
 @RequiredArgsConstructor
 @Tag(name = "프로필 이미지 관리 API", description = "프로필 이미지 수정, 삭제, 조회 API")
 @Slf4j
@@ -168,48 +170,60 @@ public class ProfileImageController {
     }
 
     @Operation(
-            summary = "프로필 사진 조회",
-            description = "사용자의 프로필 사진 URL을 조회합니다."
+        summary = "프로필 사진 이미지 데이터 조회",
+        description = "사용자의 프로필 사진 이미지 데이터를 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "프로필 사진 조회 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ProfileResponse.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                {
-                                    "imageUrl": "/images/profile/example.jpg"
-                                }
-                                """
-                            )
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "사용자를 찾을 수 없음",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = @ExampleObject(
-                                    value = """
-                                {
-                                    "code": "USER_NOT_FOUND",
-                                    "message": "사용자를 찾을 수 없습니다."
-                                }
-                                """
-                            )
-                    )
+        @ApiResponse(
+            responseCode = "200",
+            description = "프로필 사진 조회 성공",
+            content = @Content(
+                mediaType = "image/jpeg",
+                schema = @Schema(
+                    type = "string",
+                    format = "binary"
+                )
             )
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "사용자를 찾을 수 없음",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class),
+                examples = @ExampleObject(
+                    value = """
+                               {
+                                   "code": "USER_NOT_FOUND",
+                                   "message": "사용자를 찾을 수 없습니다."
+                               }
+                               """
+                )
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "파일을 찾을 수 없음",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponse.class),
+                examples = @ExampleObject(
+                    value = """
+                               {
+                                   "code": "FILE_NOT_FOUND",
+                                   "message": "파일을 찾을 수 없습니다."
+                               }
+                               """
+                )
+            )
+        )
     })
-    @GetMapping
-    public ResponseEntity<?> getProfileImage(@CurrentUser AuthUser authUser){
-        Integer userId = authUser.getId();
-        log.info("유저 프로필 이미지 조회 시작 - 유저 ID: {}", userId);
-        ProfileResponse response = profileImageService.getProfileImage(userId);
-        log.info("유저 프로필 이미지 조회 완료 - 유저 ID: {}", userId);
-        return ResponseEntity.ok(response);
+    @GetMapping("")
+    public ResponseEntity<byte[]> getActualProfileImage(@CurrentUser AuthUser authUser) {
+        byte[] imageData = profileImageService.getActualProfileImage(authUser.getId());
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_JPEG)
+            .body(imageData);
     }
 }
