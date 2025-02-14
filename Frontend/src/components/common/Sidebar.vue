@@ -57,7 +57,7 @@ const handleSubItemClick = async (subItem: SubMenuItem) => {
   if (subItem.action === 'logout') {
     try {
       await authStore.logout();
-      router.push('/login');  // 로그아웃 성공 후 로그인 페이지로 이동
+      router.push('/login'); // 로그아웃 성공 후 로그인 페이지로 이동
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
@@ -112,37 +112,7 @@ const handleLogoClick = () => {
           >
             <span class="material-icons mr-3 text-[#344E41]">{{ item.icon }}</span>
             <span class="text-[#344E41]">{{ item.name }}</span>
-            <!-- 토글 화살표 -->
-            <span
-              v-if="item.hasToggle"
-              class="material-icons ml-auto transform transition-transform text-[#344E41]"
-              :class="{ 'rotate-180': isMenuOpen(item.name) }"
-            >
-              expand_more
-            </span>
           </div>
-
-          <!-- 서브메뉴 -->
-          <ul
-            v-if="item.subItems"
-            class="overflow-hidden transition-all duration-300"
-            :class="{
-              'max-h-0': !isMenuOpen(item.name),
-              'max-h-screen': isMenuOpen(item.name),
-            }"
-          >
-            <li 
-              v-for="subItem in item.subItems" 
-              :key="subItem.name"
-              @click.prevent="handleSubItemClick(subItem)"
-              class="px-6 py-3 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors pl-12"
-            >
-              <router-link :to="subItem.path" class="flex items-center text-gray-600">
-                <span class="material-icons mr-3 text-sm">{{ subItem.icon }}</span>
-                <span class="text-sm">{{ subItem.name }}</span>
-              </router-link>
-            </li>
-          </ul>
         </li>
       </ul>
     </nav>
