@@ -51,6 +51,14 @@ const router = createRouter({
       component: () => import('@/views/BookDetailView.vue'),
       meta: { requiresAuth: false },
     },
+    {
+      path: '/public/books/:id',
+      name: 'PublicBookDetail',
+      component: () => import('@/views/QRBookDetailView.vue'),
+      meta: {
+        requiresAuth: false,
+      },
+    },
     // 404 페이지
     // {
     //   path: '/:pathMatch(.*)*',
@@ -90,23 +98,28 @@ const router = createRouter({
       name: 'NoticeEdit',
       component: () => import('@/views/notice/NoticeCreateView.vue'),
     },
+      path: '/notifications',
+      name: 'notifications',
+      component: () => import('@/views/notification/NotificationView.vue'),
+      meta: { requiresAuth: true }, // 인증이 필요한 페이지로 설정
+    },
   ],
-});
+})
 
 // 네비게이션 가드
 router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore();
-  const requiresAuth = to.meta.requiresAuth;
+  const authStore = useAuthStore()
+  const requiresAuth = to.meta.requiresAuth
 
   if (requiresAuth && !authStore.isAuthenticated) {
     // 인증이 필요한 페이지에 접근 시 로그인 상태가 아니면 로그인 페이지로 리다이렉트
-    next('/login');
+    next('/login')
   } else if (to.path === '/login' && authStore.isAuthenticated) {
     // 이미 로그인된 상태에서 로그인 페이지 접근 시 메인 페이지로 리다이렉트
-    next('/main');
+    next('/main')
   } else {
-    next();
+    next()
   }
-});
+})
 
 export default router;
