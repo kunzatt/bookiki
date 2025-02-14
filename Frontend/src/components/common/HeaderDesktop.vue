@@ -4,6 +4,7 @@ import type { DesktopHeaderProps } from '../../types/common/header';
 import { defineProps, withDefaults } from 'vue';
 import { ref, onMounted, onUnmounted } from 'vue';
 import { hasUnreadNotifications } from '@/api/notification';
+import ChatBot from '../ui/ChatBot/ChatBot.vue';
 
 const props = withDefaults(defineProps<DesktopHeaderProps>(), {
   hasNewNotification: false,
@@ -12,9 +13,10 @@ const props = withDefaults(defineProps<DesktopHeaderProps>(), {
 
 const router = useRouter();
 const hasUnreadNotification = ref(false);
+const isChatbotOpen = ref(false);
 
 const handleChatbot = () => {
-  router.push('/chatbot');
+  isChatbotOpen.value = !isChatbotOpen.value;
 };
 
 const checkUnreadNotifications = async () => {
@@ -76,5 +78,8 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Chatbot Component -->
+    <ChatBot v-model="isChatbotOpen" @close="isChatbotOpen = false" />
   </header>
 </template>
