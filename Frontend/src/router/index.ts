@@ -1,7 +1,7 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import HomeView from '../views/HomeView.vue'
-import MainView from '@/views/MainView.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
+import HomeView from '../views/HomeView.vue';
+import MainView from '@/views/MainView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -51,6 +51,14 @@ const router = createRouter({
       component: () => import('@/views/BookDetailView.vue'),
       meta: { requiresAuth: false },
     },
+    {
+      path: '/public/books/:id',
+      name: 'PublicBookDetail',
+      component: () => import('@/views/QRBookDetailView.vue'),
+      meta: {
+        requiresAuth: false,
+      },
+    },
     // 404 페이지
     // {
     //   path: '/:pathMatch(.*)*',
@@ -92,4 +100,4 @@ router.beforeEach((to, from, next) => {
   }
 })
 
-export default router
+export default router;
