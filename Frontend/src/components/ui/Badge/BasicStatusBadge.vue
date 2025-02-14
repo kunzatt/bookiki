@@ -23,7 +23,7 @@ interface BadgeProps {
   isEnabled?: boolean;
 }
 
-const BadgeProps = withDefaults(defineProps<BadgeProps>(), {
+const props = withDefaults(defineProps<BadgeProps>(), {
   type: 'primary',
   isEnabled: true
 });
