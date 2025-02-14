@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import BasicButton from '../Button/BasicButton.vue';
 import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
 import type { PostType } from '@/types/common/postForm';
+import { marked } from 'marked'; // marked 라이브러리 추가 필요
 
 interface PostFormProps {
   type: PostType;
@@ -14,13 +15,14 @@ interface PostFormProps {
     content: string;
     category?: string;
   };
-  submitButtonText?: string; // 추가된 prop
+  submitButtonText?: string;
 }
 
 const props = withDefaults(defineProps<PostFormProps>(), {
   titlePlaceholder: '제목을 입력하세요',
-  contentPlaceholder: '내용을 입력하세요',
-  submitButtonText: '작성', // 기본값 설정
+  contentPlaceholder:
+    '내용을 입력하세요 (마크다운 문법 지원)\n\n# 제목1\n## 제목2\n**굵게**\n*기울임*\n- 목록1\n- 목록2',
+  submitButtonText: '작성',
 });
 
 const emit = defineEmits<{
@@ -31,8 +33,13 @@ const emit = defineEmits<{
 const title = ref('');
 const content = ref('');
 const selectedCategory = ref('');
+const isPreview = ref(false);
 
-// initialData가 변경될 때 form 데이터 업데이트
+// 마크다운 변환된 내용
+const renderedContent = computed(() => {
+  return marked(content.value);
+});
+
 watch(
   () => props.initialData,
   (newData) => {
@@ -48,17 +55,13 @@ watch(
 );
 
 const handleSubmit = async (e: Event) => {
-  e.preventDefault(); // 기본 제출 동작 방지
-
-  // 폼 데이터 준비
+  e.preventDefault();
   const formData = {
     title: title.value,
     content: content.value,
     ...(props.type === 'inquiry' && { category: selectedCategory.value }),
   };
 
-  console.log('Form submitted with:', formData);
-  // 부모 컴포넌트로 데이터 전달
   emit('submit', formData);
 };
 
@@ -66,26 +69,15 @@ const handleCancel = () => {
   emit('cancel');
 };
 
-const handleFormat = (command: string) => {
-  document.execCommand(command, false);
-};
-
-// 명령어 매핑 함수
-const getCommand = (icon: string) => {
-  const commands = {
-    format_bold: 'bold',
-    format_italic: 'italic',
-    format_underline: 'underline',
-    format_list_bulleted: 'insertUnorderedList',
-    format_list_numbered: 'insertOrderedList',
-  };
-  return commands[icon] || '';
+const togglePreview = () => {
+  isPreview.value = !isPreview.value;
 };
 </script>
 
 <template>
   <form @submit="handleSubmit" class="w-full" method="POST">
     <div class="w-full">
+      <!-- 카테고리 부분 -->
       <div v-if="type === 'inquiry'" class="mb-4 flex flex-wrap gap-2">
         <BasicStatusBadge
           v-for="category in categories"
@@ -98,6 +90,7 @@ const getCommand = (icon: string) => {
         />
       </div>
 
+      <!-- 제목 입력 -->
       <input
         v-model="title"
         type="text"
@@ -106,33 +99,45 @@ const getCommand = (icon: string) => {
         required
       />
 
+      <!-- 내용 입력 영역 -->
       <div class="min-h-[200px] mb-4 border border-gray-200 rounded-lg">
-        <div class="flex items-center p-2 border-b border-gray-200 overflow-x-auto">
+        <div class="flex items-center p-2 border-b border-gray-200">
           <button
-            v-for="icon in [
-              'format_bold',
-              'format_italic',
-              'format_underline',
-              'format_list_bulleted',
-              'format_list_numbered',
-            ]"
-            :key="icon"
             type="button"
-            class="p-1 hover:bg-gray-100 rounded flex-shrink-0 mr-1"
-            @mousedown.prevent="handleFormat(getCommand(icon))"
+            class="px-3 py-1 text-sm rounded"
+            :class="isPreview ? 'text-gray-600' : 'bg-gray-100 text-gray-800'"
+            @click="togglePreview"
           >
-            <i class="material-icons text-gray-600 text-lg">{{ icon }}</i>
+            작성
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-sm rounded ml-2"
+            :class="isPreview ? 'bg-gray-100 text-gray-800' : 'text-gray-600'"
+            @click="togglePreview"
+          >
+            미리보기
           </button>
         </div>
 
+        <!-- 작성 모드 -->
         <textarea
+          v-if="!isPreview"
           v-model="content"
           :placeholder="contentPlaceholder"
           class="w-full h-[160px] p-4 resize-none focus:outline-none"
           required
         />
+
+        <!-- 미리보기 모드 -->
+        <div
+          v-else
+          class="w-full h-[160px] p-4 overflow-y-auto prose prose-sm max-w-none"
+          v-html="renderedContent"
+        />
       </div>
 
+      <!-- 버튼 영역 -->
       <div class="flex justify-end gap-2">
         <BasicButton type="button" size="M" text="취소" :isEnabled="false" @click="handleCancel" />
         <BasicButton type="submit" size="M" :text="submitButtonText" :isEnabled="true" />
@@ -140,3 +145,9 @@ const getCommand = (icon: string) => {
     </div>
   </form>
 </template>
+
+<style scoped>
+:deep(.prose) {
+  max-width: none;
+}
+</style>
