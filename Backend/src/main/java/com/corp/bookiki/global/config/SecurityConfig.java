@@ -108,6 +108,7 @@ public class SecurityConfig {
 								"/api/auth/**",
 								"/api/user/signup/**",
 								"/api/password/**",
+								"/iot/**",
 								"/api/ws/**",
 								"/api/oauth2/authorization/*",      // OAuth2 인증 시작 URL
 								"/api/login/oauth2/code/*",
