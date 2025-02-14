@@ -39,21 +39,26 @@ const isMenuOpen = (menuName: string): boolean => {
 const router = useRouter();
 
 // 메뉴 클릭 핸들러 함수 수정
-const handleMenuClick = (item: MenuItem) => {
+const handleMenuClick = async (item: MenuItem) => {
   if (item.name === '홈') {
     if (router.currentRoute.value.path === '/main') {
       window.location.reload();
     } else {
       router.push('/main');
     }
-  } else if (item.hasToggle) {
-    toggleSubMenu(item.name);
+  } else if (item.action === 'logout') {
+    try {
+      await authStore.logout();
+      router.push('/login'); // 로그아웃 성공 후 로그인 페이지로 이동
+    } catch (error) {
+      console.error('로그아웃 실패:', error);
+    }
   } else if (item.path) {
     router.push(item.path);
   }
 };
 
-const handleSubItemClick = async (subItem: SubMenuItem) => {
+const handleSubItemClick = async (subItem: MenuItem) => {
   if (subItem.action === 'logout') {
     try {
       await authStore.logout();
