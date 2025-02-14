@@ -18,18 +18,13 @@ public class UserInformationResponse {
 	@Schema(description = "사번", example = "CORP001")
 	private String companyId;
 
-	@Schema(description = "프로필 이미지 경로")
-	private String profileImage;
-
 	@Schema(description = "대출 가능 여부", example = "현재 3권 대출 가능")
 	private String loanStatus;
 
 	@Builder
-	public UserInformationResponse(String userName, String companyId,
-		String profileImage, String loanStatus) {
+	public UserInformationResponse(String userName, String companyId, String loanStatus) {
 		this.userName = userName;
 		this.companyId = companyId;
-		this.profileImage = profileImage;
 		this.loanStatus = loanStatus;
 	}
 
@@ -41,7 +36,6 @@ public class UserInformationResponse {
 		return UserInformationResponse.builder()
 			.userName(user.getUserName())
 			.companyId(user.getCompanyId())
-			.profileImage(user.getProfileImage())
 			.loanStatus(status)
 			.build();
 	}
