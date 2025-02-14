@@ -19,8 +19,12 @@ import com.corp.bookiki.bookhistory.dto.BookBorrowResponse;
 import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookhistory.service.BookBorrowService;
+import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
+import com.corp.bookiki.loanpolicy.dto.LoanPolicyResponse;
+import com.corp.bookiki.loanpolicy.entity.LoanPolicyEntity;
+import com.corp.bookiki.loanpolicy.service.LoanPolicyService;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 
@@ -41,6 +45,12 @@ class BookBorrowServiceTest {
 
 	@Mock
 	private UserRepository userRepository;
+
+	@Mock
+	private LoanPolicyService loanPolicyService;
+
+	@Mock
+	private BookHistoryService bookHistoryService;
 
 	@Nested
 	@DisplayName("도서 대출 서비스 테스트")
@@ -71,6 +81,16 @@ class BookBorrowServiceTest {
 				.willReturn(Optional.of(user));
 			given(bookHistoryRepository.save(any(BookHistoryEntity.class)))
 				.willReturn(history);
+
+			given(bookHistoryRepository.countByUserIdAndReturnedAtIsNull(userId))
+				.willReturn(0);  // 현재 대출 중인 책이 없다고 가정
+
+			LoanPolicyResponse mockPolicy = new LoanPolicyResponse();
+			mockPolicy.setMaxBooks(5);  // 최대 5권까지 대출 가능하다고 가정
+			mockPolicy.setLoanPeriod(14);  // 대출 기간 14일로 설정
+
+			given(loanPolicyService.getCurrentPolicy())
+				.willReturn(mockPolicy);
 
 			LocalDateTime before = LocalDateTime.now().minusDays(1);
 			when(user.getActiveAt()).thenReturn(before);
