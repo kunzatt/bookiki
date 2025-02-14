@@ -9,6 +9,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +21,9 @@ import java.util.UUID;
 public class ImageFileService {
     @Value("${spring.file.storage.path}")
     private String storagePath;
+
+    @Value("${spring.file.storage.default-image}")
+    private String defaultImagePath;
 
     public String uploadFile(MultipartFile file, String directoryPath) throws IOException {
         validateFile(file);
@@ -44,19 +50,71 @@ public class ImageFileService {
     public void deleteFile(String fileUrl) {
         try {
             String filePath = storagePath + fileUrl;
+            log.info("Attempting to delete file at: {}", filePath);
+
             File file = new File(filePath);
 
             if (!file.exists()) {
+                log.warn("File does not exist at path: {}", filePath);
                 throw new FileException(ErrorCode.FILE_NOT_FOUND);
             }
 
             if (!file.delete()) {
+                log.error("Failed to delete file at path: {}", filePath);
                 throw new FileException(ErrorCode.FILE_DELETE_FAILED);
             }
+
+            log.info("Successfully deleted file at: {}", filePath);
         } catch (SecurityException ex) {
-            log.error("File delete failed", ex);
+            log.error("Security exception while deleting file: {}", ex.getMessage(), ex);
             throw new FileException(ErrorCode.FILE_DELETE_FAILED);
         }
+    }
+
+    public byte[] getFileAsByteArray(String fileUrl) throws IOException {
+        if (fileUrl == null) {
+            log.info("fileUrl is null, trying to get default image");
+            return getDefaultImage();
+        }
+
+        try {
+            String filePath = storagePath + fileUrl;
+            log.info("Trying to read file from: {}", filePath);
+
+            Path path = Paths.get(filePath);
+            log.info("Absolute path: {}", path.toAbsolutePath());
+            log.info("File exists: {}", Files.exists(path));
+
+            if (!Files.exists(path)) {
+                log.warn("File not found at: {}. Returning default image", filePath);
+                return getDefaultImage();
+            }
+
+            return Files.readAllBytes(path);
+        } catch (Exception e) {
+            log.error("Error reading file: {}", e.getMessage(), e);
+            return getDefaultImage();
+        }
+    }
+
+    private byte[] getDefaultImage() throws IOException {
+        String defaultImageFullPath = defaultImagePath;
+        log.info("Trying to load default image from: {}", defaultImageFullPath);
+
+        Path defaultPath = Paths.get(defaultImageFullPath);
+        log.info("Default image absolute path: {}", defaultPath.toAbsolutePath());
+        log.info("Default image exists: {}", Files.exists(defaultPath));
+
+        if (!Files.exists(defaultPath)) {
+            log.error("Default image not found at: {}", defaultPath);
+            throw new FileException(ErrorCode.FILE_NOT_FOUND);
+        }
+
+        return Files.readAllBytes(defaultPath);
+    }
+
+    private String getActualFilePath(String fileUrl) {
+        return storagePath + fileUrl;
     }
 
     private void validateFile(MultipartFile file) {
