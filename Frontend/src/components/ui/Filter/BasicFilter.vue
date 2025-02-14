@@ -1,13 +1,11 @@
+//BasicFilter.vue 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import BaseDatePicker from '../DatePicker/BaseDatePicker.vue';
 import BasicInput from '../Input/BasicInput.vue';
+import BasicSelect from '../Select/BasicSelect.vue';
 import type { FilterConfig } from '@/types/common/filter';
-
-interface FilterOption {
-  label: string;
-  value: string | number;
-}
+import type { SelectOption } from '@/types/common/select';
 
 interface FilterProps {
   filters: FilterConfig[];
@@ -31,6 +29,7 @@ const resetFilters = () => {
   });
   localFilters.value = resetValue;
   emit('update:modelValue', resetValue);
+  emit('apply');
 };
 
 const hasActiveFilters = computed(() => {
@@ -42,7 +41,6 @@ const hasActiveFilters = computed(() => {
   });
 });
 
-// 검색 필터만 있는지 확인
 const isSearchOnly = computed(() => {
   return props.filters.length === 1 && props.filters[0].type === 'search';
 });
@@ -50,101 +48,100 @@ const isSearchOnly = computed(() => {
 
 <template>
   <div class="bg-white p-4 rounded-lg shadow-sm">
-    <div class="flex flex-wrap gap-6">
-      <!-- 각 필터 요소 -->
-      <div v-for="filter in filters" :key="filter.key" class="flex flex-col gap-2">
-        <label class="text-sm font-medium text-gray-700">{{ filter.label }}</label>
+    <div class="flex items-center gap-4">
+      <!-- 검색 필터 -->
+      <template v-for="filter in filters" :key="filter.key">
+        <div v-if="filter.type === 'search'" class="w-80"> <!-- 너비 조정 -->
+          <BasicInput
+            type="withButton"
+            v-model="localFilters[filter.key]"
+            :placeholder="filter.placeholder || '검색어를 입력하세요'"
+            buttonText="검색"
+            @button-click="$emit('apply')"
+            @update:modelValue="
+              (value) => {
+                updateFilter(filter.key, value);
+                $emit('apply');
+              }
+            "
+          />
+        </div>
 
-        <!-- 검색 필터 -->
-        <BasicInput
-          v-if="filter.type === 'search'"
-          type="withButton"
+        <!-- Select 필터 -->
+        <BasicSelect
+          v-else-if="filter.type === 'select'"
           v-model="localFilters[filter.key]"
-          :placeholder="filter.placeholder || '검색어를 입력하세요'"
-          buttonText="검색"
-          @button-click="$emit('apply')"
+          :options="filter.options"
+          :placeholder="filter.label"
+          size="M"
           @update:modelValue="
             (value) => {
               updateFilter(filter.key, value);
-              $emit('apply'); // 값이 변경될 때마다 바로 적용
+              $emit('apply');
             }
           "
         />
 
-        <!-- Select 필터 -->
-        <select
-          v-else-if="filter.type === 'select'"
-          v-model="localFilters[filter.key]"
-          class="h-10 px-3 rounded border border-gray-300 focus:border-[#698469] focus:ring focus:ring-[#698469] focus:ring-opacity-50"
-          :multiple="filter.multiple"
-          @change="updateFilter(filter.key, localFilters[filter.key])"
-        >
-          <option value="">전체</option>
-          <option v-for="option in filter.options" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-
         <!-- Date 필터 -->
-        <BaseDatePicker
-          v-else-if="filter.type === 'date'"
-          v-model="localFilters[filter.key]"
-          @change="updateFilter(filter.key, localFilters[filter.key])"
-        />
+        <div v-else-if="filter.type === 'date'" class="flex flex-col">
+          <label class="text-sm text-gray-600 mb-1">{{ filter.label }}</label>
+          <BaseDatePicker
+            v-model="localFilters[filter.key]"
+            @change="updateFilter(filter.key, localFilters[filter.key])"
+          />
+        </div>
 
         <!-- Radio 필터 -->
-        <div v-else-if="filter.type === 'radio'" class="flex gap-4">
-          <label
-            v-for="option in filter.options"
-            :key="option.value"
-            class="flex items-center gap-2"
-          >
-            <input
-              type="radio"
-              :name="filter.key"
-              :value="option.value"
-              v-model="localFilters[filter.key]"
-              @change="updateFilter(filter.key, localFilters[filter.key])"
-              class="text-[#698469] focus:ring-[#698469]"
-            />
-            <span class="text-sm">{{ option.label }}</span>
-          </label>
+        <div v-else-if="filter.type === 'radio'" class="flex items-center gap-4">
+          <span class="text-sm text-gray-600">{{ filter.label }}</span>
+          <div class="flex gap-4">
+            <label
+              v-for="option in filter.options"
+              :key="option.value"
+              class="flex items-center gap-2"
+            >
+              <input
+                type="radio"
+                :name="filter.key"
+                :value="option.value"
+                v-model="localFilters[filter.key]"
+                @change="updateFilter(filter.key, localFilters[filter.key])"
+                class="text-[#698469] focus:ring-[#698469]"
+              />
+              <span class="text-sm">{{ option.label }}</span>
+            </label>
+          </div>
         </div>
 
         <!-- Checkbox 필터 -->
-        <div v-else-if="filter.type === 'checkbox'" class="flex flex-wrap gap-4">
-          <label
-            v-for="option in filter.options"
-            :key="option.value"
-            class="flex items-center gap-2"
-          >
-            <input
-              type="checkbox"
-              :value="option.value"
-              v-model="localFilters[filter.key]"
-              @change="updateFilter(filter.key, localFilters[filter.key])"
-              class="text-[#698469] focus:ring-[#698469]"
-            />
-            <span class="text-sm">{{ option.label }}</span>
-          </label>
+        <div v-else-if="filter.type === 'checkbox'" class="flex items-center gap-4">
+          <span class="text-sm text-gray-600">{{ filter.label }}</span>
+          <div class="flex gap-4">
+            <label
+              v-for="option in filter.options"
+              :key="option.value"
+              class="flex items-center gap-2"
+            >
+              <input
+                type="checkbox"
+                :value="option.value"
+                v-model="localFilters[filter.key]"
+                @change="updateFilter(filter.key, localFilters[filter.key])"
+                class="text-[#698469] focus:ring-[#698469]"
+              />
+              <span class="text-sm">{{ option.label }}</span>
+            </label>
+          </div>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <!-- Filter Actions - 검색 필터만 있을 경우 버튼 숨김 -->
-    <div v-if="!isSearchOnly" class="flex justify-end mt-4">
+      <!-- Reset button -->
       <button
-        v-if="hasActiveFilters"
+        v-if="!isSearchOnly && hasActiveFilters"
         @click="resetFilters"
-        class="px-4 py-2 text-sm text-[#698469] hover:bg-[#F5F7F5] rounded-lg mr-2"
+        class="h-9 px-4 text-sm text-[#698469] hover:bg-[#F5F7F5] rounded-lg border border-[#698469]"
       >
         초기화
-      </button>
-      <button
-        class="px-4 py-2 text-sm text-white bg-[#698469] rounded-lg hover:bg-[#4F6B4F]"
-        @click="$emit('apply')"
-      >
-        적용하기
       </button>
     </div>
   </div>

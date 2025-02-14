@@ -1,9 +1,9 @@
-<!-- src/components/Notice/NoticeList.vue -->
+// QnaList.vue
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { selectQnas } from '@/api/qna';
-import { QnaListResponse } from '@/types/api/qna';
+import type { QnaListResponse } from '@/types/api/qna';
 import BasicStatusBadge from '@/components/ui/Badge/BasicStatusBadge.vue';
 import BasicWebTable from '@/components/ui/Table/BasicWebTable.vue';
 import BasicFilter from '@/components/ui/Filter/BasicFilter.vue';
@@ -11,8 +11,9 @@ import type { FilterConfig } from '@/types/common/filter';
 import type { TableColumn } from '@/types/common/table';
 import { useAuthStore } from '@/stores/auth';
 import { formatDate } from '@/types/functions/dateFormats';
-import { QnaType } from '@/types/enums/qnaType';
-import { QnaTypeDescriptions } from '@/types/enums/qnaType';
+import { QnaType, QnaTypeDescriptions } from '@/types/enums/qnaType';
+import BasicWebPagination from '../Pagination/BasicWebPagination.vue';
+import { Pageable, PageResponse } from '@/types/common/pagination';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -20,81 +21,118 @@ const authStore = useAuthStore();
 const qnas = ref<QnaListResponse[]>([]);
 const loading = ref(false);
 const currentPage = ref(1);
+const totalPages = ref(1);
 const pageSize = ref(10);
+const pageInfo = ref<Pageable>({
+  pageNumber: 0,
+  pageSize: pageSize.value,
+  sort: ['createdAt,DESC'],
+});
 const totalItems = ref(0);
 
-// Filter configuration
 const filters = ref<FilterConfig[]>([
   {
     type: 'search',
     key: 'keyword',
-    label: '검색',
-    placeholder: '제목 또는 내용을 입력하세요',
+    placeholder: '제목을 입력하세요',
+  },
+  {
+    type: 'select',
+    key: 'qnaType',
+    options: [
+      { value: '', label: '전체' },
+      { value: QnaType.NORMAL, label: '일반 문의' },
+      { value: QnaType.NEW_BOOK, label: '희망 도서 신청' },
+      { value: QnaType.CHANGE_INFO, label: '정보 변경' },
+    ],
   },
 ]);
 
 const filterValues = ref({
   keyword: '',
+  qnaType: '',
 });
 
-// Table columns configuration
 const columns: TableColumn[] = [
+  {
+    key: 'qnaType',
+    label: '유형',
+    width: '120px',
+    align: 'center',
+    render: (row) => {
+      const qnaType = row.qnaType as QnaType;
+      return {
+        component: BasicStatusBadge,
+        props: {
+          text: QnaTypeDescriptions[qnaType],
+          type: getStatusType(qnaType),
+          isEnabled: true,
+        },
+      };
+    },
+  },
   { key: 'title', label: '제목', align: 'left' },
-  { key: 'createdAt', label: '등록일', width: '150px', align: 'center' },
-  { key: 'actions', label: '관리', width: '150px', align: 'center' },
+  { key: 'authorName', label: '작성자', width: '120px', align: 'center' },
+  { key: 'createdAt', label: '등록일', width: '120px', align: 'center' },
 ];
 
-// Load notices
 const loadQnas = async () => {
   loading.value = true;
   try {
     const response = await selectQnas({
       keyword: filterValues.value.keyword,
+      qnaType: filterValues.value.qnaType,
       pageable: {
         page: currentPage.value - 1,
         size: pageSize.value,
         sort: 'createdAt',
-        direction: 'desc',
+        direction: 'DESC', // 대문자로 변경
       },
     });
     qnas.value = response.content;
     totalItems.value = response.totalElements;
+    totalPages.value = response.totalPages;
   } catch (error) {
-    console.error('공지사항 목록 조회 실패:', error);
+    console.error('문의사항 목록 조회 실패:', error);
   } finally {
     loading.value = false;
   }
 };
 
-// Handle filter apply
 const handleFilterApply = () => {
+  pageInfo.value = {
+    ...pageInfo.value,
+    pageNumber: 0,
+  };
   currentPage.value = 1;
   loadQnas();
 };
 
-// Handle page change
 const handlePageChange = (page: number) => {
   currentPage.value = page;
-  loadQnas();
+  loadQnas(); // 페이지 변경 시 바로 데이터 로드
 };
 
-// Handle row click
 const handleRowClick = (qna: QnaListResponse) => {
   router.push(`/qnas/${qna.id}`);
 };
 
-const getStatusType = (qnaType: QnaType): BadgeStatus => {
+const getStatusType = (qnaType: QnaType): string => {
   switch (qnaType) {
     case QnaType.NORMAL:
-      return 'primary'; // 일반 문의 → 기본 색상
+      return 'primary';
     case QnaType.NEW_BOOK:
-      return 'info'; // 희망 도서 신청 → 정보성
+      return 'info';
     case QnaType.CHANGE_INFO:
-      return 'warning'; // 이름/사번 변경 → 주의 필요
+      return 'warning';
     default:
-      return 'gray'; // 기타 → 회색
+      return 'gray';
   }
 };
+
+watch(currentPage, () => {
+  loadQnas();
+});
 
 onMounted(() => {
   loadQnas();
@@ -102,36 +140,35 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- Mobile List View -->
-  <div class="md:hidden">
-    <BasicFilter :filters="filters" v-model="filterValues" @apply="handleFilterApply" />
+  <div>
+    <!-- Mobile List View -->
+    <div class="md:hidden">
+      <BasicFilter :filters="filters" v-model="filterValues" @apply="handleFilterApply" />
 
-    <ul class="space-y-4">
-      <li v-for="(item, index) in items" :key="index" class="bg-white p-4 rounded-lg shadow-sm">
-        <div class="flex justify-between items-start mb-2">
-          <!-- 상태 배지 -->
-          <BasicStatusBadge
-            :text="item.qnaType"
-            :type="getStatusType(item.qnaType)"
-            :isEnabled="true"
-          />
-          <!-- 날짜 -->
-          <span class="text-sm text-gray-500">
-            {{ formatDate(item.createdAt) }}
-          </span>
-        </div>
-
-        <!-- 제목과 작성자 정보 -->
-        <div class="mt-2">
-          <h3 class="text-base font-medium text-gray-900 mb-1">
-            {{ item.title }}
-          </h3>
-          <p class="text-sm text-gray-500">
-            {{ item.quthorName }}
-          </p>
-        </div>
-      </li>
-    </ul>
+      <ul class="space-y-4 mt-4">
+        <li
+          v-for="qna in qnas"
+          :key="qna.id"
+          class="bg-white p-4 rounded-lg shadow-sm cursor-pointer"
+          @click="handleRowClick(qna)"
+        >
+          <div class="flex justify-between items-start mb-2">
+            <BasicStatusBadge
+              :text="QnaTypeDescriptions[qna.qnaType as QnaType] || '기타'"
+              :type="getStatusType(qna.qnaType as QnaType)"
+              :isEnabled="true"
+            />
+            <span class="text-sm text-gray-500">
+              {{ formatDate(qna.createdAt) }}
+            </span>
+          </div>
+          <div class="mt-2">
+            <h3 class="text-base font-medium text-gray-900 mb-1">{{ qna.title }}</h3>
+            <p class="text-sm text-gray-500">{{ qna.authorName }}</p>
+          </div>
+        </li>
+      </ul>
+    </div>
 
     <!-- Desktop Table View -->
     <div class="hidden md:block">
@@ -147,16 +184,13 @@ onMounted(() => {
             }))
           "
           :loading="loading"
+          :total-items="totalItems"
+          :total-pages="totalPages"
+          :current-page="currentPage"
+          :page-size="pageSize"
           @row-click="handleRowClick"
-        >
-          <template #actions="{ row }">
-            <div v-if="authStore.userRole == 'ADMIN'" class="flex justify-center gap-2">
-              <button class="text-sm text-red-500" @click.stop="$emit('delete', row.id)">
-                삭제
-              </button>
-            </div>
-          </template>
-        </BasicWebTable>
+          @page-change="handlePageChange"
+        />
       </div>
     </div>
   </div>
