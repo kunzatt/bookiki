@@ -11,8 +11,9 @@ export interface MenuItem {
 
 export interface SubMenuItem {
     name: string;          // 메뉴 이름
-    path: string;          // 라우트 경로
+    path?: string;          // 라우트 경로
     icon: string;         // 아이콘 (선택적)
+    action?: 'logout';
 }
 
 export interface User {
@@ -123,8 +124,8 @@ export const menuItems: MenuItem[] = [
             },
             {
                 name: '로그아웃',
-                path: '/', 
-                icon: ''
+                icon: '',
+                action: 'logout'                
             },
         ]
     },

@@ -6,6 +6,8 @@ import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<LoginResponse | null>(null);
+  const error = ref<string | null>(null);
+  const loading = ref(false);
   const router = useRouter();
 
   // sessionStorage에서 유저 정보 복구
@@ -35,28 +37,47 @@ export const useAuthStore = defineStore('auth', () => {
 
   // 로그아웃 처리
   const logout = async () => {
+    loading.value = true;
+    error.value = null;
+
     try {
       await logoutApi();
+      // 상태 초기화
       user.value = null;
-      // sessionStorage에서 사용자 정보 삭제
-      sessionStorage.removeItem('user');
-      await router.push('/login');
-    } catch (error) {
-      console.error('Logout failed:', error);
-      throw error;
+      sessionStorage.clear(); // 모든 세션 데이터 삭제
+      
+      // 로그인 페이지로 리다이렉트
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '로그아웃에 실패했습니다.';
+      error.value = errorMessage;
+      throw err;
+    } finally {
+      loading.value = false;
     }
   };
+  
+  // 권한 체크 헬퍼 함수
+  const hasRole = (requiredRole: string) => {
+    return userRole.value === requiredRole;
+  };
+
 
   // Getters
   const isAuthenticated = computed(() => !!user.value);
   const userRole = computed(() => user.value?.role);
+  const userName = computed(() => user.value?.username);
 
   return {
     user,
+    error,
+    loading,
     isAuthenticated,
     userRole,
+    userName,
     login,
     logout,
-    initializeFromStorage
+    initializeFromStorage,
+    hasRole
   };
 });
