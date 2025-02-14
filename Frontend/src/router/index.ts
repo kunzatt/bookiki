@@ -127,6 +127,23 @@ const router = createRouter({
       name: 'QnaEdit',
       component: () => import('@/views/qna/QnaCreateView.vue'),
     },
+      path: '/mypage',
+      name: 'mypage',
+      component: () => import('@/views/mypage/MyPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/loans',
+      name: 'loans',
+      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/favorites',
+      name: 'favorites',
+      component: () => import('@/views/mypage/MyFavoriteList.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
