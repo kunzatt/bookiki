@@ -66,6 +66,34 @@ public class NotificationController {
 		return ResponseEntity.ok(notificationService.getUserNotifications(authUser.getId(), pageable));
 	}
 
+	@GetMapping("/unread")
+	@Operation(summary = "읽지 않은 알림 존재 여부 확인", description = "로그인한 사용자의 읽지 않은 알림이 있는지 확인합니다.")
+	@ApiResponses({
+		@ApiResponse(
+			responseCode = "200",
+			description = "확인 성공",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(
+					implementation = Boolean.class,
+					description = "읽지 않은 알림 존재 여부 (true: 존재함, false: 존재하지 않음)"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "401",
+			description = "인증되지 않은 사용자",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = ErrorResponse.class)
+			)
+		)
+	})
+	public ResponseEntity<Boolean> hasUnreadNotifications(@CurrentUser AuthUser authUser) {
+		log.info("읽지 않은 알림 존재 여부 확인: userId={}", authUser.getId());
+		return ResponseEntity.ok(notificationService.hasUnreadNotifications(authUser.getId()));
+	}
+
 	@GetMapping("/{notificationId}")
 	@Operation(summary = "알림 상세 조회", description = "특정 알림의 상세 정보를 조회합니다.")
 	@ApiResponses({
