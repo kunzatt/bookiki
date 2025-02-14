@@ -4,6 +4,7 @@ import com.corp.bookiki.jwt.properties.JwtProperties;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import com.corp.bookiki.user.entity.Provider;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtService {
@@ -75,12 +77,21 @@ public class JwtService {
     // Token 검증
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
+            log.debug("토큰 검증 시도: {}", token.substring(0, Math.min(token.length(), 20)) + "...");
+
+            Claims claims = Jwts.parser()
                     .setSigningKey(getSigningKey())
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            log.debug("토큰 검증 성공 - Subject: {}, Expiration: {}",
+                    claims.getSubject(),
+                    claims.getExpiration());
+
             return true;
         } catch (JwtException | IllegalArgumentException e) {
+            log.error("토큰 검증 실패: {}", e.getMessage());
             return false;
         }
     }

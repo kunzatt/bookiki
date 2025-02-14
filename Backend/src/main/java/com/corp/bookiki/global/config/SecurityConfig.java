@@ -18,6 +18,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -126,7 +127,8 @@ public class SecurityConfig {
 								"/iot/**",
 								"/api/ws/**",
 								"/ws/**",
-								"/api/iot-storage"
+								"/api/iot-storage",
+								"/oauth2/**", "/login/**"
 						).permitAll()   //  인증 없이 사용
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")  // Role에 따라 권한 부여
 						.anyRequest().authenticated();   // 그 외 모든 요청은 인증된 사용자만 접근 가능
@@ -144,7 +146,7 @@ public class SecurityConfig {
 					oauth2
 //							.loginPage("/login")  // 로그인 페이지 설정 추가
 							.authorizationEndpoint(authorization ->
-									authorization.baseUri("/api/oauth2/authorization")  // /api 제거
+									authorization.baseUri("/oauth2/authorization")  // /api 제거
 							)
 							.redirectionEndpoint(redirection ->
 									redirection.baseUri("/api/login/oauth2/code/*")  // provider 변수 사용
@@ -169,6 +171,13 @@ public class SecurityConfig {
 
 		log.info("보안 필터 체인 구성 완료");
 		return http.build();
+	}
+
+	@Bean
+	public WebSecurityCustomizer webSecurityCustomizer() {
+		return (web) -> web.ignoring().requestMatchers(
+				"/css/**", "/js/**", "/img/**", "/lib/**", "/favicon.ico"
+		);
 	}
 
 	@Bean

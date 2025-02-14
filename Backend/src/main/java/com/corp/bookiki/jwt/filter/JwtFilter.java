@@ -3,6 +3,7 @@ package com.corp.bookiki.jwt.filter;
 import com.corp.bookiki.jwt.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,19 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        log.debug("Request URL: {}", request.getRequestURL());
+
+        // 쿠키 확인 로깅
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            log.debug("=== 수신된 쿠키 ===");
+            for (Cookie cookie : cookies) {
+                log.debug("쿠키 이름: {}, 값: {}", cookie.getName(), cookie.getValue());
+            }
+        } else {
+            log.debug("수신된 쿠키 없음!");
+        }
+
         // 1. Request Header에서 JWT 토큰 추출
         String jwt = resolveToken(request);
 
@@ -56,10 +70,17 @@ public class JwtFilter extends OncePerRequestFilter {
     // Authorization 헤더에서 Bearer 토큰을 추출
     // "Bearer " 접두사 제거
     private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
-            return bearerToken.substring(7);
+        // 쿠키에서 토큰 찾기
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("access_token".equals(cookie.getName())) {
+                    log.debug("Found access token in cookie");
+                    return cookie.getValue();
+                }
+            }
         }
+        log.debug("No access token found in cookies");
         return null;
     }
 

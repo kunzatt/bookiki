@@ -19,6 +19,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
@@ -54,6 +55,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         UserEntity tempUser = UserEntity.builder()
                 .email(email)
                 .provider(provider)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .role(Role.USER)
                 .build();
 
