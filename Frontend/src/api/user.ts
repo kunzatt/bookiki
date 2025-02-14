@@ -1,6 +1,7 @@
 import axios from './axios';
 import instance from '@/api/axios';
 
+
 const API_URL = '/api'; // 베이스 URL을 설정합니다.
 
 import type {
@@ -16,6 +17,7 @@ import type {
   PasswordResetEmailRequest,
   PasswordResetRequest,
   PasswordUpdateRequest,
+  UserInformationResponse,
 } from '@/types/api/user';
 
 // 이메일 회원가입
@@ -124,12 +126,12 @@ export const completeOAuth2SignUp = async (
 };
 
 // 프로필 사진 변경
-export const updateProfileImage = async (userId: number, file: File): Promise<void> => {
+export const updateProfileImage = async (file: File): Promise<void> => {
   try {
     const formData = new FormData();
     formData.append('file', file);
 
-    await axios.put(`${API_URL}/users/${userId}/profile-image`, formData, {
+    await axios.put(`${API_URL}/users/profile-image`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -141,25 +143,28 @@ export const updateProfileImage = async (userId: number, file: File): Promise<vo
 };
 
 // 프로필 사진 삭제
-export const deleteProfileImage = async (userId: number): Promise<void> => {
+export const deleteProfileImage = async (): Promise<void> => {
   try {
-    await axios.delete(`${API_URL}/users/${userId}/profile-image`);
+    await axios.delete(`${API_URL}/users/profile-image`);
   } catch (error) {
     console.error('프로필 사진 삭제 실패:', error);
     throw error;
   }
 };
 
-// 프로필 사진 조회
-export const getProfileImage = async (userId: number): Promise<ProfileResponse> => {
+// 프로필 사진 이미지 데이터 조회
+export const getProfileImageData = async (): Promise<Blob> => {
   try {
-    const response = await axios.get<ProfileResponse>(`${API_URL}/users/${userId}/profile-image`);
+    const response = await axios.get(`${API_URL}/users/profile-image`, {
+      responseType: 'blob',
+    });
     return response.data;
   } catch (error) {
-    console.error('프로필 사진 조회 실패:', error);
+    console.error('프로필 사진 이미지 데이터 조회 실패:', error);
     throw error;
   }
 };
+
 // 전체 사용자 정보 조회
 export const getUserDetails = async (): Promise<UserInformationForAdminResponse[]> => {
   try {
@@ -264,6 +269,17 @@ export const setToken = async (temporaryToken: string): Promise<LoginResponse> =
     return response.data;
   } catch (error) {
     console.error('토큰 설정 실패:', error);
+    throw error;
+  }
+};
+
+// 현재 사용자 정보 조회
+export const getCurrentUserInformation = async (): Promise<UserInformationResponse> => {
+  try {
+    const response = await axios.get<UserInformationResponse>(`${API_URL}/user`);
+    return response.data;
+  } catch (error) {
+    console.error('현재 사용자 정보 조회 실패:', error);
     throw error;
   }
 };

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineOptions({
-  name: 'SidebarMenu'
+  name: 'SidebarMenu',
 });
 
 import { ref, computed } from 'vue';
@@ -8,9 +8,8 @@ import { useRouter } from 'vue-router';
 import type { MenuItem, User } from '../../types/common/sideBar';
 import { menuItems } from '../../types/common/sideBar';
 import { useAuthStore } from '@/stores/auth';
-import BookikiLogo from '@/assets/BookikiLogo.png'
+import BookikiLogo from '@/assets/BookikiLogo.png';
 
-// props와 interface 제거
 // Store 사용
 const authStore = useAuthStore();
 
@@ -19,8 +18,10 @@ const menuStates = ref<{ [key: string]: boolean }>({});
 
 // 사용자 role에 따른 메뉴 필터링
 const filteredMenuItems = computed(() => {
-  return menuItems.filter(item => 
-    authStore.user && item.roles.includes(authStore.user.role)
+  return menuItems.filter(
+    (item) =>
+      // 권한 없는 메뉴도 포함되도록 수정
+      !item.roles.length || (authStore.user && item.roles.includes(authStore.user.role)),
   );
 });
 
@@ -77,21 +78,17 @@ const handleLogoClick = () => {
 
 <template>
   <aside class="w-64 h-screen bg-[#F6F6F3] shadow-lg">
-    <!-- 로고 부분은 동일 -->
-    <div 
+    <!-- 로고에 클릭 이벤트 추가 -->
+    <div
       class="px-6 py-4 flex flex-col items-center justify-center cursor-pointer"
       @click="handleLogoClick"
     >
-      <img 
-        :src="BookikiLogo" 
-        alt="Bookiki Logo" 
-        class="h-32 w-auto"
-      />
+      <img :src="BookikiLogo" alt="Bookiki Logo" class="h-32 w-auto" />
     </div>
 
     <!-- 사용자 환영 메시지 -->
     <div class="px-6 py-3 border-b border-[#F6F6F3]">
-      <p class="text-sm text-gray-700">{{ authStore.user.username }}님 안녕하세요!</p>
+      <p class="text-sm text-gray-700">{{ authStore.user?.username || '게스트' }}님 안녕하세요!</p>
     </div>
 
     <!-- 메뉴 목록 -->
@@ -99,12 +96,10 @@ const handleLogoClick = () => {
       <ul class="space-y-1">
         <li v-for="item in filteredMenuItems" :key="item.path">
           <!-- 메인 메뉴 아이템 -->
-          <div 
-            v-if="item.name === '홈'" 
-            @click="handleMenuClick(item)"
-            class="block"
-          >
-            <div class="px-6 py-4 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors">
+          <div v-if="item.name === '홈'" @click="handleMenuClick(item)" class="block">
+            <div
+              class="px-6 py-4 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors"
+            >
               <span class="material-icons mr-3 text-[#344E41]">{{ item.icon }}</span>
               <span class="text-[#344E41]">{{ item.name }}</span>
             </div>
@@ -131,9 +126,9 @@ const handleLogoClick = () => {
           <ul
             v-if="item.subItems"
             class="overflow-hidden transition-all duration-300"
-            :class="{ 
+            :class="{
               'max-h-0': !isMenuOpen(item.name),
-              'max-h-screen': isMenuOpen(item.name)
+              'max-h-screen': isMenuOpen(item.name),
             }"
           >
             <li 
@@ -142,13 +137,10 @@ const handleLogoClick = () => {
               @click.prevent="handleSubItemClick(subItem)"
               class="px-6 py-3 flex items-center cursor-pointer hover:bg-[#DAD7CD] transition-colors pl-12"
             >
-              <span 
-                v-if="subItem.icon" 
-                class="material-icons mr-3 text-[#344E41]"
-              >
-                {{ subItem.icon }}
-              </span>
-              <span class="text-[#344E41] text-sm">{{ subItem.name }}</span>
+              <router-link :to="subItem.path" class="flex items-center text-gray-600">
+                <span class="material-icons mr-3 text-sm">{{ subItem.icon }}</span>
+                <span class="text-sm">{{ subItem.name }}</span>
+              </router-link>
             </li>
           </ul>
         </li>

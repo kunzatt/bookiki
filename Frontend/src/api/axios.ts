@@ -1,4 +1,3 @@
-// src/api/axios.ts
 import axios from 'axios';
 import { useAuthStore } from '@/stores/auth';
 import router from '@/router';
@@ -7,7 +6,7 @@ let isRefreshing = false;
 let failedQueue: any[] = [];
 
 const instance = axios.create({
-  baseURL: 'http://localhost:8088', // 또는 환경변수 사용
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8088',
   withCredentials: true,
   timeout: 5000,
   headers: {
@@ -71,6 +70,5 @@ instance.interceptors.response.use(
     return Promise.reject(error);
   },
 );
-왜;
 
 export default instance;

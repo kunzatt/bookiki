@@ -8,7 +8,7 @@ interface QnaProps {
   items: QnaListResponse[];
 }
 
-const qnaProps = defineProps<QnaProps>();
+const props = defineProps<QnaProps>();
 
 // 날짜 포맷팅 함수 (YY.MM.DD)
 const formatDate = (dateString: string) => {

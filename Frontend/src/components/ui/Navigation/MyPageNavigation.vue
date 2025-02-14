@@ -30,7 +30,7 @@ import BasicButton from '../Button/BasicButton.vue';
 //   }
 // }
 
-const myPageProps = defineProps<MyPageProps>();
+const props = defineProps<MyPageProps>();
 
 // router 변경 필요
 const menuItems = [

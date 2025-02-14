@@ -2,15 +2,20 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { getBookByQrCode } from '@/api/bookItem';
-import { getBookInformation } from '@/api/bookInformation';
-import { getFavoriteStatus, toggleFavorite } from '@/api/favorites';
+import { AxiosError } from 'axios';
 import type { BookItemResponse } from '@/types/api/bookItem';
 import type { BookInformationResponse } from '@/types/api/bookInformation';
 import Sidebar from '@/components/common/Sidebar.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
+
+// API 메서드들 import
+import { getBookItemById } from '@/api/bookItem';
+import { getBookInformation } from '@/api/bookInformation';
+import { checkFavorite, toggleFavorite, getBookFavoriteCount } from '@/api/bookFavorite';
+
+import debounce from 'lodash/debounce';
 
 const route = useRoute();
 const router = useRouter();
@@ -24,37 +29,127 @@ const showErrorModal = ref(false);
 const errorMessage = ref('');
 const locationMessage = ref('');
 const isFavorite = ref(false);
+const favoriteCount = ref<number>(0);
 
-// 윈도우 너비 관리를 위한 ref
 const $window = ref({
-  width: window.innerWidth
+  width: window.innerWidth,
 });
 
-// 윈도우 리사이즈 이벤트 핸들러
 const handleResize = () => {
   $window.value.width = window.innerWidth;
+};
+
+// 공통 에러 처리 함수
+const handleError = (error: unknown, defaultMessage: string) => {
+  if (error instanceof AxiosError) {
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+
+    if (error.response?.status === 401) {
+      showLoginModal.value = true;
+    } else {
+      errorMessage.value = defaultMessage;
+      showErrorModal.value = true;
+    }
+  } else {
+    console.error('Unexpected error:', error);
+    errorMessage.value = defaultMessage;
+    showErrorModal.value = true;
+  }
 };
 
 const fetchBookData = async () => {
   try {
     const bookItemId = Number(route.params.id);
-    const itemResponse = await getBookByQrCode(bookItemId);
+    const itemResponse = await getBookItemById(bookItemId);
     bookItem.value = itemResponse;
-    
-    if (itemResponse.bookInformationId) {
+
+    if (itemResponse.id) {
       const infoResponse = await getBookInformation(itemResponse.bookInformationId);
       bookInfo.value = infoResponse;
-      await checkFavoriteStatus();
+
+      // 로그인한 경우에만 좋아요 상태 초기화
+      if (authStore.isAuthenticated) {
+        await initializeFavoriteStatus(itemResponse.id);
+      }
     }
   } catch (error) {
-    console.error('도서 정보 조회 실패:', error);
-    errorMessage.value = '도서 정보를 불러오는데 실패했습니다.';
-    showErrorModal.value = true;
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      // 401 에러는 무시하고 계속 진행
+      console.log('Not authenticated, skipping favorite status check');
+    } else {
+      handleError(error, '도서 정보를 불러오는데 실패했습니다.');
+    }
+  }
+};
+
+const handleFavorite = async () => {
+  if (!authStore.isAuthenticated) {
+    showLoginModal.value = true;
+    return;
+  }
+
+  try {
+    if (!bookItem.value?.id) {
+      return;
+    }
+
+    // 서버에 토글 요청
+    await toggleFavorite(bookItem.value.id);
+
+    // 서버의 최신 상태 확인
+    const newStatus = await checkFavorite(bookItem.value.id);
+
+    // 서버에서 받은 상태로 UI 업데이트
+    isFavorite.value = newStatus;
+
+    // 좋아요 수 업데이트
+    favoriteCount.value = await getBookFavoriteCount(bookItem.value.id);
+  } catch (error: any) {
+    // 401 에러 체크를 위해 타입 가드 사용
+    if (error?.response?.status === 401) {
+      showLoginModal.value = true;
+    } else {
+      errorMessage.value = '좋아요 처리에 실패했습니다.';
+      showErrorModal.value = true;
+    }
+  }
+};
+
+const debouncedHandleFavorite = debounce(
+  () => {
+    handleFavorite();
+  },
+  300,
+  { leading: true },
+);
+
+const initializeFavoriteStatus = async (bookItemId: number) => {
+  if (!authStore.isAuthenticated) {
+    isFavorite.value = false;
+    favoriteCount.value = 0;
+    return;
+  }
+
+  try {
+    console.log('[initializeFavoriteStatus] Checking status for bookId:', bookItemId);
+    const status = await checkFavorite(bookItemId);
+    console.log('[initializeFavoriteStatus] Initial status:', status);
+
+    isFavorite.value = status;
+    favoriteCount.value = await getBookFavoriteCount(bookItemId);
+  } catch (error) {
+    console.error('[initializeFavoriteStatus] Error:', error);
+    isFavorite.value = false;
+    favoriteCount.value = 0;
   }
 };
 
 const handleLocationClick = async () => {
-  if (!authStore.isLoggedIn) {
+  if (!authStore.isAuthenticated) {
     showLoginModal.value = true;
     return;
   }
@@ -66,62 +161,18 @@ const handleLocationClick = async () => {
         showErrorModal.value = true;
         return;
       }
-      
-      // API 호출 및 응답 처리
+
       const response = await fetch(`/api/ws/book-location/${bookItem.value.id}`);
       if (!response.ok) {
         throw new Error('API 호출 실패');
       }
-      
+
       locationMessage.value = '책장을 확인해주세요';
       showLocationModal.value = true;
     }
   } catch (error) {
     console.error('책 위치 조회 실패:', error);
-    errorMessage.value = '책 위치 조회에 실패했습니다.';
-    showErrorModal.value = true;
-  }
-};
-
-// 컴포넌트 마운트 시 이벤트 리스너 등록
-onMounted(() => {
-  window.addEventListener('resize', handleResize);
-  fetchBookData();
-});
-
-// 컴포넌트 언마운트 시 이벤트 리스너 제거
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-});
-
-// 좋아요 상태 확인
-const checkFavoriteStatus = async () => {
-  try {
-    if (bookItem.value?.id) {
-      const status = await getFavoriteStatus(bookItem.value.id);
-      isFavorite.value = status;
-    }
-  } catch (error) {
-    console.error('좋아요 상태 확인 실패:', error);
-  }
-};
-
-// 좋아요 토글
-const handleFavorite = async () => {
-  if (!authStore.isLoggedIn) {
-    showLoginModal.value = true;
-    return;
-  }
-
-  try {
-    if (bookItem.value?.id) {
-      await toggleFavorite(bookItem.value.id);
-      isFavorite.value = !isFavorite.value;
-    }
-  } catch (error) {
-    console.error('좋아요 토글 실패:', error);
-    errorMessage.value = '좋아요 처리에 실패했습니다.';
-    showErrorModal.value = true;
+    handleError(error, '책 위치 조회에 실패했습니다.');
   }
 };
 
@@ -129,7 +180,6 @@ const goToLogin = () => {
   router.push('/login');
 };
 
-// 출판일 포맷팅 함수
 const formatPublishDate = (dateStr: string) => {
   const date = new Date(dateStr);
   const year = date.getFullYear();
@@ -137,22 +187,25 @@ const formatPublishDate = (dateStr: string) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}년 ${month}월 ${day}일`;
 };
+
+onMounted(async () => {
+  window.addEventListener('resize', handleResize);
+  await fetchBookData();
+});
+
+onUnmounted(() => {
+  debouncedHandleFavorite.cancel();
+  window.removeEventListener('resize', handleResize);
+});
 </script>
 
 <template>
   <div class="flex min-h-screen bg-gray-100">
     <Sidebar class="hidden lg:block fixed left-0 top-0 h-screen" />
-    
+
     <div class="flex-1 flex flex-col lg:ml-64">
-      <HeaderDesktop 
-        class="hidden lg:block"
-        title="도서 상세"
-      />
-      <HeaderMobile
-        class="lg:hidden"
-        title="도서 상세"
-        type="default"
-      />
+      <HeaderDesktop class="hidden lg:block" title="도서 상세" />
+      <HeaderMobile class="lg:hidden" title="도서 상세" type="default" />
 
       <main class="flex-1 p-6 lg:p-10">
         <div v-if="bookInfo" class="max-w-none mx-auto">
@@ -162,18 +215,17 @@ const formatPublishDate = (dateStr: string) => {
               <div>
                 <div class="relative">
                   <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
-                    <img 
-                      :src="bookInfo.image" 
+                    <img
+                      :src="bookInfo.image"
                       :alt="bookInfo.title"
                       class="w-full h-full object-cover"
-                    >
+                    />
                   </div>
                   <!-- Favorite Button -->
                   <div class="absolute top-4 right-4">
-                    <button 
-                      @click="handleFavorite"
-                      class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 
-                             transition-colors duration-200"
+                    <button
+                      @click="debouncedHandleFavorite"
+                      class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors duration-200"
                       :class="{ 'text-red-500': isFavorite }"
                     >
                       <i class="material-icons text-2xl">
@@ -186,23 +238,22 @@ const formatPublishDate = (dateStr: string) => {
                 <div class="mt-8 hidden lg:block">
                   <button
                     @click="handleLocationClick"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg
-                          transition-colors duration-200 font-medium text-lg shadow-md"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg transition-colors duration-200 font-medium text-lg shadow-md"
                   >
                     책 위치 찾기
                   </button>
                 </div>
               </div>
             </div>
-            
+
             <!-- Book Info Section -->
             <div class="flex-1 lg:py-4">
               <div class="lg:max-w-3xl">
-                <span 
+                <span
                   v-if="$window.width >= 1024"
                   :class="{
                     'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-                    'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
+                    'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
                   }"
                   class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
                 >
@@ -212,7 +263,7 @@ const formatPublishDate = (dateStr: string) => {
                 <div class="flex items-center gap-4 mb-4">
                   <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
                 </div>
-                
+
                 <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
                   <span>{{ bookInfo.author }}</span>
                   <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
@@ -242,7 +293,9 @@ const formatPublishDate = (dateStr: string) => {
                       </div>
                       <div>
                         <span class="text-gray-500 text-sm">출판일</span>
-                        <p class="text-gray-900 mt-1">{{ formatPublishDate(bookInfo.publishedAt) }}</p>
+                        <p class="text-gray-900 mt-1">
+                          {{ formatPublishDate(bookInfo.publishedAt) }}
+                        </p>
                       </div>
                       <div>
                         <span class="text-gray-500 text-sm">ISBN</span>
@@ -256,14 +309,16 @@ const formatPublishDate = (dateStr: string) => {
           </div>
         </div>
       </main>
-      
+
       <!-- Mobile fixed bottom section -->
-      <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3">
+      <div
+        class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3"
+      >
         <div class="flex items-center justify-between gap-4 mb-[56px]">
-          <span 
+          <span
             :class="{
               'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-              'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE'
+              'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
             }"
             class="px-4 py-2 rounded-full text-sm font-medium shadow-sm"
           >
@@ -271,8 +326,7 @@ const formatPublishDate = (dateStr: string) => {
           </span>
           <button
             @click="handleLocationClick"
-            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg
-                   transition-colors duration-200 font-medium shadow-sm"
+            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-medium shadow-sm"
           >
             책 위치 찾기
           </button>
@@ -287,14 +341,14 @@ const formatPublishDate = (dateStr: string) => {
   </div>
 
   <!-- 로그인 모달 -->
-  <div v-if="showLoginModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div
+    v-if="showLoginModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+  >
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
       <h2 class="text-xl font-bold mb-4">로그인이 필요합니다</h2>
       <div class="flex justify-end gap-4">
-        <button
-          @click="showLoginModal = false"
-          class="px-4 py-2 text-gray-600 hover:text-gray-800"
-        >
+        <button @click="showLoginModal = false" class="px-4 py-2 text-gray-600 hover:text-gray-800">
           취소
         </button>
         <button
@@ -308,7 +362,10 @@ const formatPublishDate = (dateStr: string) => {
   </div>
 
   <!-- 에러 모달 -->
-  <div v-if="showErrorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div
+    v-if="showErrorModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+  >
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
       <h2 class="text-xl font-bold mb-4">오류</h2>
       <p class="text-gray-600 mb-6">{{ errorMessage }}</p>
@@ -324,7 +381,10 @@ const formatPublishDate = (dateStr: string) => {
   </div>
 
   <!-- Location Modal -->
-  <div v-if="showLocationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div
+    v-if="showLocationModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+  >
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
       <h2 class="text-xl font-bold mb-4">책 위치 정보</h2>
       <p class="text-gray-600 mb-6">{{ locationMessage }}</p>
