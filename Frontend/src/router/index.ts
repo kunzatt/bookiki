@@ -127,6 +127,7 @@ const router = createRouter({
       name: 'QnaEdit',
       component: () => import('@/views/qna/QnaCreateView.vue'),
     },
+    {
       path: '/mypage',
       name: 'mypage',
       component: () => import('@/views/mypage/MyPage.vue'),
