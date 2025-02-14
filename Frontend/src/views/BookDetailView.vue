@@ -15,6 +15,8 @@ import { getBookItemById } from '@/api/bookItem';
 import { getBookInformation } from '@/api/bookInformation';
 import { checkFavorite, toggleFavorite, getBookFavoriteCount } from '@/api/bookFavorite';
 
+import debounce from 'lodash/debounce';
+
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
@@ -66,33 +68,21 @@ const fetchBookData = async () => {
     bookItem.value = itemResponse;
 
     if (itemResponse.id) {
-      const [infoResponse, count] = await Promise.all([
-        getBookInformation(itemResponse.bookInformationId),
-        getBookFavoriteCount(itemResponse.id),
-      ]);
-
+      const infoResponse = await getBookInformation(itemResponse.bookInformationId);
       bookInfo.value = infoResponse;
-      favoriteCount.value = count;
 
-      // 로그인한 경우에만 좋아요 상태 확인
+      // 로그인한 경우에만 좋아요 상태 초기화
       if (authStore.isAuthenticated) {
-        const status = await checkFavorite(itemResponse.id);
-        isFavorite.value = status;
+        await initializeFavoriteStatus(itemResponse.id);
       }
     }
   } catch (error) {
-    handleError(error, '도서 정보를 불러오는데 실패했습니다.');
-  }
-};
-
-const checkFavoriteStatus = async () => {
-  try {
-    if (bookItem.value?.id && authStore.isAuthenticated) {
-      const status = await checkFavorite(bookItem.value.id);
-      isFavorite.value = status;
+    if (error instanceof AxiosError && error.response?.status === 401) {
+      // 401 에러는 무시하고 계속 진행
+      console.log('Not authenticated, skipping favorite status check');
+    } else {
+      handleError(error, '도서 정보를 불러오는데 실패했습니다.');
     }
-  } catch (error) {
-    handleError(error, '좋아요 상태 확인에 실패했습니다.');
   }
 };
 
@@ -103,20 +93,58 @@ const handleFavorite = async () => {
   }
 
   try {
-    if (bookItem.value?.id) {
-      await toggleFavorite(bookItem.value.id);
-
-      // 좋아요 상태와 카운트 재조회
-      const [newStatus, newCount] = await Promise.all([
-        checkFavorite(bookItem.value.id),
-        getBookFavoriteCount(bookItem.value.id),
-      ]);
-
-      isFavorite.value = newStatus;
-      favoriteCount.value = newCount;
+    if (!bookItem.value?.id) {
+      return;
     }
+
+    // 서버에 토글 요청
+    await toggleFavorite(bookItem.value.id);
+
+    // 서버의 최신 상태 확인
+    const newStatus = await checkFavorite(bookItem.value.id);
+
+    // 서버에서 받은 상태로 UI 업데이트
+    isFavorite.value = newStatus;
+
+    // 좋아요 수 업데이트
+    favoriteCount.value = await getBookFavoriteCount(bookItem.value.id);
+  } catch (error: any) {
+    // 401 에러 체크를 위해 타입 가드 사용
+    if (error?.response?.status === 401) {
+      showLoginModal.value = true;
+    } else {
+      errorMessage.value = '좋아요 처리에 실패했습니다.';
+      showErrorModal.value = true;
+    }
+  }
+};
+
+const debouncedHandleFavorite = debounce(
+  () => {
+    handleFavorite();
+  },
+  300,
+  { leading: true },
+);
+
+const initializeFavoriteStatus = async (bookItemId: number) => {
+  if (!authStore.isAuthenticated) {
+    isFavorite.value = false;
+    favoriteCount.value = 0;
+    return;
+  }
+
+  try {
+    console.log('[initializeFavoriteStatus] Checking status for bookId:', bookItemId);
+    const status = await checkFavorite(bookItemId);
+    console.log('[initializeFavoriteStatus] Initial status:', status);
+
+    isFavorite.value = status;
+    favoriteCount.value = await getBookFavoriteCount(bookItemId);
   } catch (error) {
-    handleError(error, '좋아요 처리에 실패했습니다.');
+    console.error('[initializeFavoriteStatus] Error:', error);
+    isFavorite.value = false;
+    favoriteCount.value = 0;
   }
 };
 
@@ -160,12 +188,13 @@ const formatPublishDate = (dateStr: string) => {
   return `${year}년 ${month}월 ${day}일`;
 };
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('resize', handleResize);
-  fetchBookData();
+  await fetchBookData();
 });
 
 onUnmounted(() => {
+  debouncedHandleFavorite.cancel();
   window.removeEventListener('resize', handleResize);
 });
 </script>
@@ -195,7 +224,7 @@ onUnmounted(() => {
                   <!-- Favorite Button -->
                   <div class="absolute top-4 right-4">
                     <button
-                      @click="handleFavorite"
+                      @click="debouncedHandleFavorite"
                       class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors duration-200"
                       :class="{ 'text-red-500': isFavorite }"
                     >
