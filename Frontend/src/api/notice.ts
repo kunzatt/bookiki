@@ -1,86 +1,102 @@
 import axios from 'axios';
-
-const API_URL = '/api';
-
-import type {
-    NoticeRequest,
-    NoticeResponse,
-    NoticeUpdate
-} from '@/types/api/notice';
+import type { NoticeRequest, NoticeResponse, NoticeUpdate } from '@/types/api/notice';
 import type { PageResponse } from '@/types/common/pagination';
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+// axios 인스턴스 생성 - HttpOnly 쿠키 사용을 위한 설정
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  withCredentials: true, // 쿠키를 포함한 크로스 도메인 요청 허용
+});
 
 // 공지사항 등록
 export const createNotice = async (request: NoticeRequest): Promise<number> => {
-    try {
-        const response = await axios.post<number>(
-            `${API_URL}/admin/notices`,
-            request
-        );
-        return response.data;
-    } catch (error) {
-        console.error('공지사항 등록 실패:', error);
-        throw error;
+  console.log('createNotice called with:', request);
+  console.log('API_URL:', API_URL);
+
+  try {
+    // API 요청
+    const response = await axiosInstance.post<number>('/api/admin/notices', request);
+    console.log('API response:', response);
+    return response.data;
+  } catch (error) {
+    console.error('API error in createNotice:', error);
+    if (error.response) {
+      console.error('Error response:', error.response.data);
+      console.error('Error status:', error.response.status);
+    } else if (error.request) {
+      console.error('Error request:', error.request);
+    } else {
+      console.error('Error message:', error.message);
     }
+    throw error;
+  }
 };
 
 // 공지사항 목록 조회
-export const selectAllNotices = async (
-    params: {
-        keyword?: string;
-        pageable?: {
-            page?: number;
-            size?: number;
-            sort?: string;
-            direction?: 'asc' | 'desc';
-        };
+export const selectAllNotices = async (params: {
+  keyword?: string;
+  pageable?: {
+    page?: number;
+    size?: number;
+    sort?: string;
+    direction?: 'asc' | 'desc';
+  };
+}) => {
+  try {
+    console.log('Fetching notices with params:', params);
+
+    // URL 파라미터 구성
+    const searchParams = new URLSearchParams();
+
+    if (params.keyword) {
+      searchParams.append('keyword', params.keyword);
     }
-): Promise<PageResponse<NoticeResponse>> => {
-    try {
-        const { pageable, ...restParams } = params;
-        const response = await axios.get<PageResponse<NoticeResponse>>(`${API_URL}/notices`, {
-            params: {
-                ...restParams,
-                ...pageable
-            }
-        });
-        return response.data;
-    } catch (error) {
-        console.error('공지사항 목록 조회 실패:', error);
-        throw error;
+
+    if (params.pageable) {
+      searchParams.append('page', String(params.pageable.page || 0));
+      searchParams.append('size', String(params.pageable.size || 10));
+      if (params.pageable.sort) {
+        searchParams.append('sort', params.pageable.sort);
+      }
+      if (params.pageable.direction) {
+        searchParams.append('direction', params.pageable.direction);
+      }
     }
+
+    const response = await axiosInstance.get(`/api/notices?${searchParams.toString()}`);
+    console.log('API response:', response.data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401) {
+        // 인증 실패시 로그인 페이지로 리다이렉트
+        window.location.href = '/login';
+      }
+    }
+    console.error('공지사항 목록 조회 실패:', error);
+    throw error;
+  }
 };
 
 // 공지사항 상세 조회
 export const selectNoticeById = async (id: number): Promise<NoticeResponse> => {
-    try {
-        const response = await axios.get<NoticeResponse>(`${API_URL}/notices/${id}`);
-        return response.data;
-    } catch (error) {
-        console.error('공지사항 상세 조회 실패:', error);
-        throw error;
-    }
+  const response = await axiosInstance.get<NoticeResponse>(`/api/notices/${id}`);
+  return response.data;
 };
 
 // 공지사항 삭제
 export const deleteNotice = async (id: number): Promise<void> => {
-    try {
-        await axios.delete(`${API_URL}/admin/notices/${id}`);
-    } catch (error) {
-        console.error('공지사항 삭제 실패:', error);
-        throw error;
-    }
+  await axiosInstance.delete(`/api/admin/notices/${id}`);
 };
 
 // 공지사항 수정
 export const updateNotice = async (update: NoticeUpdate): Promise<string> => {
-    try {
-        const response = await axios.put<string>(
-            `${API_URL}/admin/notices`,
-            update
-        );
-        return response.data;
-    } catch (error) {
-        console.error('공지사항 수정 실패:', error);
-        throw error;
-    }
+  const response = await axiosInstance.put<string>(`/api/admin/notices`, update);
+  return response.data;
 };

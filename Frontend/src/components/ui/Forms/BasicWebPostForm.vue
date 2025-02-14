@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import BasicPostForm from './BasicPostForm.vue';
-import type { PostType } from '@/types/common/postForm';
+import BasicPostForm from './BasicPostForm.vue'
+import type { PostType } from '@/types/common/postForm'
 
 interface WebPostFormProps {
-  type: PostType;
-  categories?: string[];
+  type: PostType
+  categories?: string[]
 }
 
-const webPostFormProps = defineProps<WebPostFormProps>();
+const props = defineProps<WebPostFormProps>()
+
+const emit = defineEmits(['submit', 'cancel'])
 
 const handleSubmit = (formData: { title: string; content: string; category?: string }) => {
-  console.log('Web form submitted:', formData);
   // 웹용 제출 로직
-};
+  emit('submit', formData)
+  console.log('Web form submitted:', formData)
+}
 
 const handleCancel = () => {
-  console.log('Web form cancelled');
   // 웹용 취소 로직
-};
+  emit('cancel')
+  console.log('Web form cancelled')
+}
 </script>
 
 <template>

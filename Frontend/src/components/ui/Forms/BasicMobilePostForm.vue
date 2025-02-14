@@ -1,23 +1,27 @@
 <script setup lang="ts">
-import BasicPostForm from './BasicPostForm.vue';
-import type { PostType } from '@/types/common/postForm';
+import BasicPostForm from './BasicPostForm.vue'
+import type { PostType } from '@/types/common/postForm'
 
 interface MobilePostFormProps {
-  type: PostType;
-  categories?: string[];
+  type: PostType
+  categories?: string[]
 }
 
-const mobilePostFormProps = defineProps<MobilePostFormProps>();
+const props = defineProps<MobilePostFormProps>()
+
+const emit = defineEmits(['submit', 'cancel'])
 
 const handleSubmit = (formData: { title: string; content: string; category?: string }) => {
-  console.log('Mobile form submitted:', formData);
   // 모바일용 제출 로직
-};
+  emit('submit', formData)
+  console.log('Mobile form submitted:', formData)
+}
 
 const handleCancel = () => {
-  console.log('Mobile form cancelled');
   // 모바일용 취소 로직
-};
+  emit('cancel')
+  console.log('Mobile form cancelled')
+}
 </script>
 
 <template>

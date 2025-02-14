@@ -1,55 +1,55 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import HomeView from '../views/HomeView.vue';
-import MainView from '@/views/MainView.vue'
+import MainView from '@/views/MainView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      redirect: '/login'
+      redirect: '/login',
     },
     {
       path: '/login',
       name: 'login',
       component: () => import('@/views/auth/LoginView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     {
       path: '/main',
       name: 'main',
       component: () => import('@/views/MainView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
     {
       path: '/signup',
       name: 'SignUp',
-      component: () => import('@/views/auth/SignupView.vue')
+      component: () => import('@/views/auth/SignupView.vue'),
     },
     {
       path: '/oauth2/signup',
       name: 'OAuth2SignUp',
       component: () => import('@/views/auth/OAuth2SignUp.vue'),
-      props: (route) => ({ 
-        token: route.query.token 
-      })
+      props: (route) => ({
+        token: route.query.token,
+      }),
     },
     {
       path: '/api/oauth2/error',
       name: 'OAuth2Error',
-      component: () => import('@/views/auth/OAuth2Error.vue')
+      component: () => import('@/views/auth/OAuth2Error.vue'),
     },
     {
       path: '/oauth2/callback',
       name: 'OAuth2Callback',
-      component: () => import('@/views/auth/OAuth2Callback.vue')
+      component: () => import('@/views/auth/OAuth2Callback.vue'),
     },
     {
       path: '/books/:id',
       name: 'book-detail',
       component: () => import('@/views/BookDetailView.vue'),
-      meta: { requiresAuth: false }
+      meta: { requiresAuth: false },
     },
     // 404 페이지
     // {
@@ -65,17 +65,17 @@ const router = createRouter({
     {
       path: '/library',
       name: 'VirtualShelf',
-      component: () => import('@/views/book/VirtualShelfView.vue')
+      component: () => import('@/views/book/VirtualShelfView.vue'),
     },
     {
-      path: '/notice/create',
+      path: '/notices/create',
       name: 'NoticeCreate',
-      component: () => import('@/views/notice/NoticeCreateView.vue')
+      component: () => import('@/views/notice/NoticeCreateView.vue'),
     },
     {
       path: '/notices',
       name: 'NoticeList',
-      component: () => import('@/views/notice/NoticeList.vue')
+      component: () => import('@/views/notice/NoticeListView.vue'),
     },
   ],
 });
@@ -96,4 +96,4 @@ router.beforeEach((to, from, next) => {
   }
 });
 
-export default router
+export default router;
