@@ -59,7 +59,7 @@ const handleSubmit = async (e: Event) => {
   const formData = {
     title: title.value,
     content: content.value,
-    ...(props.type === 'inquiry' && { category: selectedCategory.value }),
+    ...(props.type === 'qna' && { category: selectedCategory.value }),
   };
 
   emit('submit', formData);
