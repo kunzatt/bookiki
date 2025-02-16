@@ -145,6 +145,12 @@ const router = createRouter({
       component: () => import('@/views/mypage/MyFavoriteList.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin',
+      name: 'adminMain',
+      component: () => import('@/views/admin/AdminView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
