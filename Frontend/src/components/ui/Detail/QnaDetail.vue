@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import type { QnaDetailResponse, QnaCommentRequest } from '@/types/api/qna';
-import { selectQnaById, deleteQna, createQnaComment } from '@/api/qna';
+import type { QnaDetailResponse, QnaCommentRequest, QnaCommentResponse } from '@/types/api/qna';
+import {
+  selectQnaById,
+  deleteQna,
+  createQnaComment,
+  deleteQnaComment,
+  updateQnaComment,
+} from '@/api/qna';
 import BasicButton from '../Button/BasicButton.vue';
 import { formatDateTime } from '@/types/functions/dateFormats';
 import { useAuthStore } from '@/stores/auth';
@@ -43,11 +49,11 @@ const handleDelete = async () => {
 
 const handleCommentSubmit = async () => {
   if (!newComment.value.trim()) return;
-  
+
   try {
     const request: QnaCommentRequest = {
       qnaId: props.qnaId,
-      content: newComment.value
+      content: newComment.value,
     };
     await createQnaComment(request);
     qna.value = await selectQnaById(props.qnaId);
@@ -71,6 +77,61 @@ const getStatusType = (qnaType: QnaType): string => {
       return 'warning';
     default:
       return 'gray';
+  }
+};
+
+// 답변 수정 관련
+const editingCommentId = ref<number | null>(null);
+const editingCommentContent = ref('');
+const showDeleteCommentModal = ref(false);
+const deleteCommentId = ref<number | null>(null);
+
+// 답변 수정 관련 함수들
+const handleEditComment = (comment: QnaCommentResponse) => {
+  editingCommentId.value = comment.id;
+  editingCommentContent.value = comment.content;
+};
+
+const cancelEditComment = () => {
+  editingCommentId.value = null;
+  editingCommentContent.value = '';
+};
+
+const saveEditComment = async (commentId: number) => {
+  try {
+    const request = {
+      id: commentId,
+      content: editingCommentContent.value,
+    };
+    await updateQnaComment(request);
+    // 데이터 새로고침
+    qna.value = await selectQnaById(props.qnaId);
+    // 편집 모드 종료
+    cancelEditComment();
+  } catch (err) {
+    error.value = '답변 수정 중 오류가 발생했습니다.';
+  }
+};
+
+// 답변 삭제 함수
+const openDeleteCommentModal = (commentId: number) => {
+  deleteCommentId.value = commentId;
+  showDeleteCommentModal.value = true;
+};
+
+const handleDeleteComment = async () => {
+  if (!deleteCommentId.value) return;
+
+  try {
+    await deleteQnaComment(deleteCommentId.value);
+    // 데이터 새로고침
+    qna.value = await selectQnaById(props.qnaId);
+  } catch (err) {
+    error.value = '답변 삭제 중 오류가 발생했습니다.';
+  } finally {
+    // 모달 닫기 및 상태 초기화
+    showDeleteCommentModal.value = false;
+    deleteCommentId.value = null;
   }
 };
 
@@ -123,9 +184,38 @@ onMounted(async () => {
       <div v-for="comment in qna.comments" :key="comment.id" class="bg-gray-50 p-4 rounded-lg mb-4">
         <div class="flex justify-between items-center mb-2">
           <span class="font-medium">관리자</span>
-          <span class="text-sm text-gray-500">{{ formatDateTime(comment.createdAt) }}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">{{ formatDateTime(comment.createdAt) }}</span>
+            <!-- 관리자인 경우 수정/삭제 버튼 표시 -->
+            <div v-if="isAdmin" class="flex gap-2">
+              <button
+                class="text-sm text-blue-600 hover:text-blue-800"
+                @click="handleEditComment(comment)"
+              >
+                수정
+              </button>
+              <button
+                class="text-sm text-red-600 hover:text-red-800"
+                @click="openDeleteCommentModal(comment.id)"
+              >
+                삭제
+              </button>
+            </div>
+          </div>
         </div>
-        <p class="text-gray-700">{{ comment.content }}</p>
+        <!-- 수정 모드일 때는 textarea 표시 -->
+        <div v-if="editingCommentId === comment.id">
+          <textarea
+            v-model="editingCommentContent"
+            class="w-full p-2 border rounded-lg resize-none h-32 mb-2"
+          />
+          <div class="flex justify-end gap-2">
+            <BasicButton size="S" text="취소" @click="cancelEditComment" />
+            <BasicButton size="S" text="저장" @click="saveEditComment(comment.id)" />
+          </div>
+        </div>
+        <!-- 일반 모드일 때는 내용 표시 -->
+        <p v-else class="text-gray-700">{{ comment.content }}</p>
       </div>
     </div>
 
@@ -147,7 +237,7 @@ onMounted(async () => {
     <!-- 버튼 영역 -->
     <div class="flex justify-end gap-2 pt-4 border-t mt-6">
       <BasicButton size="S" :is-enabled="false" text="목록" @click="router.push('/qnas')" />
-      <template v-if="authStore.userId === qna.authorId || isAdmin">
+      <template v-if="authStore.user?.id === qna.authorId">
         <BasicButton size="S" text="수정" @click="handleEdit" />
         <BasicButton size="S" text="삭제" @click="openDeleteModal" />
       </template>
@@ -162,5 +252,14 @@ onMounted(async () => {
     cancel-text="취소"
     icon="delete"
     @confirm="handleDelete"
+  />
+  <ConfirmModal
+    v-model="showDeleteCommentModal"
+    title="답변 삭제"
+    content="정말 이 답변을 삭제하시겠습니까?"
+    confirm-text="삭제"
+    cancel-text="취소"
+    icon="delete"
+    @confirm="handleDeleteComment"
   />
 </template>

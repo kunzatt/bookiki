@@ -17,10 +17,10 @@ const route = useRoute();
 const authStore = useAuthStore();
 const isMobile = ref(false);
 const isEditMode = ref(false);
-const initialFormData = ref({ 
-  title: '', 
+const initialFormData = ref({
+  title: '',
   content: '',
-  qnaType: QnaType.NORMAL 
+  qnaType: QnaType.NORMAL,
 });
 const pageTitle = ref('문의사항 작성');
 
@@ -44,14 +44,14 @@ onMounted(async () => {
     pageTitle.value = '문의사항 수정';
     try {
       const qna = await selectQnaById(Number(qnaId));
-      if (authStore.userId !== qna.authorId && authStore.userRole !== 'ADMIN') {
+      if (authStore.user?.id !== qna.authorId) {
         router.push('/qnas');
         return;
       }
       initialFormData.value = {
         title: qna.title,
         content: qna.content,
-        qnaType: qna.qnaType
+        qnaType: qna.qnaType,
       };
     } catch (error) {
       console.error('Failed to load qna:', error);
@@ -62,7 +62,7 @@ onMounted(async () => {
 
 const categories = Object.entries(QnaTypeDescriptions).map(([type, label]) => ({
   type: type as QnaType,
-  label
+  label,
 }));
 
 const checkDeviceType = () => {
