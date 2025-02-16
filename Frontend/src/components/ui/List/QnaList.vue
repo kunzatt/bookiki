@@ -13,10 +13,12 @@ import { formatDate } from '@/types/functions/dateFormats';
 import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
 import type { Pageable } from '@/types/common/pagination';
 import { QnaType, QnaTypeDescriptions } from '@/types/enums/qnaType';
+import { QnaStatus, QnaStatusDescriptions, QnaStatusTypes } from '@/types/enums/qnaStatus';
+import type { QnaListResponseWithAnswered } from '@/types/common/qnaList';
 
 const router = useRouter();
 
-const qnas = ref<QnaListResponse[]>([]);
+const qnas = ref<QnaListResponseWithAnswered[]>([]);
 const loading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -41,18 +43,29 @@ const filters = ref<FilterConfig[]>([
       { value: QnaType.CHANGE_INFO, label: '정보 변경' },
     ],
   },
+  {
+    type: 'select',
+    key: 'answered',
+    label: '답변 상태',
+    options: [
+      { value: '', label: '전체' },
+      { value: QnaStatus.COMPLETED, label: QnaStatusDescriptions[QnaStatus.COMPLETED] },
+      { value: QnaStatus.WAITING, label: QnaStatusDescriptions[QnaStatus.WAITING] },
+    ],
+  },
 ]);
 
 const filterValues = ref({
   keyword: '',
   qnaType: '',
+  answered: '',
 });
 
 const columns: TableColumn[] = [
   {
     key: 'qnaType',
     label: '유형',
-    width: '120px',
+    width: '160px',
     align: 'center',
     render: (row) => ({
       component: BasicStatusBadge,
@@ -64,35 +77,81 @@ const columns: TableColumn[] = [
     }),
   },
   { key: 'title', label: '제목', align: 'left' },
-  { key: 'authorName', label: '작성자', width: '120px', align: 'center' },
-  { key: 'createdAt', label: '등록일', width: '120px', align: 'center' },
+  { key: 'authorName', label: '작성자', width: '160px', align: 'center' },
+  {
+    key: 'createdAt',
+    label: '등록일',
+    width: '120px',
+    align: 'center',
+    render: (row) => ({
+      component: 'div',
+      props: {
+        innerHTML: formatDate(row.createdAt),
+      },
+    }),
+  },
+  {
+    key: 'answered',
+    label: '답변',
+    width: '120px',
+    align: 'center',
+    render: (row) => ({
+      component: BasicStatusBadge,
+      props: {
+        text: row.answered
+          ? QnaStatusDescriptions[QnaStatus.COMPLETED]
+          : QnaStatusDescriptions[QnaStatus.WAITING],
+        type: row.answered ? 'success' : 'warning',
+        isEnabled: true,
+      },
+    }),
+  },
 ];
+
+const convertQnaForDisplay = (qna: QnaListResponseWithAnswered) => ({
+  ...qna,
+  createdAt: formatDate(qna.createdAt),
+  qnaType: QnaTypeDescriptions[qna.qnaType as QnaType],
+  answered: qna.answered
+    ? QnaStatusDescriptions[QnaStatus.COMPLETED]
+    : QnaStatusDescriptions[QnaStatus.WAITING],
+});
 
 const loadQnas = async () => {
   loading.value = true;
   try {
-    // 모바일과 데스크톱의 페이지 처리 구분
-    const pageNumber = isMobile.value ? 0 : currentPage.value - 1;
-
+    // 필터링된 결과를 위해 더 많은 데이터를 요청
     const response = await selectQnas({
       keyword: filterValues.value.keyword,
       qnaType: filterValues.value.qnaType,
       pageable: {
-        page: pageNumber,
-        size: pageSize.value,
+        page: isMobile.value ? 0 : currentPage.value - 1,
+        size: pageSize.value * 2, // 페이지 사이즈를 2배로 요청
         sort: ['createdAt,DESC'],
       },
     });
 
-    // 모바일일 경우 누적, 데스크톱일 경우 교체
-    if (isMobile.value && currentPage.value > 1) {
-      qnas.value = [...qnas.value, ...response.content];
-    } else {
-      qnas.value = response.content;
+    let filteredContent = response.content;
+
+    // answered 필터 적용
+    if (filterValues.value.answered !== '') {
+      const isAnswered = filterValues.value.answered === QnaStatus.COMPLETED;
+      filteredContent = filteredContent.filter((qna) => qna.answered === isAnswered);
     }
 
-    totalItems.value = response.totalElements;
-    hasMore.value = qnas.value.length < response.totalElements;
+    // 필터링된 결과에서 현재 페이지에 해당하는 부분만 잘라내기
+    const start = 0;
+    const end = pageSize.value;
+
+    if (isMobile.value && currentPage.value > 1) {
+      qnas.value = [...qnas.value, ...filteredContent.slice(start, end)];
+    } else {
+      qnas.value = filteredContent.slice(start, end);
+    }
+
+    // 전체 아이템 수 계산 수정
+    totalItems.value = filteredContent.length;
+    hasMore.value = qnas.value.length < totalItems.value;
   } catch (error) {
     console.error('문의사항 목록 조회 실패:', error);
   } finally {
@@ -113,19 +172,6 @@ const handlePaginationChange = async (pageInfo: Pageable) => {
   if (!isMobile.value) {
     currentPage.value = pageInfo.pageNumber + 1;
     await loadQnas();
-  }
-};
-
-const getStatusType = (qnaType: QnaType): string => {
-  switch (qnaType) {
-    case QnaType.NORMAL:
-      return 'primary';
-    case QnaType.NEW_BOOK:
-      return 'info';
-    case QnaType.CHANGE_INFO:
-      return 'warning';
-    default:
-      return 'gray';
   }
 };
 
@@ -250,17 +296,33 @@ defineEmits(['delete']);
       <div
         v-for="qna in qnas"
         :key="qna.id"
-        class="bg-white p-4 rounded-lg shadow-sm cursor-pointer"
+        class="bg-white p-3 rounded-lg shadow-sm cursor-pointer"
         @click="handleRowClick(qna)"
       >
-        <div class="flex justify-between items-start mb-2">
+        <!-- 상단: 유형 뱃지와 날짜 -->
+        <div class="flex justify-between items-center">
           <BasicStatusBadge
-            :text="QnaTypeDescriptions[qna.qnaType as QnaType]"
-            :type="getStatusType(qna.qnaType as QnaType)"
+            :text="QnaTypeDescriptions[qna.qnaType]"
+            :type="
+              qna.qnaType === QnaType.NEW_BOOK
+                ? success
+                : qna.qnaType === QnaType.NORMAL
+                  ? 'info'
+                  : 'warning'
+            "
             :isEnabled="true"
           />
-          <span class="text-sm text-gray-500">{{ formatDate(qna.createdAt) }}</span>
+          <div class="flex flex-col items-end">
+            <span class="text-sm text-gray-500 mb-1">{{ formatDate(qna.createdAt) }}</span>
+            <BasicStatusBadge
+              :text="QnaStatusDescriptions[qna.answered ? 'COMPLETED' : 'WAITING']"
+              :type="qna.answered ? success : 'warning'"
+              :isEnabled="true"
+            />
+          </div>
         </div>
+
+        <!-- 하단: 제목과 작성자 -->
         <div class="mt-2">
           <h3 class="text-base font-medium text-gray-900 mb-1">{{ qna.title }}</h3>
           <p class="text-sm text-gray-500">{{ qna.authorName }}</p>
@@ -281,12 +343,7 @@ defineEmits(['delete']);
     <div class="mt-4">
       <BasicWebTable
         :columns="columns"
-        :data="
-          qnas.map((qna) => ({
-            ...qna,
-            createdAt: formatDate(qna.createdAt),
-          }))
-        "
+        :data="qnas.map(convertQnaForDisplay)"
         :loading="loading"
         @row-click="handleRowClick"
       />
