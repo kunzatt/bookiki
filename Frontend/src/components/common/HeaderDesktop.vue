@@ -31,6 +31,10 @@ const handleNotification = () => {
   router.push('/notifications');
 };
 
+const handleNotice = () => {
+  router.push('/notices');
+};
+
 onMounted(() => {
   checkUnreadNotifications();
 
@@ -61,6 +65,14 @@ onMounted(() => {
             class="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors duration-200"
           >
             <img src="@/assets/chatbot2.png" alt="chatbot" class="w-8 h-8" />
+          </button>
+
+          <!-- Notice Button -->
+          <button
+            @click="handleNotice"
+            class="flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors duration-200"
+          >
+            <i class="material-icons text-gray-700 !text-[28px]">announcement</i>
           </button>
 
           <!-- Notification Button -->

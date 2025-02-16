@@ -13,7 +13,7 @@ const menuItems = [
   { id: 1, title: '도서 관리', path: '/admin/books' },
   { id: 2, title: '도서관 관리', path: '/admin/library' },
   { id: 3, title: '회원 관리', path: '/admin/user' },
-  { id: 4, title: '문의사항', path: '/admin/qna' },
+  { id: 4, title: '문의사항', path: '/qnas' },
   { id: 5, title: '알림', path: '/notifications' },
 ];
 
