@@ -1,7 +1,6 @@
 import axios from './axios';
 import instance from '@/api/axios';
 
-
 const API_URL = '/api'; // 베이스 URL을 설정합니다.
 
 import type {
@@ -19,6 +18,8 @@ import type {
   PasswordUpdateRequest,
   UserInformationResponse,
 } from '@/types/api/user';
+
+import type { PageResponse } from '@/types/common/pagination';
 
 // 이메일 회원가입
 export const registerWithEmail = async (request: UserSignUpRequest): Promise<string> => {
@@ -166,9 +167,24 @@ export const getProfileImageData = async (): Promise<Blob> => {
 };
 
 // 전체 사용자 정보 조회
-export const getUserDetails = async (): Promise<UserInformationForAdminResponse[]> => {
+export const getUserDetails = async (
+  page: number = 0,
+  size: number = 25,
+  sortBy: string = 'id',
+  direction: string = 'desc',
+): Promise<PageResponse<UserInformationForAdminResponse>> => {
   try {
-    const response = await axios.get<UserInformationForAdminResponse[]>(`${API_URL}/admin/users`);
+    const response = await axios.get<PageResponse<UserInformationForAdminResponse>>(
+      `${API_URL}/admin/users`,
+      {
+        params: {
+          page,
+          size,
+          sortBy,
+          direction,
+        },
+      },
+    );
     return response.data;
   } catch (error) {
     console.error('전체 사용자 조회 실패:', error);
