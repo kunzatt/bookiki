@@ -64,10 +64,8 @@ const checkDeviceType = () => {
   isMobile.value = window.innerWidth < 768;
 };
 
-// 제출 로직
 const handleSubmit = async (formData: { title: string; content: string }) => {
   try {
-    // 제출 시점에 다시 한번 인증 상태 확인
     if (!authStore.isAuthenticated) {
       console.log('User not authenticated during submission');
       await router.push('/login');
@@ -81,15 +79,17 @@ const handleSubmit = async (formData: { title: string; content: string }) => {
         content: formData.content,
       };
       await updateNotice(updateRequest);
+      // 수정 완료 후 해당 글의 상세 페이지로 이동
+      await router.push(`/notices/${route.params.id}`);
     } else {
       const noticeRequest: NoticeRequest = {
         title: formData.title,
         content: formData.content,
       };
-      await createNotice(noticeRequest);
+      const newNoticeId = await createNotice(noticeRequest);
+      // 새 글 작성 완료 후 해당 글의 상세 페이지로 이동
+      await router.push(`/notices/${newNoticeId}`);
     }
-
-    await router.push('/notices');
   } catch (error) {
     console.error(`Failed to ${isEditMode.value ? 'update' : 'create'} notice:`, error);
     if (error.response?.status === 401 || error.response?.status === 302) {
