@@ -47,8 +47,7 @@ const loadNotifications = async (page: number = currentPage.value) => {
     const requestConfig = {
       page,
       size: pageSize,
-      sort: 'createdAt',
-      direction: 'desc' as const,
+      sort: 'createdAt,desc'
     };
 
     const response = await getUserNotifications(requestConfig);
