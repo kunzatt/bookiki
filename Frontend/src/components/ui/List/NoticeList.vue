@@ -1,6 +1,6 @@
 <!-- src/components/Notice/NoticeList.vue -->
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { selectAllNotices } from '@/api/notice';
 import type { NoticeResponse } from '@/types/api/notice';
@@ -114,29 +114,44 @@ let observer: IntersectionObserver | null = null;
 
 // 디바이스 타입 변경 감지 및 처리
 const checkDeviceType = () => {
-  const wasDesktop = !isMobile.value;
-  isMobile.value = window.innerWidth < 768;
+  const wasMobile = isMobile.value;
+  const newIsMobile = window.innerWidth < 768;
 
-  // 데스크톱에서 모바일로 전환 시
-  if (!wasDesktop && isMobile.value) {
-    loadAllNoticesForMobile();
-  }
-  // 모바일에서 데스크톱으로 전환 시
-  else if (wasDesktop && !isMobile.value) {
-    currentPage.value = 1;
-    loadNotices();
+  // 모바일/데스크톱 전환이 있을 때만 처리
+  if (wasMobile !== newIsMobile) {
+    isMobile.value = newIsMobile;
+
+    // 모바일에서 데스크톱으로 전환 시
+    if (wasMobile && !newIsMobile) {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      currentPage.value = 1;
+      notices.value = [];
+      loadNotices();
+    }
+    // 데스크톱에서 모바일로 전환 시
+    else if (!wasMobile && newIsMobile) {
+      observer = setupIntersectionObserver();
+      loadNotices();
+    }
   }
 };
 
 // Intersection Observer 설정
 const setupIntersectionObserver = () => {
+  if (observer) {
+    observer.disconnect();
+  }
+
   const options = {
     root: null,
     rootMargin: '20px',
     threshold: 0.1,
   };
 
-  const observer = new IntersectionObserver((entries) => {
+  observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting && !isLoadingMore.value && hasMore.value) {
         loadMoreNotices();
@@ -144,9 +159,12 @@ const setupIntersectionObserver = () => {
     });
   }, options);
 
-  if (observerTarget.value) {
-    observer.observe(observerTarget.value);
-  }
+  // nextTick을 사용하여 DOM 업데이트 후 observe
+  nextTick(() => {
+    if (observerTarget.value) {
+      observer.observe(observerTarget.value);
+    }
+  });
 
   return observer;
 };
