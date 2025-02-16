@@ -11,6 +11,7 @@ import type {
   QnaCommentUpdate,
 } from '@/types/api/qna';
 import type { PageResponse } from '@/types/common/pagination';
+import { convertToQnaWithAnswered } from '@/types/common/qnaList';
 
 // QNA API
 export const createQna = async (request: QnaRequest): Promise<number> => {
@@ -56,7 +57,22 @@ export const selectQnas = async (params: {
     console.log('Request URL:', url);
 
     const response = await axios.get(url);
-    return response.data;
+
+    // 각 QNA의 상세 정보를 병렬로 가져옴
+    const detailPromises = response.data.content.map((qna: QnaListResponse) =>
+      selectQnaById(qna.id),
+    );
+    const details = await Promise.all(detailPromises);
+
+    // QnaListResponseWithAnswered로 변환
+    const enhancedContent = response.data.content.map((qna: QnaListResponse, index: number) =>
+      convertToQnaWithAnswered(details[index]),
+    );
+
+    return {
+      ...response.data,
+      content: enhancedContent,
+    };
   } catch (error) {
     if (axios.isAxiosError(error)) {
       if (error.response?.status === 401) {
