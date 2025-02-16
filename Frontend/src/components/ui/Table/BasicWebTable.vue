@@ -12,7 +12,7 @@ interface TableProps {
 const props = withDefaults(defineProps<TableProps>(), {
   hoverable: true,
   loading: false,
-  minWidth: '1024px' // 기본 최소 너비 설정
+  minWidth: '1024px', // 기본 최소 너비 설정
 });
 
 const emit = defineEmits<{
@@ -24,7 +24,7 @@ const getColumnClass = (column: TableColumn) => {
     'text-left': column.align === 'left' || !column.align,
     'text-center': column.align === 'center',
     'text-right': column.align === 'right',
-    [`w-[${column.width}]`]: column.width
+    [`w-[${column.width}]`]: column.width,
   };
 };
 </script>
