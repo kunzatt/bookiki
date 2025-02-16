@@ -43,36 +43,31 @@ export const selectAllNotices = async (params: {
   pageable?: {
     page?: number;
     size?: number;
-    sort?: string;
-    direction?: 'asc' | 'desc';
+    sort?: string[]; // string[] 타입으로 변경
   };
 }) => {
   try {
-    console.log('Fetching notices with params:', params);
-
     const searchParams = new URLSearchParams();
 
     if (params.keyword) {
       searchParams.append('keyword', params.keyword);
-      console.log('Added keyword param:', params.keyword);
     }
 
     if (params.pageable) {
       searchParams.append('page', String(params.pageable.page || 0));
       searchParams.append('size', String(params.pageable.size || 10));
-      if (params.pageable.sort) {
-        searchParams.append('sort', params.pageable.sort);
-      }
-      if (params.pageable.direction) {
-        searchParams.append('direction', params.pageable.direction);
+      // sort 처리 방식 변경
+      if (params.pageable.sort && params.pageable.sort.length > 0) {
+        params.pageable.sort.forEach((sort) => {
+          searchParams.append('sort', sort);
+        });
       }
     }
 
     const url = `/api/notices?${searchParams.toString()}`;
-    console.log('Final URL:', url);
+    console.log('Request URL:', url); // 요청 URL 로깅
 
     const response = await axiosInstance.get(url);
-    console.log('API response:', response.data);
     return response.data;
   } catch (error) {
     if (axios.isAxiosError(error)) {
