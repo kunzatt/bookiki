@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, watch, computed  } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
-import Sidebar from '@/components/common/Sidebar.vue'
+import Sidebar from '@/components/common/Sidebar.vue';
 import { selectBooksByKeyword } from '@/api/bookItem';
 import type { BookItemDisplayResponse } from '@/types/api/bookItem';
 import type { Pageable } from '@/types/common/pagination';
@@ -21,7 +21,7 @@ const loading = ref(false);
 const pageInfo = ref<Pageable>({
   pageNumber: 0,
   pageSize: 20,
-  sort: ['id,DESC']
+  sort: ['id,DESC'],
 });
 
 const fetchBooks = async () => {
@@ -32,9 +32,9 @@ const fetchBooks = async () => {
       pageInfo.value.pageSize,
       'id',
       'desc',
-      searchKeyword.value
+      searchKeyword.value,
     );
-    
+
     books.value = response.content;
     totalPages.value = response.totalPages;
   } catch (error) {
@@ -88,60 +88,63 @@ onMounted(async () => {
 
     <!-- 메인 컨텐츠 영역 -->
     <div class="flex-1 flex flex-col md:ml-64">
-      <!-- 모바일 헤더 -->
+      <!-- Mobile Header -->
       <HeaderMobile class="md:hidden fixed top-0 left-0 right-0 z-10" title="도서관" type="main" />
-      
-      <!-- 데스크톱 헤더 -->
+
+      <!-- Desktop Header -->
       <HeaderDesktop class="hidden md:block fixed top-0 right-0 left-64 z-10" title="도서관" />
 
       <!-- 스크롤 가능한 컨텐츠 영역 -->
-      <div class="flex-1 overflow-y-auto pt-16"> <!-- 헤더 높이만큼 패딩 추가 -->
+      <div class="flex-1 overflow-y-auto pt-16">
         <div class="h-full p-4 md:p-8">
-          <!-- 검색 바 -->
-          <div class="mb-8">
-            <BasicInput
-              v-model="searchKeyword"
-              type="withButton"
-              placeholder="도서명을 입력하세요"
-              buttonText="검색"
-              @buttonClick="handleSearch"
-            />
-          </div>
+          <div class="max-w-3xl mx-auto">
+            <!-- 검색 바 -->
+            <div class="mb-8">
+              <BasicInput
+                v-model="searchKeyword"
+                type="withButton"
+                placeholder="도서명을 입력하세요"
+                buttonText="검색"
+                @buttonClick="handleSearch"
+              />
+            </div>
 
-          <!-- 책장 컨테이너 -->
-          <div class="overflow-y-auto">
             <!-- 책장 -->
             <div v-if="books.length > 0" class="bg-[#8B4513] p-6 rounded-lg">
-    <div class="space-y-8">
-      <div 
-        v-for="(row, rowIndex) in bookRows" 
-        :key="rowIndex"
-        class="relative bg-[#F5E6D3] p-4 rounded"
-      >
-        <div class="grid grid-cols-4 gap-4">
-          <div
-            v-for="book in row"
-            :key="book.id"
-            class="aspect-[3/4] relative group"
-          >
-            <div class="book absolute inset-0 transform transition-transform duration-200 group-hover:scale-105">
-              <img
-                :src="getBookCoverImage(book.image)"
-                :alt="'Book cover ' + book.id"
-                class="w-full h-full object-cover rounded shadow-lg cursor-pointer"
-            @click="navigateToBook(book.id)"
-              />
-              <div class="absolute top-0 left-0 w-2 h-full bg-black bg-opacity-10 rounded-l"></div>
-            </div>
-          </div>
-        </div>
+              <div class="space-y-8">
+                <div
+                  v-for="(row, rowIndex) in bookRows"
+                  :key="rowIndex"
+                  class="relative bg-[#F5E6D3] p-4 rounded"
+                >
+                  <div class="grid grid-cols-4 gap-4">
+                    <div v-for="book in row" :key="book.id" class="aspect-[3/4] relative group">
+                      <div
+                        class="book absolute inset-0 transform transition-transform duration-200 group-hover:scale-105"
+                      >
+                        <img
+                          :src="getBookCoverImage(book.image)"
+                          :alt="'Book cover ' + book.id"
+                          class="w-full h-full object-cover rounded shadow-lg cursor-pointer"
+                          @click="navigateToBook(book.id)"
+                        />
+                        <div
+                          class="absolute top-0 left-0 w-2 h-full bg-black bg-opacity-10 rounded-l"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
 
-        <!-- 선반 효과 -->
-        <div class="absolute -bottom-4 left-0 right-0 h-4 bg-[#8B4513] shadow-md transform skew-y-1"></div>
-        <div class="absolute -bottom-4 left-0 right-0 h-2 bg-[#5C2E0E] transform -skew-y-2"></div>
-      </div>
-    </div>
-  </div>
+                  <!-- 선반 효과 -->
+                  <div
+                    class="absolute -bottom-4 left-0 right-0 h-4 bg-[#8B4513] shadow-md transform skew-y-1"
+                  ></div>
+                  <div
+                    class="absolute -bottom-4 left-0 right-0 h-2 bg-[#5C2E0E] transform -skew-y-2"
+                  ></div>
+                </div>
+              </div>
+            </div>
 
             <!-- 페이지네이션 -->
             <div v-if="books.length > 0" class="mt-8 mb-16 md:mb-8">
@@ -155,8 +158,8 @@ onMounted(async () => {
             </div>
 
             <!-- 검색 결과 없음 -->
-            <div 
-              v-if="!loading && books.length === 0" 
+            <div
+              v-if="!loading && books.length === 0"
               class="flex justify-center items-center h-40 text-gray-500"
             >
               검색 결과가 없습니다.
@@ -172,8 +175,13 @@ onMounted(async () => {
     </div>
 
     <!-- 로딩 스피너 -->
-    <div v-if="loading" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div class="animate-spin rounded-full h-12 w-12 border-4 border-[#698469] border-t-transparent"></div>
+    <div
+      v-if="loading"
+      class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+    >
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-4 border-[#698469] border-t-transparent"
+      ></div>
     </div>
   </div>
 </template>
@@ -181,7 +189,7 @@ onMounted(async () => {
 <style scoped>
 .book {
   transform-style: preserve-3d;
-  box-shadow: 
+  box-shadow:
     -6px 6px 8px rgba(0, 0, 0, 0.1),
     -2px 2px 4px rgba(0, 0, 0, 0.1);
 }
