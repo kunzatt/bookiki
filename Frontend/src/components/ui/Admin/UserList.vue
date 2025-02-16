@@ -13,37 +13,29 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 // 페이지네이션 상태
-const currentPage = ref(1);
 const totalPages = ref(1);
+const totalElements = ref(0);
+const currentPage = ref(1);
 const pageSize = ref(10);
-const pageInfo = ref<Pageable>({
-  pageNumber: 0,
-  pageSize: 10,
-  sort: ['id,DESC'],
-});
+const sortBy = ref('id');
+const direction = ref('desc');
 
-// 사용자 목록 조회
-const fetchUsers = async () => {
+// 페이지 변경 핸들러
+const handlePaginationChange = async (pageInfo: Pageable) => {
+  currentPage.value = pageInfo.pageNumber + 1;
   loading.value = true;
-  error.value = null;
 
   try {
-    const response = await getUserDetails();
-    users.value = response;
-    totalPages.value = Math.ceil(response.length / pageSize.value);
+    const response = await getUserDetails(pageInfo.pageNumber, pageSize.value, 'id', 'DESC');
+    users.value = response.content;
+    totalPages.value = response.totalPages;
+    totalElements.value = response.totalElements;
   } catch (err) {
     error.value = '사용자 목록을 불러오는데 실패했습니다.';
     console.error('Error fetching users:', err);
   } finally {
     loading.value = false;
   }
-};
-
-// 페이지 변경 핸들러
-const handlePageChange = (newPageInfo: Pageable) => {
-  pageInfo.value = newPageInfo;
-  currentPage.value = newPageInfo.pageNumber + 1;
-  fetchUsers();
 };
 
 // 사용자 삭제 핸들러
@@ -67,6 +59,29 @@ const handleUserDetail = (userId: number) => {
 onMounted(() => {
   fetchUsers();
 });
+
+// fetchUsers 함수 수정
+const fetchUsers = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const response = await getUserDetails(
+      currentPage.value - 1, // 백엔드는 0-based index 사용
+      pageSize.value,
+      sortBy.value,
+      direction.value,
+    );
+    users.value = response.content;
+    totalPages.value = response.totalPages;
+    totalElements.value = response.totalElements;
+  } catch (err) {
+    error.value = '사용자 목록을 불러오는데 실패했습니다.';
+    console.error('Error fetching users:', err);
+  } finally {
+    loading.value = false;
+  }
+};
 </script>
 
 <template>
@@ -108,10 +123,10 @@ onMounted(() => {
     <!-- 페이지네이션 -->
     <div class="mt-4">
       <Pagination
-        v-model:pageInfo="pageInfo"
         :current-page="currentPage"
         :total-pages="totalPages"
         :page-size="pageSize"
+        @update:pageInfo="handlePaginationChange"
       />
     </div>
   </div>

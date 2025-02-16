@@ -49,12 +49,16 @@ const handleDeleteClick = () => {
       {{ user.companyId }}
     </td>
 
-    <!-- 사번 -->
-    <td class="py-4 px-4 text-sm">'도서 대출 현황이 들어갈 자리'</td>
+    <!-- 도서 대출 현황 -->
+    <td class="py-4 px-4 text-sm">{{ user.currentBorrowCount }}권</td>
 
     <!-- 상태 뱃지 -->
     <td class="py-4 px-4">
-      <Badge text="상태" type="primary" />
+      <Badge
+        :text="user.hasOverdueBooks ? '연체' : '정상'"
+        :type="user.hasOverdueBooks ? 'error' : 'primary'"
+        :is-enabled="true"
+      />
     </td>
 
     <!-- 액션 버튼 -->

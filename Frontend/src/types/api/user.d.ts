@@ -99,6 +99,8 @@ export interface UserInformationForAdminResponse {
   activeAt: string | null;
   profileImage: string;
   provider: string;
+  currentBorrowCount: number; // 추가: 현재 대출 중인 도서 수
+  hasOverdueBooks: boolean; // 추가: 연체 도서 존재 여부
 }
 
 // 회원가입 요청
