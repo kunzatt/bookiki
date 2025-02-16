@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+import Sidebar from '@/components/common/Sidebar.vue'
+import HeaderDesktop from '@/components/common/HeaderDesktop.vue'
+import BottomNav from '@/components/common/BottomNav.vue'
 import { ref, onMounted, computed } from 'vue';
 import {
   getUserNotifications,
@@ -9,6 +13,7 @@ import { useAuthStore } from '@/stores/auth';
 import type { NotificationResponse } from '@/types/api/notification';
 import { NotificationStatus } from '@/types/enums/notificationStatus';
 
+const router = useRouter()
 const authStore = useAuthStore();
 const notifications = ref<NotificationResponse[]>([]);
 const loading = ref(true);
@@ -47,8 +52,7 @@ const loadNotifications = async (page: number = currentPage.value) => {
     const requestConfig = {
       page,
       size: pageSize,
-      sort: 'createdAt',
-      direction: 'desc' as const,
+      sort: 'createdAt,desc'
     };
 
     const response = await getUserNotifications(requestConfig);
@@ -152,102 +156,130 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- 기존 헤더 부분 유지 -->
-    <div class="lg:hidden sticky top-0 bg-white border-b z-10">
-      <div class="px-4 py-3 flex items-center justify-between">
-        <h1 class="text-lg font-medium">알림</h1>
-      </div>
-    </div>
+  <div class="flex h-screen overflow-hidden">
+    <!-- 데스크톱 사이드바 - lg 이상에서만 표시 -->
+    <Sidebar class="hidden lg:block" />
 
-    <div class="max-w-3xl mx-auto">
-      <div class="hidden lg:flex justify-between items-center p-4 mb-4">
-        <h1 class="text-xl font-semibold">알림</h1>
-        <span class="text-sm text-gray-500">전체 {{ totalElements }}개</span>
-      </div>
-
-      <!-- 알림 리스트 -->
-      <div class="divide-y divide-gray-200">
-        <TransitionGroup name="list" tag="div">
-          <div
-            v-for="notification in notifications"
-            :key="notification.id"
-            class="bg-white hover:bg-gray-50 transition-colors"
-            :class="{
-              'bg-blue-50 hover:bg-blue-100': notification.notificationStatus === 'UNREAD',
-            }"
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- 모바일 헤더 -->
+      <div class="lg:hidden sticky top-0 bg-white border-b z-10">
+        <div class="px-4 py-3 flex items-center space-x-4">
+          <button 
+            @click="router.back()" 
+            class="text-gray-600 hover:text-gray-800"
           >
-            <div class="p-4">
-              <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center space-x-2">
-                  <span
-                    class="w-2 h-2 rounded-full"
-                    :class="
-                      notification.notificationStatus === 'UNREAD' ? 'bg-blue-500' : 'bg-gray-300'
-                    "
-                  ></span>
-                </div>
-                <button
-                  @click="handleDeleteNotification(notification.id)"
-                  class="text-gray-400 hover:text-gray-600"
-                >
-                  <span class="sr-only">삭제</span>
-                  <i class="material-icons !text-[20px]">close</i>
-                </button>
-              </div>
+            <span class="material-icons">arrow_back</span>
+          </button>
+          <h1 class="text-lg font-medium">알림</h1>
+        </div>
+      </div>
 
-              <div @click="handleNotificationClick(notification)" class="cursor-pointer">
-                <p class="text-gray-900 mb-1">{{ notification.content }}</p>
-                <p class="text-sm text-gray-500">
-                  {{ formatDate(notification.createdAt) }}
-                </p>
+      <!-- 데스크톱 헤더 -->
+      <HeaderDesktop class="hidden lg:block" />
+
+      <main class="flex-1 px-5 lg:px-8 pb-16 lg:pb-8 overflow-y-auto">
+        <div class="max-w-3xl mx-auto">
+          <!-- 데스크톱 타이틀 -->
+          <div class="hidden lg:flex justify-between items-center p-4 mb-4">
+            <div class="flex items-center space-x-4">
+              <button 
+                @click="router.back()" 
+                class="text-gray-600 hover:text-gray-800"
+              >
+                <span class="material-icons">arrow_back</span>
+              </button>
+              <h1 class="text-xl font-semibold">알림</h1>
+            </div>
+            <span class="text-sm text-gray-500">전체 {{ totalElements }}개</span>
+          </div>
+
+          <!-- 알림 리스트 -->
+          <div class="bg-white rounded-lg shadow-sm divide-y divide-gray-200">
+            <TransitionGroup name="list" tag="div">
+              <div
+                v-for="notification in notifications"
+                :key="notification.id"
+                class="hover:bg-gray-50 transition-colors"
+                :class="{
+                  'bg-blue-50 hover:bg-blue-100': notification.notificationStatus === 'UNREAD',
+                }"
+              >
+                <div class="p-4">
+                  <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center space-x-2">
+                      <span
+                        class="w-2 h-2 rounded-full"
+                        :class="
+                          notification.notificationStatus === 'UNREAD' ? 'bg-blue-500' : 'bg-gray-300'
+                        "
+                      ></span>
+                    </div>
+                    <button
+                      @click="handleDeleteNotification(notification.id)"
+                      class="text-gray-400 hover:text-gray-600"
+                    >
+                      <span class="sr-only">삭제</span>
+                      <i class="material-icons !text-[20px]">close</i>
+                    </button>
+                  </div>
+
+                  <div @click="handleNotificationClick(notification)" class="cursor-pointer">
+                    <p class="text-gray-900 mb-1">{{ notification.content }}</p>
+                    <p class="text-sm text-gray-500">
+                      {{ formatDate(notification.createdAt) }}
+                    </p>
+                  </div>
+                </div>
               </div>
+            </TransitionGroup>
+
+            <!-- 로딩 상태 -->
+            <div v-if="loading" class="p-8 flex justify-center">
+              <div class="w-6 h-6 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div v-if="!loading && notifications.length === 0" class="p-8 text-center text-gray-500">
+              알림이 없습니다.
             </div>
           </div>
-        </TransitionGroup>
 
-        <!-- 로딩 상태 -->
-        <div v-if="loading" class="p-8 flex justify-center">
-          <div
-            class="w-6 h-6 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"
-          ></div>
+          <!-- 페이지네이션 -->
+          <div v-if="totalPages > 1" class="flex justify-center items-center space-x-2 p-4 mt-4">
+            <button
+              @click="handlePageChange(currentPage - 1)"
+              :disabled="!canGoPrevious"
+              class="px-3 py-1 rounded border"
+              :class="canGoPrevious ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'"
+            >
+              이전
+            </button>
+
+            <button
+              v-for="page in pageNumbers"
+              :key="page"
+              @click="handlePageChange(page)"
+              class="px-3 py-1 rounded border"
+              :class="currentPage === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'"
+            >
+              {{ page + 1 }}
+            </button>
+
+            <button
+              @click="handlePageChange(currentPage + 1)"
+              :disabled="!canGoNext"
+              class="px-3 py-1 rounded border"
+              :class="canGoNext ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'"
+            >
+              다음
+            </button>
+          </div>
         </div>
+      </main>
 
-        <!-- 빈 상태 -->
-        <div v-if="!loading && notifications.length === 0" class="p-8 text-center text-gray-500">
-          알림이 없습니다.
-        </div>
-
-        <!-- 페이지네이션 -->
-        <div v-if="totalPages > 1" class="flex justify-center items-center space-x-2 p-4">
-          <button
-            @click="handlePageChange(currentPage - 1)"
-            :disabled="!canGoPrevious"
-            class="px-3 py-1 rounded border"
-            :class="canGoPrevious ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'"
-          >
-            이전
-          </button>
-
-          <button
-            v-for="page in pageNumbers"
-            :key="page"
-            @click="handlePageChange(page)"
-            class="px-3 py-1 rounded border"
-            :class="currentPage === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'"
-          >
-            {{ page + 1 }}
-          </button>
-
-          <button
-            @click="handlePageChange(currentPage + 1)"
-            :disabled="!canGoNext"
-            class="px-3 py-1 rounded border"
-            :class="canGoNext ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'"
-          >
-            다음
-          </button>
-        </div>
+      <!-- 모바일에서만 BottomNav 표시 -->
+      <div class="lg:hidden">
+        <BottomNav />
       </div>
     </div>
   </div>
