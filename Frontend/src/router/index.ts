@@ -44,6 +44,14 @@ const router = createRouter({
       path: '/oauth2/callback',
       name: 'OAuth2Callback',
       component: () => import('@/views/auth/OAuth2Callback.vue'),
+      props: (route) => ({
+        token: route.query.token,
+      }),
+    },
+    {
+      path: '/oauth2/authorization/:provider',
+      name: 'OAuth2Authorization',
+      component: () => import('@/views/auth/OAuth2Authorization.vue'),
     },
     {
       path: '/books/:id',
@@ -165,11 +173,21 @@ router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
   const requiresAuth = to.meta.requiresAuth;
 
+  // OAuth2 인증 처리
+  if (to.name === 'OAuth2Authorization') {
+    const provider = to.params.provider as string;
+    if (provider) {
+      window.location.href = `${import.meta.env.VITE_API_URL}/api/oauth2/authorization/${provider}`;
+      return;
+    }
+    next({ name: 'OAuth2Error' });
+    return;
+  }
+
+  // 기존 인증 체크 로직
   if (requiresAuth && !authStore.isAuthenticated) {
-    // 인증이 필요한 페이지에 접근 시 로그인 상태가 아니면 로그인 페이지로 리다이렉트
     next('/login');
   } else if (to.path === '/login' && authStore.isAuthenticated) {
-    // 이미 로그인된 상태에서 로그인 페이지 접근 시 메인 페이지로 리다이렉트
     next('/main');
   } else {
     next();

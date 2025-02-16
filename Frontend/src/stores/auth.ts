@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { AuthUser, LoginRequest, LoginResponse } from '@/types/api/user';
-import { login as loginApi, logout as logoutApi } from '@/api/user';
+import { login as loginApi, logout as logoutApi, setToken as setTokenApi } from '@/api/user';
 import { useRouter } from 'vue-router';
 
 export const useAuthStore = defineStore('auth', () => {
@@ -22,12 +22,12 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (loginRequest: LoginRequest) => {
     try {
       const response: LoginResponse = await loginApi(loginRequest);
-      
+
       // User 정보 설정
       user.value = response;
       // sessionStorage에 사용자 정보 저장
       sessionStorage.setItem('user', JSON.stringify(response));
-      
+
       return response;
     } catch (error) {
       console.error('Login failed:', error);
@@ -45,7 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
       // 상태 초기화
       user.value = null;
       sessionStorage.clear(); // 모든 세션 데이터 삭제
-      
+
       // 로그인 페이지로 리다이렉트
       return true;
     } catch (err) {
@@ -56,12 +56,43 @@ export const useAuthStore = defineStore('auth', () => {
       loading.value = false;
     }
   };
-  
+
   // 권한 체크 헬퍼 함수
   const hasRole = (requiredRole: string) => {
     return userRole.value === requiredRole;
   };
 
+  const setToken = async (temporaryToken: string) => {
+    try {
+      const response = await setTokenApi(temporaryToken);
+      user.value = response;
+      sessionStorage.setItem('user', JSON.stringify(response));
+      return response;
+    } catch (error) {
+      console.error('Token exchange failed:', error);
+      throw error;
+    }
+  };
+
+  const handleOAuth2Login = async (token: string) => {
+    try {
+      const response = await setTokenApi(token);
+
+      // User 정보 설정 (response에서 받은 데이터로)
+      user.value = {
+        id: response.id,
+        username: response.username,
+        role: response.role,
+      };
+
+      // sessionStorage에 사용자 정보 저장
+      sessionStorage.setItem('user', JSON.stringify(user.value));
+      return true;
+    } catch (error) {
+      console.error('OAuth2 login failed:', error);
+      throw error;
+    }
+  };
 
   // Getters
   const isAuthenticated = computed(() => !!user.value);
@@ -78,6 +109,8 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     logout,
     initializeFromStorage,
-    hasRole
+    hasRole,
+    setToken,
+    handleOAuth2Login,
   };
 });
