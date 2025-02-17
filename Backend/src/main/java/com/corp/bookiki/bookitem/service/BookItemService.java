@@ -143,6 +143,7 @@ public class BookItemService {
 		return response;
 	}
 
+	@Transactional
 	public void updateBookStatus(Integer id, BookStatus newStatus) {
 		BookItemEntity bookItem = bookItemRepository.findById(id)
 				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + id));

@@ -103,10 +103,9 @@ public class BookItemEntity {
 	}
 
 	public void markAsLost() {
-		if (this.bookStatus == BookStatus.BORROWED) {
-			throw new BookItemException(ErrorCode.BOOK_NOT_LOST);
-		}
 		this.bookStatus = BookStatus.UNAVAILABLE;
 	}
+
+
 
 }
