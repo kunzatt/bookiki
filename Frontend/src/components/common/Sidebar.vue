@@ -8,7 +8,7 @@ import { useRouter } from 'vue-router';
 import type { MenuItem, User } from '../../types/common/sideBar';
 import { menuItems } from '../../types/common/sideBar';
 import { useAuthStore } from '@/stores/auth';
-import BookikiLogo from '@/assets/BookikiLogo.png';
+import BookikiLogo from '@/assets/BookikiLogo.PNG';
 
 // Store 사용
 const authStore = useAuthStore();

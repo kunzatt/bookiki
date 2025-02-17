@@ -60,8 +60,8 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/public/books/:id',
-      name: 'PublicBookDetail',
+      path: '/qr/books/:id',
+      name: 'QRBookDetail',
       component: () => import('@/views/QRBookDetailView.vue'),
       meta: {
         requiresAuth: false,
@@ -136,21 +136,27 @@ const router = createRouter({
       component: () => import('@/views/qna/QnaCreateView.vue'),
     },
     {
-      path: '/mypage',
-      name: 'mypage',
-      component: () => import('@/views/mypage/MyPage.vue'),
+      path: '/mypage/current-borrowed',
+      name: 'currentBorrowed',
+      component: () => import('@/views/mypage/CurrentBorrowedBookListView.vue'),
       meta: { requiresAuth: true },
     },
     {
-      path: '/loans',
-      name: 'loans',
-      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
+      path: '/mypage/history',
+      name: 'borrowHistory',
+      component: () => import('@/views/mypage/BorrowHistoryView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/mypage',
+      name: 'mypage',
+      component: () => import('@/views/mypage/MyPageView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/favorites',
       name: 'favorites',
-      component: () => import('@/views/mypage/MyFavoriteList.vue'),
+      component: () => import('@/views/mypage/MyFavoriteListView.vue'),
       meta: { requiresAuth: true },
     },
     {
@@ -164,6 +170,20 @@ const router = createRouter({
       name: 'adminUser',
       component: () => import('@/views/admin/AdminUserView.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/password/change',
+      name: 'passwordChange',
+      component: () => import('@/views/password/PasswordChangeView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/reset-password/:token',
+      name: 'PasswordReset',
+      component: () => import('@/views/password/PasswordResetView.vue'),
+      meta: {
+        requiresAuth: false,
+      },
     },
     {
       path: '/feedbacks',
@@ -199,7 +219,8 @@ router.beforeEach((to, from, next) => {
   // 기존 인증 체크 로직
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login');
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
+  } else if (to.path === '/login' && authStore.isAuthenticated && from.path !== '/mypage') {
+    // 마이페이지에서 로그아웃한 경우는 /login으로 이동
     next('/main');
   } else {
     next();
