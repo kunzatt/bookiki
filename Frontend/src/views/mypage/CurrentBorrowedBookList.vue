@@ -1,60 +1,85 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import BottomNav from '@/components/common/BottomNav.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import { getCurrentBorrowedBooks } from '@/api/bookHistory';
-import { getBookItemById } from '@/api/bookItem';
 import { getBookInformation } from '@/api/bookInformation';
+import { getBookItemById } from '@/api/bookItem';
 import type { BookHistoryResponse } from '@/types/api/bookHistory';
-import type { BookItemResponse } from '@/types/api/bookItem';
-import type { BookInformationResponse } from '@/types/api/bookInformation';
 
-interface DetailedBookInfo extends BookHistoryResponse {
-  bookInformation?: BookInformationResponse;
+interface BookDetail extends Omit<BookHistoryResponse, 'overdue'> {
+  isOverdue: boolean;
+  bookInfo?: {
+    title: string;
+    author: string;
+    image: string;
+  };
 }
 
+const router = useRouter();
 const isLoading = ref(true);
-const borrowedBooks = ref<DetailedBookInfo[]>([]);
+const borrowedBooks = ref<BookDetail[]>([]);
 const error = ref<string | null>(null);
 
 const fetchBookDetails = async () => {
   try {
     isLoading.value = true;
-    const borrowedBooksData = await getCurrentBorrowedBooks();
-
-    // 각 대출 도서에 대한 상세 정보 조회
-    const detailedBooks = await Promise.all(
-      borrowedBooksData.map(async (book) => {
+    // 1. 현재 대출 중인 도서 목록 조회
+    const currentBooks = await getCurrentBorrowedBooks();
+    console.log('1. 대출 중인 도서 목록:', currentBooks);
+    
+    // 2. 각 도서의 상세 정보 조회
+    const booksWithDetails = await Promise.all(
+      currentBooks.map(async (book) => {
         try {
+          // 2-1. bookItemId로 도서 아이템 정보 조회
           const bookItem = await getBookItemById(book.bookItemId);
+          console.log(`2. 도서 아이템 정보 (ID: ${book.bookItemId}):`, bookItem);
+          
+          // 2-2. bookInformationId로 도서 정보 조회
           const bookInfo = await getBookInformation(bookItem.bookInformationId);
-          return { ...book, bookInformation: bookInfo };
+          console.log(`3. 도서 상세 정보 (ID: ${bookItem.bookInformationId}):`, bookInfo);
+          
+          return {
+            ...book,
+            isOverdue: book.overdue, // overdue를 isOverdue로 변환
+            bookInfo: {
+              title: bookInfo.title,
+              author: bookInfo.author,
+              image: bookInfo.image
+            }
+          } as BookDetail;
         } catch (err) {
-          console.error(`도서 정보 조회 실패 (ID: ${book.bookItemId}):`, err);
-          return book;
+          console.error(`도서 ID ${book.bookItemId}의 상세 정보 조회 실패:`, err);
+          // 기본 도서 정보로 반환
+          return {
+            ...book,
+            isOverdue: book.overdue,
+            bookInfo: {
+              title: book.bookTitle || '제목 없음',
+              author: book.bookAuthor || '저자 미상',
+              image: '/default-book-cover.svg'
+            }
+          } as BookDetail;
         }
-      }),
+      })
     );
 
-    borrowedBooks.value = detailedBooks;
-  } catch (err) {
+    console.log('4. 최종 도서 목록:', booksWithDetails);
+    borrowedBooks.value = booksWithDetails;
+  } catch (err: any) {
     console.error('대출 중인 도서 목록 조회 실패:', err);
-    error.value = '도서 목록을 불러오는데 실패했습니다.';
+    const errorMessage = err.response?.data?.message || err.message;
+    error.value = `도서 목록을 불러오는데 실패했습니다: ${errorMessage}`;
   } finally {
     isLoading.value = false;
   }
 };
 
-const formatDate = (date: any) => {
-  if (Array.isArray(date)) {
-    return new Date(date[0], date[1] - 1, date[2]).toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  }
+const formatDate = (date: string) => {
   return new Date(date).toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'long',
@@ -62,8 +87,13 @@ const formatDate = (date: any) => {
   });
 };
 
-const isOverdue = (overdue: boolean | null) => {
+const isOverdue = (overdue: boolean) => {
   return overdue === true;
+};
+
+const handleImageError = (event: Event) => {
+  const target = event.target as HTMLImageElement;
+  target.src = '/default-book-cover.svg';
 };
 
 onMounted(() => {
@@ -73,15 +103,20 @@ onMounted(() => {
 
 <template>
   <div class="flex h-screen overflow-hidden">
+    <!-- Sidebar for desktop -->
     <Sidebar class="hidden lg:block" />
 
     <div class="flex-1 flex flex-col overflow-hidden">
-      <HeaderMobile class="lg:hidden" />
-      <HeaderDesktop class="hidden lg:block" />
+      <!-- Headers -->
+      <HeaderMobile class="lg:hidden" title="대출 중인 도서" />
+      <HeaderDesktop class="hidden lg:block" title="대출 중인 도서" />
 
       <main class="flex-1 px-5 lg:px-8 pb-16 lg:pb-8 overflow-y-auto">
         <div class="max-w-[1440px] mx-auto">
-          <h1 class="text-2xl font-bold my-6">대출 중인 도서</h1>
+          <div class="flex justify-between items-center my-6">
+            <h1 class="text-xl lg:text-2xl font-medium">대출 중인 도서</h1>
+            <span class="text-gray-600">총 {{ borrowedBooks.length }}권</span>
+          </div>
 
           <!-- 로딩 상태 -->
           <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
@@ -99,62 +134,36 @@ onMounted(() => {
           </div>
 
           <!-- 대출 도서 목록 -->
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
             <div
               v-for="book in borrowedBooks"
               :key="book.id"
-              class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6"
+              class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              @click="router.push(`/books/${book.bookItemId}`)"
             >
-              <div class="flex flex-col md:flex-row gap-6">
-                <!-- 도서 이미지 -->
-                <div class="flex-shrink-0">
-                  <img
-                    :src="book.bookInformation?.coverImage || '/default-book-cover.svg'"
-                    :alt="book.bookTitle"
-                    class="w-full md:w-40 h-56 object-cover rounded-lg"
-                    @error="$event.target.src = '/default-book-cover.svg'"
-                  />
-                </div>
-
-                <!-- 도서 정보 -->
-                <div class="flex-1">
-                  <h3 class="text-xl font-semibold mb-2">{{ book.bookTitle }}</h3>
-                  <p class="text-gray-600 mb-4">{{ book.bookAuthor }}</p>
-
-                  <div class="space-y-2 text-sm">
-                    <p v-if="book.bookInformation?.publisher" class="text-gray-600">
-                      출판사: {{ book.bookInformation.publisher }}
-                    </p>
-                    <p v-if="book.bookInformation?.publicationYear" class="text-gray-600">
-                      출판년도: {{ book.bookInformation.publicationYear }}
-                    </p>
-                    <p v-if="book.bookInformation?.isbn" class="text-gray-600">
-                      ISBN: {{ book.bookInformation.isbn }}
-                    </p>
-                  </div>
-
-                  <div class="mt-4 pt-4 border-t border-gray-200">
-                    <p class="text-sm mb-2">대출일: {{ formatDate(book.borrowedAt) }}</p>
-                    <p :class="['text-sm', { 'text-red-600': isOverdue(book.overdue) }]">
-                      반납 예정일: {{ formatDate(book.borrowedAt) }}
-                      <span
-                        v-if="isOverdue(book.overdue)"
-                        class="ml-2 text-xs bg-red-100 text-red-600 px-2 py-1 rounded"
-                      >
-                        연체
-                      </span>
-                    </p>
-                  </div>
+              <div class="relative">
+                <img
+                  :src="book.bookInfo?.image || '/default-book-cover.svg'"
+                  :alt="book.bookInfo?.title"
+                  @error="handleImageError"
+                  class="w-full h-[220px] object-cover rounded-t-lg"
+                />
+                <div
+                  v-if="isOverdue(book.isOverdue)"
+                  class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                >
+                  연체
                 </div>
               </div>
-
-              <!-- 도서 설명 -->
-              <div
-                v-if="book.bookInformation?.description"
-                class="mt-4 pt-4 border-t border-gray-200"
-              >
-                <p class="text-sm text-gray-600 line-clamp-3">
-                  {{ book.bookInformation.description }}
+              <div class="p-3 sm:p-4">
+                <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                  {{ book.bookInfo?.title }}
+                </h3>
+                <p class="text-xs sm:text-sm text-gray-600 mb-1">
+                  {{ book.bookInfo?.author }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  반납 예정일: {{ formatDate(book.dueDate) }}
                 </p>
               </div>
             </div>
@@ -162,25 +171,27 @@ onMounted(() => {
         </div>
       </main>
 
-      <BottomNav class="lg:hidden" />
+      <div class="lg:hidden">
+        <BottomNav />
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.grid {
-  scroll-behavior: smooth;
+.book-card {
+  @apply bg-white rounded-lg overflow-hidden shadow hover:shadow-md transition-shadow;
 }
 
-@media (min-width: 768px) {
+@media screen and (min-width: 768px) {
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    @apply grid-cols-3;
   }
 }
-
-@media (min-width: 1024px) {
+        
+@media screen and (min-width: 1024px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
+    @apply grid-cols-4;
   }
 }
 </style>
