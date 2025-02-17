@@ -197,6 +197,12 @@ const router = createRouter({
       component: () => import('@/views/feedback/FeedbackDetailVIew.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/search',
+      name: 'search',
+      component: () => import('@/views/search/SearchView.vue'),
+      meta: { requiresAuth: true }
+    },
   ],
 });
 
