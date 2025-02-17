@@ -1,14 +1,10 @@
 package com.corp.bookiki.jwt.filter;
 
-import com.corp.bookiki.jwt.service.JwtService;
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,10 +13,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.stream.Collectors;
+import com.corp.bookiki.jwt.service.JwtService;
+
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -73,7 +75,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 path.startsWith("/api/user/signup") ||
                 path.startsWith("/api/login") ||
                 path.startsWith("/api/ws") ||
-                path.startsWith("/api/password") ||
+                path.startsWith("/api/password/reset") ||
                 path.startsWith("/api/books/return") ||
                 path.startsWith("/api/iot-storage") ||
                 path.startsWith("/api/user/login") ||
