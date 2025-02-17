@@ -19,6 +19,8 @@ import com.corp.bookiki.util.CookieUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
+
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Slf4j
-@WebMvcTest(BookHistoryController.class)
+@WebMvcTest(ProfileImageController.class)
 @Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class,
     CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
@@ -140,25 +142,25 @@ class ProfileImageControllerTest {
         log.info("프로필 이미지 업데이트 API 테스트 시작");
 
         MockMultipartFile mockFile = new MockMultipartFile(
-                "file",
-                "test-image.jpg",
-                MediaType.IMAGE_JPEG_VALUE,
-                "test image content".getBytes()
+            "file",
+            "test-image.jpg",
+            MediaType.IMAGE_JPEG_VALUE,
+            "test image content".getBytes()
         );
         log.info("테스트용 MultipartFile 생성 완료");
 
         doNothing().when(profileImageService).updateProfileImage(anyInt(), any(MultipartFile.class));
         log.info("Mock 서비스 동작 설정 완료");
 
-        mockMvc.perform(multipart("/api/users/1/profile-image")
-                        .file(mockFile)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
+        mockMvc.perform(multipart("/api/users/profile-image")
+                .file(mockFile)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
                 .cookie(getUserJwtCookie())
-                        .with(request -> {
-                            request.setMethod("PUT");
-                            return request;
-                        }))
-                .andExpect(status().isOk());
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+            .andExpect(status().isOk());
 
         verify(profileImageService, times(1)).updateProfileImage(anyInt(), any(MultipartFile.class));
         log.info("프로필 이미지 업데이트 API 테스트 완료");
@@ -173,37 +175,36 @@ class ProfileImageControllerTest {
         doNothing().when(profileImageService).deleteProfileImage(anyInt());
         log.info("Mock 서비스 동작 설정 완료");
 
-        mockMvc.perform(delete("/api/users/1/profile-image")
+        mockMvc.perform(delete("/api/users/profile-image")
                 .cookie(getUserJwtCookie())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNoContent());
 
         verify(profileImageService, times(1)).deleteProfileImage(anyInt());
         log.info("프로필 이미지 삭제 API 테스트 완료");
     }
 
     @Test
-    @DisplayName("프로필 이미지 조회 API 성공")
+    @DisplayName("프로필 이미지 데이터 조회 API 성공")
     @WithMockUser
-    void getProfileImage_WhenValidRequest_ThenSuccess() throws Exception {
-        log.info("프로필 이미지 조회 API 테스트 시작");
+    void getActualProfileImage_WhenValidRequest_ThenSuccess() throws Exception {
+        log.info("프로필 이미지 데이터 조회 API 테스트 시작");
 
-        ProfileResponse response = ProfileResponse.builder()
-                .profileImageUrl("/images/profile/test.jpg")
-                .build();
-        log.info("테스트용 응답 객체 생성 완료: {}", response);
-
-        when(profileImageService.getProfileImage(anyInt())).thenReturn(response);
+        byte[] imageData = "test image content".getBytes();
+        when(profileImageService.getActualProfileImage(anyInt())).thenReturn(imageData);
         log.info("Mock 서비스 동작 설정 완료");
 
-        mockMvc.perform(get("/api/users/1/profile-image")
+        mockMvc.perform(get("/api/users/profile-image")
                 .cookie(getUserJwtCookie())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.profileImageUrl").value("/images/profile/test.jpg"));
+                .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(result -> {
+                byte[] responseBytes = result.getResponse().getContentAsByteArray();
+                Assertions.assertThat(responseBytes).isEqualTo(imageData);
+            });
 
-        verify(profileImageService, times(1)).getProfileImage(anyInt());
-        log.info("프로필 이미지 조회 API 테스트 완료");
+        verify(profileImageService, times(1)).getActualProfileImage(anyInt());
+        log.info("프로필 이미지 데이터 조회 API 테스트 완료");
     }
 
     @Test
@@ -213,25 +214,25 @@ class ProfileImageControllerTest {
         log.info("잘못된 파일 형식 프로필 이미지 업데이트 API 테스트 시작");
 
         MockMultipartFile mockFile = new MockMultipartFile(
-                "file",
-                "test-file.txt",
-                MediaType.TEXT_PLAIN_VALUE,
-                "test file content".getBytes()
+            "file",
+            "test-file.txt",
+            MediaType.TEXT_PLAIN_VALUE,
+            "test file content".getBytes()
         );
         log.info("테스트용 잘못된 형식의 MultipartFile 생성 완료");
 
         doThrow(new FileException(ErrorCode.FILE_INVALID_FORMAT))
-                .when(profileImageService).updateProfileImage(anyInt(), any(MultipartFile.class));
+            .when(profileImageService).updateProfileImage(anyInt(), any(MultipartFile.class));
         log.info("Mock 서비스 예외 발생 설정 완료");
 
-        mockMvc.perform(multipart("/api/users/1/profile-image")
-                        .file(mockFile)
+        mockMvc.perform(multipart("/api/users/profile-image")
+                .file(mockFile)
                 .cookie(getUserJwtCookie())
-                        .with(request -> {
-                            request.setMethod("PUT");  // PUT 메서드로 명시적 설정
-                            return request;
-                        }))
-                .andExpect(status().isBadRequest());
+                .with(request -> {
+                    request.setMethod("PUT");
+                    return request;
+                }))
+            .andExpect(status().isBadRequest());
 
         verify(profileImageService, times(1)).updateProfileImage(anyInt(), any(MultipartFile.class));
         log.info("잘못된 파일 형식 프로필 이미지 업데이트 API 테스트 완료");

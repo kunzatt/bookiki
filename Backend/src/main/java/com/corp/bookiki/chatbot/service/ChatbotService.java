@@ -72,8 +72,6 @@ public class ChatbotService {
             DetectIntentResponse response = sessionsClient.detectIntent(detectIntentRequest);
             QueryResult queryResult = response.getQueryResult();
 
-            String faqCategory = handleFaqContext(queryResult, session);
-
             // 6. 신뢰도 검사
             if (queryResult.getIntentDetectionConfidence() < confidenceThreshold) {
                 return handleLowConfidence(queryResult);
@@ -148,10 +146,8 @@ public class ChatbotService {
         try {
             // 특정 intent에 대해 추가 안내 메시지 제공
             switch (intent) {
-                case "qr_troubleshooting":
-                    return "문제가 지속되면 'QR 오류 신고' 또는 '관리자 호출'을 선택해주세요.";
-                case "led_troubleshooting":
-                    return "다른 도움이 필요하시다면 알려주세요.";
+                case "qr_troubleshooting", "led_troubleshooting":
+                    return "문제가 지속되면 '오류 신고 및 피드백'을 선택해주세요.";
                 default:
                     return null;
             }
@@ -167,7 +163,16 @@ public class ChatbotService {
             return Arrays.asList(
                     "qr_troubleshooting",
                     "led_troubleshooting",
-                    "error_situation"
+                    "wrong_shelf_report",
+                    "system_status_check",
+                    "qr_error_report",
+                    "led_brightness_issue",
+                    "emergency_support",
+                    "camera_status",
+                    "book_wrong_place",
+                    "book_damage_report",
+                    "book_condition_report",
+                    "auto_return_guide"
             ).contains(intent);
         } catch (Exception e) {
             log.error("관리자 문의 버튼 표시 여부 확인 중 오류 발생: {}", e.getMessage());
@@ -190,37 +195,6 @@ public class ChatbotService {
             chatbotFeedbackRepository.save(feedback);
         } catch (Exception e) {
             log.error("피드백 생성 중 오류 발생: {}", e.getMessage());
-            throw new ChatbotException(ErrorCode.CONTEXT_MANAGEMENT_ERROR);
-        }
-    }
-
-    private String handleFaqContext(QueryResult queryResult, SessionName session) {
-        try {
-            // faq_category 파라미터 가져오기
-            Value categoryValue = queryResult.getParameters().getFieldsOrDefault("faq_category", Value.getDefaultInstance());
-            String faqCategory = categoryValue.getStringValue();
-
-            if (faqCategory != null && !faqCategory.isEmpty()) {
-                // 카테고리 관련 후속 질문을 위한 컨텍스트 설정
-                Context context = Context.newBuilder()
-                        .setName(session.toString() + "/contexts/faq-follow-up")
-                        .setLifespanCount(2)
-                        .build();
-
-                // 컨텍스트 생성 요청
-                CreateContextRequest contextRequest = CreateContextRequest.newBuilder()
-                        .setParent(session.toString())
-                        .setContext(context)
-                        .build();
-
-                contextsClient.createContext(contextRequest);
-
-                return faqCategory;
-            }
-            return null;
-
-        } catch (Exception e) {
-            log.error("FAQ 컨텍스트 처리 중 오류 발생: {}", e.getMessage());
             throw new ChatbotException(ErrorCode.CONTEXT_MANAGEMENT_ERROR);
         }
     }

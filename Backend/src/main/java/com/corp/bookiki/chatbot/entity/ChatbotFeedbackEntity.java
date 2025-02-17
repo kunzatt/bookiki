@@ -56,6 +56,8 @@ public class ChatbotFeedbackEntity {
         this.feedbackMessage = feedbackMessage;
         this.category = category;
         this.status = FeedbackStatus.PENDING;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
         this.deleted = false;
     }
 

@@ -14,6 +14,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -68,17 +72,24 @@ class UserInformationForAdminControllerTest {
 		UserInformationForAdminResponse response = createTestResponse(now);
 		log.info("테스트용 응답 객체 생성 완료: {}", response);
 
-		when(userInformationForAdminService.getUserDetails()).thenReturn(List.of(response));
+		// List를 Page로 변환
+		List<UserInformationForAdminResponse> responseList = List.of(response);
+		PageRequest pageRequest = PageRequest.of(0, 10, Sort.Direction.DESC, "id");
+		Page<UserInformationForAdminResponse> page = new PageImpl<>(responseList, pageRequest, responseList.size());
+
+		// Stubbing - 컨트롤러의 기본값과 일치하도록 수정
+		when(userInformationForAdminService.getUserDetails(0, 10, "id", "desc"))
+			.thenReturn(page);
 		log.info("Mock 서비스 동작 설정 완료");
 
 		mockMvc.perform(get("/api/admin/users")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$[0].email").value("test@example.com"))
-			.andExpect(jsonPath("$[0].userName").value("테스트"))
-			.andExpect(jsonPath("$[0].companyId").value("CORP001"));
+			.andExpect(jsonPath("$.content[0].email").value("test@example.com"))
+			.andExpect(jsonPath("$.content[0].userName").value("테스트"))
+			.andExpect(jsonPath("$.content[0].companyId").value("CORP001"));
 
-		verify(userInformationForAdminService, times(1)).getUserDetails();
+		verify(userInformationForAdminService, times(1)).getUserDetails(0, 10, "id", "desc");
 		log.info("전체 사용자 조회 API 테스트 완료");
 	}
 

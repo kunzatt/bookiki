@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,8 +14,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
@@ -37,6 +44,9 @@ class UserInformationForAdminServiceTest {
 	@Mock
 	private UserRepository userRepository;
 
+	@Mock
+	private BookHistoryService bookHistoryService;
+
 	@Test
 	@DisplayName("전체 사용자 조회 성공")
 	void getUserDetails_WhenValidRequest_ThenSuccess() {
@@ -52,20 +62,38 @@ class UserInformationForAdminServiceTest {
 			.updatedAt(now)
 			.activeAt(now)
 			.profileImage("profile.jpg")
+			.deleted(false)  // deleted 필드 추가
 			.build();
 		ReflectionTestUtils.setField(user, "id", 1);
 		log.info("테스트용 사용자 엔티티 생성 완료: {}", user);
 
-		when(userRepository.findAll()).thenReturn(List.of(user));
+		// Pageable 객체 생성
+		Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+		PageRequest pageRequest = PageRequest.of(0, 10, sort);
+
+		// Mock 동작 설정 - findByDeletedFalse 메서드에 대한 stubbing
+		when(userRepository.findByDeletedFalse(any(Pageable.class)))
+			.thenReturn(new PageImpl<>(List.of(user), pageRequest, 1));
+
+		// bookHistoryService에 대한 stubbing 추가
+		when(bookHistoryService.getCurrentBorrowedBooks(anyInt(), any()))
+			.thenReturn(Collections.emptyList());
+
 		log.info("Mock 레포지토리 동작 설정 완료");
 
-		List<UserInformationForAdminResponse> result = userInformationForAdminService.getUserDetails();
+		// 서비스 메서드 호출
+		Page<UserInformationForAdminResponse> result = userInformationForAdminService
+			.getUserDetails(0, 10, "createdAt", "DESC");
 
-		assertThat(result).hasSize(1);
-		assertThat(result.get(0).getEmail()).isEqualTo("test@example.com");
-		assertThat(result.get(0).getUserName()).isEqualTo("테스트");
-		assertThat(result.get(0).getCompanyId()).isEqualTo("CORP001");
-		verify(userRepository, times(1)).findAll();
+		// 검증
+		assertThat(result).isNotNull();
+		assertThat(result.getContent()).hasSize(1);
+		assertThat(result.getContent().get(0).getEmail()).isEqualTo("test@example.com");
+		assertThat(result.getContent().get(0).getUserName()).isEqualTo("테스트");
+		assertThat(result.getContent().get(0).getCompanyId()).isEqualTo("CORP001");
+
+		verify(userRepository).findByDeletedFalse(any(Pageable.class));
+		verify(bookHistoryService, times(2)).getCurrentBorrowedBooks(anyInt(), any());
 		log.info("전체 사용자 조회 테스트 완료");
 	}
 
