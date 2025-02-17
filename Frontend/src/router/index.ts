@@ -165,6 +165,18 @@ const router = createRouter({
       component: () => import('@/views/admin/AdminUserView.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/feedbacks',
+      name: 'chatbotFeedback',
+      component: () => import('@/views/feedback/FeedbackListView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feedbacks/:id',
+      name: 'FeedbackDetail',
+      component: () => import('@/views/feedback/FeedbackDetailVIew.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
