@@ -1,4 +1,5 @@
 import { PeriodType } from "../enums/periodType";
+import type { PageResponse } from '@/types/common/pagination';
 
 // 책 대출 요청
 export interface BookBorrowRequest {
@@ -11,14 +12,20 @@ export interface BookBorrowResponse {
     bookItemId: number;
     userId: number;
     borrowedAt: string;
+    dueDate: string;
+    isOverdue: boolean;
 }
 
 // 책 이력 요청
 export interface BookHistoryRequest {
     periodType: PeriodType;
-    startDate: string;
-    endDate: string;
-    userName: string;
+    startDate?: string;
+    endDate?: string;
+    userName?: string;
+    overdue?: boolean;
+    page?: number;
+    size?: number;
+    sort?: string;
 }
 
 // 책 이력 응답
@@ -48,3 +55,6 @@ export interface BookRankingResponse {
   image: string
   borrowCount: number
 }
+
+// 페이지네이션된 책 이력 응답
+export type BookHistoryPageResponse = PageResponse<BookHistoryResponse>;
