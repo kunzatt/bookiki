@@ -6,7 +6,8 @@ let isRefreshing = false;
 let failedQueue: any[] = [];
 
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8088',
+  baseURL:
+    import.meta.env.VITE_API_BASE_URL || 'http://localhost:8088' || 'http://bookiki-backend:8088',
   withCredentials: true,
   timeout: 5000,
   headers: {
