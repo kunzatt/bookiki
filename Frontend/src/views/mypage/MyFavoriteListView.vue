@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import BottomNav from '@/components/common/BottomNav.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
@@ -8,14 +8,19 @@ import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import { getUserFavorites, toggleFavorite } from '@/api/bookFavorite';
 import type { BookFavoriteResponse } from '@/types/api/favorite';
 import type { PageResponse } from '@/types/common/pagination';
+import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
 
 const router = useRouter();
 const isLoading = ref(true);
 const favorites = ref<BookFavoriteResponse[]>([]);
 const error = ref<string | null>(null);
-const currentPage = ref(0);
+const currentPage = ref(1);
 const totalPages = ref(0);
-const totalElements = ref(0);
+const pageInfo = ref({
+  pageNumber: 0,
+  pageSize: 8,
+  sort: ['createdAt,DESC'],
+});
 const displayCount = ref(4);
 const prevDisplayCount = ref(4);
 
@@ -37,22 +42,16 @@ const updateDisplayCount = () => {
   }
 };
 
-const fetchFavorites = async (page: number = 0) => {
+const fetchFavorites = async () => {
   try {
     isLoading.value = true;
-    const response = await getUserFavorites(page, 8, 'createdAt,desc');
-
-    // 모바일에서는 데이터를 누적
-    if (window.innerWidth < 1024 && page > 0) {
-      favorites.value = [...favorites.value, ...response.content];
-    } else {
-      // 데스크톱이거나 첫 페이지면 데이터를 교체
-      favorites.value = response.content;
-    }
-
-    currentPage.value = response.pageable.page;
+    const response = await getUserFavorites(
+      pageInfo.value.pageNumber,
+      pageInfo.value.pageSize,
+      pageInfo.value.sort[0]
+    );
+    favorites.value = response.content;
     totalPages.value = response.totalPages;
-    totalElements.value = response.totalElements;
   } catch (err) {
     console.error('좋아요 목록 조회 실패:', err);
     error.value = '좋아요 목록을 불러오는데 실패했습니다.';
@@ -65,16 +64,9 @@ const handleToggleFavorite = async (bookItemId: number, event: Event) => {
   try {
     event.stopPropagation();
     await toggleFavorite(bookItemId);
-    await fetchFavorites(currentPage.value);
+    await fetchFavorites();
   } catch (err) {
     console.error('좋아요 토글 실패:', err);
-  }
-};
-
-const loadMore = async () => {
-  if (currentPage.value + 1 < totalPages.value) {
-    currentPage.value += 1;
-    await fetchFavorites(currentPage.value);
   }
 };
 
@@ -93,8 +85,13 @@ const debounce = (fn: Function, delay: number) => {
 
 const debouncedUpdateDisplayCount = debounce(updateDisplayCount, 250);
 
-onMounted(() => {
-  fetchFavorites();
+watch(pageInfo, async () => {
+  currentPage.value = pageInfo.value.pageNumber + 1;
+  await fetchFavorites();
+});
+
+onMounted(async () => {
+  await fetchFavorites();
   updateDisplayCount();
   window.addEventListener('resize', debouncedUpdateDisplayCount);
 });
@@ -116,12 +113,12 @@ onUnmounted(() => {
         <div class="max-w-[1440px] mx-auto">
           <div class="flex justify-between items-center my-6">
             <h1 class="text-xl lg:text-2xl font-medium">좋아요 한 도서</h1>
-            <span class="text-gray-600">총 {{ totalElements }}권</span>
+            <span class="text-gray-600">총 {{ totalPages * pageInfo.pageSize }}권</span>
           </div>
 
           <!-- 로딩 상태 -->
           <div
-            v-if="isLoading && currentPage === 0"
+            v-if="isLoading && currentPage === 1"
             class="flex justify-center items-center h-[300px]"
           >
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -170,15 +167,15 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <!-- 더보기 버튼 -->
-            <div v-if="currentPage + 1 < totalPages" class="text-center mt-8">
-              <button
-                @click="loadMore"
-                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                :disabled="isLoading"
-              >
-                {{ isLoading ? '로딩 중...' : '더보기' }}
-              </button>
+            <!-- 페이지네이션 -->
+            <div class="mt-6 flex justify-center">
+              <BasicWebPagination
+                v-model:pageInfo="pageInfo"
+                :current-page="currentPage"
+                :total-pages="totalPages"
+                :page-size="pageInfo.pageSize"
+                :sort="pageInfo.sort"
+              />
             </div>
           </div>
         </div>

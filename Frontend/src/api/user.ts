@@ -248,12 +248,12 @@ export const sendPasswordResetEmail = async (request: PasswordResetEmailRequest)
 };
 
 // 비밀번호 재설정
-export const resetPassword = async (
-  token: string,
-  request: PasswordResetRequest,
-): Promise<void> => {
+export const resetPassword = async (token: string, request: { newPassword: string; newPasswordConfirm: string }): Promise<void> => {
   try {
-    await axios.put(`${API_URL}/password/reset/${token}`, request);
+    await instance.put(`${API_URL}/password/reset`, {
+      ...request,
+      token
+    });
   } catch (error) {
     console.error('비밀번호 재설정 실패:', error);
     throw error;
@@ -263,7 +263,7 @@ export const resetPassword = async (
 // 비밀번호 변경
 export const updatePassword = async (request: PasswordUpdateRequest): Promise<void> => {
   try {
-    await axios.put(`${API_URL}/password/update`, request);
+    await instance.put(`${API_URL}/password/update`, request);
   } catch (error) {
     console.error('비밀번호 변경 실패:', error);
     throw error;

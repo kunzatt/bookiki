@@ -31,7 +31,7 @@ const menuItems = [
   { id: 2, title: '좋아요 목록', path: '/favorites' },
   { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
   { id: 4, title: '문의사항', path: '/qnas' },
-  { id: 5, title: '비밀번호 변경', path: '/password' },
+  { id: 5, title: '비밀번호 변경', path: '/password/change' },
   { id: 6, title: '로그아웃', path: '/logout' },
 ];
 
