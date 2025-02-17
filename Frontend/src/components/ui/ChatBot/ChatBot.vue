@@ -2,9 +2,12 @@
 import { ref, onMounted, nextTick, watch } from 'vue';
 import { sendMessage, sendFeedback } from '@/api/chatBot';
 import type { Message } from '@/types/common/chatbot';
+import { FeedbackCategory } from '@/types/enums/feedbackCategory';
+import BasicSelect from '../Select/BasicSelect.vue';
+import type { SelectOption } from '@/types/common/select';
 
 const props = defineProps<{
-  modelValue: boolean; // v-model을 위해 modelValue로 변경
+  modelValue: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -16,10 +19,24 @@ const messages = ref<Message[]>([]);
 const loading = ref(false);
 const inputMessage = ref('');
 const showFeedbackModal = ref(false);
-const showReportModal = ref(false);
+const showFeedbackInputModal = ref(false);
 const currentMessageIndex = ref(-1);
-const reportContent = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
+const feedbackContent = ref('');
+
+// 피드백 카테고리 목록
+const feedbackCategories: SelectOption[] = [
+  { value: FeedbackCategory.QR_ERROR, label: 'QR 코드 오류' },
+  { value: FeedbackCategory.LED_ERROR, label: 'LED 위치 표시 오류' },
+  { value: FeedbackCategory.CAMERA_ERROR, label: '카메라 인식 오류' },
+  { value: FeedbackCategory.BOOK_LOCATION, label: '도서 위치 오류' },
+  { value: FeedbackCategory.SYSTEM_ERROR, label: '시스템 오류' },
+  { value: FeedbackCategory.CHATBOT_ERROR, label: '챗봇 응답 오류' },
+  { value: FeedbackCategory.OTHER, label: '기타' },
+];
+
+// 초기 카테고리 값 설정
+const selectedCategory = ref<string>(FeedbackCategory.OTHER);
 
 // 스크롤 처리
 const scrollToBottom = async () => {
@@ -43,13 +60,11 @@ const handleSend = async (message: string = inputMessage.value) => {
 
   try {
     const response = await sendMessage({ message });
-
     messages.value.push({
       type: 'bot',
       content: response.message,
       showFeedback: response.showAdminInquiryButton,
     });
-
     await scrollToBottom();
   } catch (error) {
     console.error('메시지 전송 실패:', error);
@@ -62,66 +77,46 @@ const handleSend = async (message: string = inputMessage.value) => {
   }
 };
 
-// 피드백 처리
+// 피드백 처리 - 수정된 부분
 const handleFeedbackChoice = (messageId: number) => {
   currentMessageIndex.value = messageId;
-  showFeedbackModal.value = true;
+  showFeedbackInputModal.value = true; // 바로 피드백 입력 모달 표시
 };
 
-const submitFeedback = async (isContinueChat: boolean) => {
-  const targetMessage = messages.value[currentMessageIndex.value];
-  if (!targetMessage || targetMessage.type !== 'bot') return;
+const submitFeedbackContent = async () => {
+  if (!feedbackContent.value.trim() || !selectedCategory.value) return;
 
   try {
-    if (!isContinueChat) {
-      await sendFeedback({
-        originalIntent: targetMessage.content,
-        feedbackMessage: '피드백을 남기겠습니다.',
-        category: 'FEEDBACK',
-      });
-
-      messages.value.push({
-        type: 'system',
-        content: '피드백을 남겨주세요.',
-        showReportButton: true,
-      });
-    }
-
-    targetMessage.showFeedback = false;
-    showFeedbackModal.value = false;
-  } catch (error) {
-    console.error('피드백 처리 실패:', error);
-    messages.value.push({
-      type: 'system',
-      content: '피드백 처리에 실패했습니다. 다시 시도해 주세요.',
+    // 메시지 배열 전체를 새로 할당하여 반응성 트리거
+    messages.value = messages.value.map((msg, index) => {
+      if (index === currentMessageIndex.value) {
+        return {
+          ...msg,
+          showFeedback: false,
+        };
+      }
+      return msg;
     });
-  }
-};
 
-// 신고 처리
-const handleReport = async () => {
-  const targetMessage = messages.value[currentMessageIndex.value];
-  if (!targetMessage || targetMessage.type !== 'bot') return;
-
-  try {
     await sendFeedback({
-      originalIntent: targetMessage.content,
-      feedbackMessage: reportContent.value,
-      category: 'ISSUE_REPORT',
+      originalIntent: messages.value[currentMessageIndex.value].content,
+      feedbackMessage: feedbackContent.value,
+      category: selectedCategory.value,
     });
 
     messages.value.push({
       type: 'system',
-      content: '신고가 접수되었습니다. 관리자 확인 후 조치하겠습니다.',
+      content: '피드백이 접수되었습니다. 관리자 확인 후 조치하겠습니다.',
     });
 
-    showReportModal.value = false;
-    reportContent.value = '';
+    showFeedbackInputModal.value = false;
+    feedbackContent.value = '';
+    selectedCategory.value = FeedbackCategory.OTHER;
   } catch (error) {
-    console.error('신고 전송 실패:', error);
+    console.error('피드백 전송 실패:', error);
     messages.value.push({
       type: 'system',
-      content: '신고 접수에 실패했습니다. 다시 시도해 주세요.',
+      content: '피드백 전송에 실패했습니다. 다시 시도해 주세요.',
     });
   }
 };
@@ -131,7 +126,6 @@ const handleClose = () => {
   emit('close');
 };
 
-// 초기 메시지 설정
 onMounted(() => {
   messages.value.push({
     type: 'bot',
@@ -140,24 +134,26 @@ onMounted(() => {
   });
 });
 
-// 메시지 추가될 때마다 스크롤
 watch(() => messages.value.length, scrollToBottom);
 </script>
 
 <template>
-  <el-dialog
-    :model-value="modelValue"
-    @update:model-value="(val) => emit('update:modelValue', val)"
-    :show-close="false"
-    :modal="true"
-    :close-on-click-modal="false"
-    width="450px"
-    class="chatbot-dialog"
-  >
-    <template #header>
-      <div
-        class="bg-[#698469] text-white p-4 -mt-6 -mx-4 rounded-t-lg flex items-center justify-between"
-      >
+  <Teleport to="body">
+    <!-- 반투명 오버레이 -->
+    <div
+      v-if="modelValue"
+      class="fixed inset-0 bg-black bg-opacity-30 z-40"
+      @click="handleClose"
+    ></div>
+
+    <!-- 챗봇 모달 -->
+    <div
+      v-if="modelValue"
+      class="fixed bottom-5 right-5 w-[450px] bg-white rounded-lg shadow-xl z-50 flex flex-col"
+      @click.stop
+    >
+      <!-- 헤더 -->
+      <div class="bg-[#698469] text-white p-4 rounded-t-lg flex items-center justify-between">
         <div class="flex items-center gap-2">
           <span class="material-icons">support_agent</span>
           <h3 class="text-lg font-semibold">Bookiki 도우미</h3>
@@ -166,105 +162,138 @@ watch(() => messages.value.length, scrollToBottom);
           <span class="material-icons">close</span>
         </button>
       </div>
-    </template>
 
-    <!-- Messages -->
-    <div ref="messagesContainer" class="h-[400px] overflow-y-auto px-2">
-      <div
-        v-for="(message, index) in messages"
-        :key="index"
-        :class="['mb-4', message.type === 'user' ? 'text-right' : 'text-left']"
-      >
+      <!-- 메시지 영역 -->
+      <div ref="messagesContainer" class="h-[400px] overflow-y-auto p-4">
         <div
-          :class="[
-            'inline-block p-3 rounded-lg max-w-[80%]',
-            message.type === 'user'
-              ? 'bg-[#698469] text-white'
-              : message.type === 'system'
-                ? 'bg-gray-200 text-gray-800'
-                : 'bg-[#F8F9F8] text-gray-800 border border-[#698469]',
-          ]"
-          style="white-space: pre-line"
+          v-for="(message, index) in messages"
+          :key="index"
+          :class="['mb-4', message.type === 'user' ? 'text-right' : 'text-left']"
         >
-          {{ message.content }}
-        </div>
-
-        <!-- 피드백 옵션 -->
-        <div v-if="message.showFeedback" class="mt-2">
-          <button
-            class="text-sm text-[#698469] px-3 py-1 rounded border border-[#698469] hover:bg-[#F8F9F8]"
-            @click="handleFeedbackChoice(index)"
+          <div
+            :class="[
+              'inline-block p-3 rounded-lg max-w-[80%]',
+              message.type === 'user'
+                ? 'bg-[#698469] text-white'
+                : message.type === 'system'
+                  ? 'bg-gray-200 text-gray-800'
+                  : 'bg-[#F8F9F8] text-gray-800 border border-[#698469]',
+            ]"
+            style="white-space: pre-line"
           >
-            답변에 대한 피드백 남기기
-          </button>
+            {{ message.content }}
+          </div>
+
+          <!-- 피드백 옵션 -->
+          <div v-if="message.showFeedback" class="mt-2">
+            <button
+              class="text-sm text-[#698469] px-3 py-1 rounded border border-[#698469] hover:bg-[#F8F9F8]"
+              @click="handleFeedbackChoice(index)"
+            >
+              오류 신고 및 피드백 남기기
+            </button>
+          </div>
+        </div>
+
+        <!-- 로딩 표시 -->
+        <div v-if="loading" class="flex justify-start">
+          <div class="bg-[#F8F9F8] text-gray-800 p-3 rounded-lg inline-flex items-center gap-2">
+            <span class="material-icons animate-spin">sync</span>
+            응답 중...
+          </div>
         </div>
       </div>
 
-      <!-- Loading -->
-      <div v-if="loading" class="flex justify-start">
-        <div class="bg-[#F8F9F8] text-gray-800 p-3 rounded-lg inline-flex items-center gap-2">
-          <span class="material-icons animate-spin">sync</span>
-          응답 중...
-        </div>
+      <!-- 입력 영역 -->
+      <div class="border-t border-gray-200 p-4 flex gap-2 items-center">
+        <input
+          v-model="inputMessage"
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#698469]"
+          placeholder="메시지를 입력하세요..."
+          :disabled="loading"
+          @keyup.enter="handleSend()"
+        />
+        <button
+          class="px-4 py-2 bg-[#698469] text-white rounded-lg hover:bg-[#4F634F] disabled:opacity-50"
+          :disabled="loading || !inputMessage.trim()"
+          @click="handleSend()"
+        >
+          <span class="material-icons">send</span>
+        </button>
       </div>
     </div>
 
-    <!-- Input -->
-    <div class="border-t border-gray-200 pt-4 px-4 flex gap-2 items-center">
-      <input
-        v-model="inputMessage"
-        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#698469]"
-        placeholder="메시지를 입력하세요..."
-        :disabled="loading"
-        @keyup.enter="handleSend()"
-      />
-      <button
-        class="px-4 py-2 bg-[#698469] text-white rounded-lg hover:bg-[#4F634F] disabled:opacity-50"
-        :disabled="loading || !inputMessage.trim()"
-        @click="handleSend()"
+    <!-- 피드백 입력 모달 -->
+    <div
+      v-if="showFeedbackInputModal"
+      class="fixed inset-0 bg-black bg-opacity-30 z-[60]"
+      @click="showFeedbackInputModal = false"
+    >
+      <div
+        class="absolute w-[450px] bg-white rounded-lg shadow-xl"
+        :style="{
+          right: '20px',
+          bottom: '90px', // 챗봇 모달 높이 + 약간의 간격
+        }"
+        @click.stop
       >
-        <span class="material-icons">send</span>
-      </button>
-    </div>
+        <div class="p-6 space-y-4">
+          <h3 class="text-lg font-semibold">오류 신고 및 피드백</h3>
 
-    <!-- 피드백 모달 -->
-    <el-dialog v-model="showFeedbackModal" title="답변에 대한 피드백" width="400px" append-to-body>
-      <div class="space-y-4">
-        <button
-          class="w-full p-3 text-[#698469] border border-[#698469] rounded-lg hover:bg-[#F8F9F8]"
-          @click="submitFeedback(false)"
-        >
-          피드백/신고 남기기
-        </button>
-        <button
-          class="w-full p-3 bg-[#698469] text-white rounded-lg hover:bg-[#4F634F]"
-          @click="submitFeedback(true)"
-        >
-          챗봇에게 이어서 문의하기
-        </button>
+          <!-- 카테고리 선택 -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">피드백 유형</label>
+            <BasicSelect
+              v-model="selectedCategory"
+              :options="feedbackCategories"
+              size="L"
+              class="w-full"
+            />
+          </div>
+
+          <!-- 피드백 내용 입력 -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">피드백 내용</label>
+            <textarea
+              v-model="feedbackContent"
+              rows="4"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#698469]"
+              placeholder="오류 신고 및 피드백 내용을 입력해주세요."
+            ></textarea>
+          </div>
+
+          <!-- 버튼 -->
+          <div class="flex justify-end gap-2">
+            <button
+              class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              @click="showFeedbackInputModal = false"
+            >
+              취소
+            </button>
+            <button
+              class="px-4 py-2 bg-[#698469] text-white rounded-lg hover:bg-[#4F634F] disabled:opacity-50"
+              :disabled="!selectedCategory || !feedbackContent.trim()"
+              @click="submitFeedbackContent"
+            >
+              전송
+            </button>
+          </div>
+        </div>
       </div>
-    </el-dialog>
-  </el-dialog>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
-.chatbot-dialog :deep(.el-dialog) {
-  border-radius: 8px;
-  overflow: hidden;
+.material-icons {
+  font-size: 24px;
+  line-height: 1;
 }
 
-.chatbot-dialog :deep(.el-dialog__header) {
-  padding: 0;
-  margin: 0;
-}
-
-.chatbot-dialog :deep(.el-dialog__body) {
-  padding: 1rem;
-}
-
-.chatbot-dialog :deep(.el-dialog__footer) {
-  padding: 0;
-  margin: 0;
-  height: auto;
+@media (max-width: 500px) {
+  .absolute {
+    width: calc(100% - 40px) !important;
+    right: 20px !important;
+  }
 }
 </style>

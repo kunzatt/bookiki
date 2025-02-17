@@ -27,6 +27,10 @@ const checkUnreadNotifications = async () => {
   }
 };
 
+const handleChatbotClose = () => {
+  isChatbotOpen.value = false;
+};
+
 const handleNotification = () => {
   router.push('/notifications');
 };
@@ -92,6 +96,10 @@ onMounted(() => {
     </div>
 
     <!-- Chatbot Component -->
-    <ChatBot v-model="isChatbotOpen" @close="isChatbotOpen = false" />
+    <ChatBot
+      :modelValue="isChatbotOpen"
+      @update:modelValue="isChatbotOpen = $event"
+      @close="handleChatbotClose"
+    />
   </header>
 </template>
