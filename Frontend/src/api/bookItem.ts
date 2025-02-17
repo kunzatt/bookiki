@@ -8,6 +8,7 @@ import type {
   BookItemRequest,
   BookItemResponse,
   BookAdminListResponse,
+  BookAdminDetailResponse,
 } from '@/types/api/bookItem';
 import { SearchType } from '@/types/enums/searchType';
 import type { PageResponse } from '@/types/common/pagination';
@@ -125,4 +126,9 @@ export const updateBookStatus = async (bookId: number, newStatus: BookStatus): P
     console.error('도서 상태 업데이트 실패:', error);
     throw error;
   }
+};
+
+export const getBookAdminDetail = async (bookItemId: number): Promise<BookAdminDetailResponse> => {
+  const response = await axios.get<BookAdminDetailResponse>(`/api/admin/books/${bookItemId}`);
+  return response.data;
 };
