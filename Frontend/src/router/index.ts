@@ -197,6 +197,12 @@ const router = createRouter({
       component: () => import('@/views/feedback/FeedbackDetailVIew.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin/library',
+      name: 'LibraryManagement',
+      component: () => import('@/views/admin/LibraryManagementVIew.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
