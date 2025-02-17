@@ -15,6 +15,7 @@ const resetEmail = ref('');
 const showResetModal = ref(false);
 const showConfirmModal = ref(false);
 const resetError = ref('');
+const showLoginErrorModal = ref(false);
 
 const handleLogin = async () => {
   try {
@@ -25,7 +26,7 @@ const handleLogin = async () => {
     await router.push('/main');
   } catch (error) {
     console.error('Login failed:', error);
-    // TODO: 에러 처리 (토스트 또는 알림)
+    showLoginErrorModal.value = true;
   }
 };
 
@@ -55,6 +56,10 @@ const closeModals = () => {
   resetEmail.value = '';
   resetError.value = '';
 };
+
+const closeLoginErrorModal = () => {
+  showLoginErrorModal.value = false;
+};
 </script>
 
 <template>
@@ -73,7 +78,7 @@ const closeModals = () => {
         <h2 class="text-2xl font-bold mb-8">Welcome!</h2>
 
         <form @submit.prevent="handleLogin" class="space-y-4">
-          <BasicInput v-model="email" type="full" placeholder="ID" inputType="email" />
+          <BasicInput v-model="email" type="full" placeholder="ID" inputType="text" />
 
           <BasicInput v-model="password" type="password" placeholder="Password" />
 
@@ -88,9 +93,9 @@ const closeModals = () => {
           </div>
 
           <BasicButton
+            type="submit"
             size="L"
             text="로그인"
-            @click="handleLogin"
             class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
           />
 
@@ -122,7 +127,7 @@ const closeModals = () => {
 
       <form @submit.prevent="handleLogin" class="space-y-4">
         <!-- 기존 폼 내용과 동일 -->
-        <BasicInput v-model="email" type="full" placeholder="ID" inputType="email" />
+        <BasicInput v-model="email" type="full" placeholder="ID" inputType="text" />
 
         <BasicInput v-model="password" type="password" placeholder="Password" />
 
@@ -137,9 +142,9 @@ const closeModals = () => {
         </div>
 
         <BasicButton
+          type="submit"
           size="L"
           text="로그인"
-          @click="handleLogin"
           class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
         />
 
@@ -220,6 +225,26 @@ const closeModals = () => {
           class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
         />
       </div>
+    </div>
+  </div>
+
+  <!-- 로그인 에러 모달 -->
+  <div 
+    v-if="showLoginErrorModal" 
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <form @submit.prevent="closeLoginErrorModal">
+        <p class="text-gray-600 mb-4">아이디와 비밀번호를 확인해주세요.</p>
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+          >
+            확인
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
