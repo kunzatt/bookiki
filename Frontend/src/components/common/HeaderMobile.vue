@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { defineProps, withDefaults } from 'vue';
+import { defineProps, withDefaults, ref } from 'vue';
 import type { MobileHeaderProps } from '../../types/common/header';
 import { useRouter } from 'vue-router';
+import ChatBot from '../ui/ChatBot/ChatBot.vue';
 
 const router = useRouter();
+const isChatbotOpen = ref(false);
 
 const props = withDefaults(defineProps<MobileHeaderProps>(), {
   type: 'default',
@@ -20,6 +22,14 @@ const handleNotification = () => {
 
 const handleNotice = () => {
   router.push('/notices');
+};
+
+const handleChatbot = () => {
+  isChatbotOpen.value = !isChatbotOpen.value;
+};
+
+const handleChatbotClose = () => {
+  isChatbotOpen.value = false;
 };
 </script>
 
@@ -42,6 +52,11 @@ const handleNotice = () => {
 
       <!-- Notification Bell (For default and main types) -->
       <div v-if="type === 'default' || type === 'main'" class="flex items-center w-auto">
+        <!-- Chatbot Button -->
+        <button @click="handleChatbot" class="flex items-center justify-center w-8 h-8">
+          <img src="@/assets/chatbot2.png" alt="chatbot" class="w-6 h-6" />
+        </button>
+
         <!-- Notice Button -->
         <button @click="handleNotice" class="flex items-center justify-center w-8 h-8">
           <i class="material-icons">announcement</i>
@@ -62,5 +77,12 @@ const handleNotice = () => {
       </div>
       <div v-else class="w-8"></div>
     </div>
+
+    <!-- Chatbot Component -->
+    <ChatBot
+      :modelValue="isChatbotOpen"
+      @update:modelValue="isChatbotOpen = $event"
+      @close="handleChatbotClose"
+    />
   </header>
 </template>
