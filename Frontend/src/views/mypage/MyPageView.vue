@@ -26,14 +26,12 @@ const userInfo = ref({
   availableLoans: 0,
 });
 
-const menuItems = [
+const menuItems = ref([
   { id: 1, title: '대출 중 도서', path: '/mypage/current-borrowed' },
   { id: 2, title: '좋아요 목록', path: '/favorites' },
   { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
   { id: 4, title: '문의사항', path: '/qnas' },
-  { id: 5, title: '비밀번호 변경', path: '/password/change' },
-  { id: 6, title: '로그아웃', path: '/logout' },
-];
+]);
 
 // 사용자 데이터 가져오기
 const fetchUserData = async () => {
@@ -53,6 +51,14 @@ const fetchUserData = async () => {
       console.error('프로필 이미지 로드 실패:', error);
       userInfo.value.profileImage = '/default-book-cover.svg';
     }
+
+    // provider가 BOOKIKI일 때만 비밀번호 변경 메뉴 추가
+    if (userData.provider === 'BOOKIKI') {
+      menuItems.value.push({ id: 5, title: '비밀번호 변경', path: '/password/change' });
+    }
+
+    // 로그아웃은 항상 마지막에 추가
+    menuItems.value.push({ id: 6, title: '로그아웃', path: '/logout' });
 
     // 현재 대출 중인 도서 목록 조회
     const currentBooks = await getCurrentBorrowedBooks();
