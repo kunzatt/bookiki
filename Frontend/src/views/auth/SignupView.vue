@@ -17,7 +17,7 @@ const formData = ref<UserSignUpRequest>({
   email: '',
   password: '',
   userName: '',
-  companyId: ''
+  companyId: '',
 });
 
 // 상태 관리
@@ -29,7 +29,7 @@ const passwordConfirm = ref('');
 const toastConfig = ref({
   isVisible: false,
   message: '',
-  type: 'info' as const
+  type: 'info' as const,
 });
 
 // Toast 표시 함수
@@ -37,7 +37,7 @@ const showToast = (message: string, type: 'success' | 'info' = 'info') => {
   toastConfig.value = {
     isVisible: true,
     message,
-    type
+    type,
   };
 };
 
@@ -100,99 +100,27 @@ const handleSubmit = async () => {
 </script>
 
 <template>
-    <div class="min-h-screen flex justify-center items-center p-4">
-      <!-- 데스크탑 크기에서만 보이는 카드형 컨테이너 -->
-      <div class="hidden md:flex flex-col w-full max-w-[480px] bg-white rounded-lg shadow-lg p-8 border border-gray-200">
-        <!-- 상단: 로고 영역 -->
-        <div class="flex justify-center mb-8">
-          <img src="@/assets/BookikiLogo.png" alt="Bookiki Logo" class="w-32" />
-        </div>
-  
-        <!-- 회원가입 폼 영역 -->
-        <div class="w-full">
-          <h2 class="text-2xl font-bold mb-8">회원가입</h2>
-  
-          <form @submit.prevent="handleSubmit" class="space-y-4">
-            <!-- 이메일 인증 -->
-            <EmailVerify
-              v-model="formData.email"
-              @verified="handleEmailVerified"
-            />
-  
-            <!-- 이름 -->
-            <BasicInput
-              v-model="formData.userName"
-              type="full"
-              placeholder="Name"
-              label="이름"
-            />
-  
-            <!-- 사번 -->
-            <BasicInput
-              v-model="formData.companyId"
-              type="withButton"
-              placeholder="Company ID"
-              label="사번"
-              button-text="중복 확인"
-              @button-click="checkCompanyIdDuplicate"
-            />
-  
-            <!-- 비밀번호 -->
-            <BasicInput
-              v-model="formData.password"
-              type="password"
-              placeholder="Password (비밀번호 형식 표기)"
-            />
-  
-            <!-- 비밀번호 확인 -->
-            <BasicInput
-              v-model="passwordConfirm"
-              type="password"
-              placeholder="Password"
-            />
-  
-            <!-- 회원가입 버튼 -->
-            <BasicButton
-              size="L"
-              text="회원가입"
-              :disabled="!isFormValid"
-              @click="handleSubmit"
-              class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
-            />
-  
-            <!-- 로그인 링크 -->
-            <div class="flex w-full justify-center">
-              <button
-                type="button"
-                class="text-sm text-gray-500 hover:text-gray-700"
-                @click="router.push('/login')"
-              >
-                이미 계정이 있으신가요? <span class="text-[#698469]">로그인</span>
-              </button>
-            </div>
-          </form>
-        </div>
+  <div class="min-h-screen flex justify-center items-center p-4">
+    <!-- 데스크탑 크기에서만 보이는 카드형 컨테이너 -->
+    <div
+      class="hidden md:flex flex-col w-full max-w-[480px] bg-white rounded-lg shadow-lg p-8 border border-gray-200"
+    >
+      <!-- 상단: 로고 영역 -->
+      <div class="flex justify-center mb-8">
+        <img src="@/assets/BookikiLogo.PNG" alt="Bookiki Logo" class="w-32" />
       </div>
-  
-      <!-- 모바일 크기에서만 보이는 컨테이너 -->
-      <div class="md:hidden w-full max-w-[384px]">
+
+      <!-- 회원가입 폼 영역 -->
+      <div class="w-full">
         <h2 class="text-2xl font-bold mb-8">회원가입</h2>
-  
+
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <!-- 이메일 인증 -->
-          <EmailVerify
-            v-model="formData.email"
-            @verified="handleEmailVerified"
-          />
-  
+          <EmailVerify v-model="formData.email" @verified="handleEmailVerified" />
+
           <!-- 이름 -->
-          <BasicInput
-            v-model="formData.userName"
-            type="full"
-            placeholder="Name"
-            label="이름"
-          />
-  
+          <BasicInput v-model="formData.userName" type="full" placeholder="Name" label="이름" />
+
           <!-- 사번 -->
           <BasicInput
             v-model="formData.companyId"
@@ -202,21 +130,17 @@ const handleSubmit = async () => {
             button-text="중복 확인"
             @button-click="checkCompanyIdDuplicate"
           />
-  
+
           <!-- 비밀번호 -->
           <BasicInput
             v-model="formData.password"
             type="password"
             placeholder="Password (비밀번호 형식 표기)"
           />
-  
+
           <!-- 비밀번호 확인 -->
-          <BasicInput
-            v-model="passwordConfirm"
-            type="password"
-            placeholder="Password"
-          />
-  
+          <BasicInput v-model="passwordConfirm" type="password" placeholder="Password" />
+
           <!-- 회원가입 버튼 -->
           <BasicButton
             size="L"
@@ -225,7 +149,7 @@ const handleSubmit = async () => {
             @click="handleSubmit"
             class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
           />
-  
+
           <!-- 로그인 링크 -->
           <div class="flex w-full justify-center">
             <button
@@ -238,8 +162,62 @@ const handleSubmit = async () => {
           </div>
         </form>
       </div>
-  
-      <!-- Toast 컴포넌트 -->
-      <Toast v-bind="toastConfig" />
     </div>
-  </template>
+
+    <!-- 모바일 크기에서만 보이는 컨테이너 -->
+    <div class="md:hidden w-full max-w-[384px]">
+      <h2 class="text-2xl font-bold mb-8">회원가입</h2>
+
+      <form @submit.prevent="handleSubmit" class="space-y-4">
+        <!-- 이메일 인증 -->
+        <EmailVerify v-model="formData.email" @verified="handleEmailVerified" />
+
+        <!-- 이름 -->
+        <BasicInput v-model="formData.userName" type="full" placeholder="Name" label="이름" />
+
+        <!-- 사번 -->
+        <BasicInput
+          v-model="formData.companyId"
+          type="withButton"
+          placeholder="Company ID"
+          label="사번"
+          button-text="중복 확인"
+          @button-click="checkCompanyIdDuplicate"
+        />
+
+        <!-- 비밀번호 -->
+        <BasicInput
+          v-model="formData.password"
+          type="password"
+          placeholder="Password (비밀번호 형식 표기)"
+        />
+
+        <!-- 비밀번호 확인 -->
+        <BasicInput v-model="passwordConfirm" type="password" placeholder="Password" />
+
+        <!-- 회원가입 버튼 -->
+        <BasicButton
+          size="L"
+          text="회원가입"
+          :disabled="!isFormValid"
+          @click="handleSubmit"
+          class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
+        />
+
+        <!-- 로그인 링크 -->
+        <div class="flex w-full justify-center">
+          <button
+            type="button"
+            class="text-sm text-gray-500 hover:text-gray-700"
+            @click="router.push('/login')"
+          >
+            이미 계정이 있으신가요? <span class="text-[#698469]">로그인</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Toast 컴포넌트 -->
+    <Toast v-bind="toastConfig" />
+  </div>
+</template>
