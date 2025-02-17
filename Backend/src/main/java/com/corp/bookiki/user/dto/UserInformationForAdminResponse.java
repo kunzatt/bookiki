@@ -1,13 +1,12 @@
 package com.corp.bookiki.user.dto;
 
-import java.time.LocalDateTime;
-
 import com.corp.bookiki.user.entity.UserEntity;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor
@@ -43,10 +42,13 @@ public class UserInformationForAdminResponse {
 	@Schema(description = "로그인 도메인")
 	private String provider;
 
+	private int currentBorrowCount;  // 현재 대출 중인 도서 수
+	private boolean hasOverdueBooks; // 연체 도서 존재 여부
+
 	@Builder
 	public UserInformationForAdminResponse(Integer id, String email, String userName, String companyId,
 		String role, LocalDateTime createdAt, LocalDateTime updatedAt, LocalDateTime activeAt,
-		String profileImage, String provider) {
+		String profileImage, String provider, int currentBorrowCount, boolean hasOverdueBooks ) {
 		this.id = id;
 		this.email = email;
 		this.userName = userName;
@@ -57,20 +59,28 @@ public class UserInformationForAdminResponse {
 		this.activeAt = activeAt;
 		this.profileImage = profileImage;
 		this.provider = provider;
+		this.currentBorrowCount = currentBorrowCount;
+		this.hasOverdueBooks = hasOverdueBooks;
 	}
 
-	public static UserInformationForAdminResponse from(UserEntity user) {
-		return UserInformationForAdminResponse.builder()
-			.id(user.getId())
-			.email(user.getEmail())
-			.userName(user.getUserName())
-			.companyId(user.getCompanyId())
-			.role(user.getRole().toString())
-			.createdAt(user.getCreatedAt())
-			.updatedAt(user.getUpdatedAt())
-			.activeAt(user.getActiveAt())
-			.profileImage(user.getProfileImage())
-			.provider(user.getProvider().toString())
-			.build();
+	public static UserInformationForAdminResponse from(
+			UserEntity user,
+			int currentBorrowCount,
+			boolean hasOverdueBooks
+	) {
+			return UserInformationForAdminResponse.builder()
+					.id(user.getId())
+					.email(user.getEmail())
+					.userName(user.getUserName())
+					.companyId(user.getCompanyId())
+					.role(user.getRole().toString())
+					.createdAt(user.getCreatedAt())
+					.updatedAt(user.getUpdatedAt())
+					.activeAt(user.getActiveAt())
+					.profileImage(user.getProfileImage())
+					.provider(user.getProvider().toString())
+					.currentBorrowCount(currentBorrowCount)
+					.hasOverdueBooks(hasOverdueBooks)
+					.build();
 	}
 }

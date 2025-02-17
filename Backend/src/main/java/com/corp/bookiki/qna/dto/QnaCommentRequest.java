@@ -6,11 +6,14 @@ import com.corp.bookiki.user.entity.UserEntity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 @Schema(description = "문의사항 답변 등록 요청")
 public class QnaCommentRequest {
     @Schema(description = "문의사항 ID", example = "1", required = true)

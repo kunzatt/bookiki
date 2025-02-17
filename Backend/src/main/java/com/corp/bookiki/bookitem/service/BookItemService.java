@@ -1,5 +1,6 @@
 package com.corp.bookiki.bookitem.service;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -152,4 +154,34 @@ public class BookItemService {
 		}
 	}
 
+
+	// AI 추천용 메서드
+	@Transactional(readOnly = true)
+	public List<BookItemListResponse> getRecommendedBooksByKeywords(List<String> keywords, int limit) {
+		Set<BookItemListResponse> recommendations = new LinkedHashSet<>();
+
+		for (String keyword : keywords) {
+			List<BookItemEntity> books = bookItemRepository.findRecommendedBooksByKeyword(
+					keyword,
+					PageRequest.of(0, limit)
+			);
+
+			recommendations.addAll(books.stream()
+					.map(BookItemListResponse::from)
+					.collect(Collectors.toList()));
+
+			if (recommendations.size() >= limit) {
+				break;
+			}
+		}
+
+		// 추천 도서가 없을 경우 예외 발생
+		if (recommendations.isEmpty()) {
+			throw new BookItemException(ErrorCode.BOOK_SEARCH_NOT_FOUND);
+		}
+
+		return recommendations.stream()
+				.limit(limit)
+				.collect(Collectors.toList());
+	}
 }

@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
@@ -47,16 +48,16 @@ class ProfileImageServiceTest {
         // given
         log.info("프로필 이미지 업데이트 테스트 시작");
         MockMultipartFile file = new MockMultipartFile(
-                "file", "test.jpg", "image/jpeg", "test image content".getBytes()
+            "file", "test.jpg", "image/jpeg", "test image content".getBytes()
         );
         UserEntity user = UserEntity.builder()
-                .profileImage(DEFAULT_IMAGE_URL)
-                .build();
+            .profileImage(DEFAULT_IMAGE_URL)
+            .build();
         String newImageUrl = PROFILE_IMAGE_PATH + "new-image.jpg";
 
         ReflectionTestUtils.setField(profileImageService, "defaultImageUrl", DEFAULT_IMAGE_URL);
         when(userRepository.findById(TEST_USER_ID)).thenReturn(java.util.Optional.of(user));
-        when(imageFileService.uploadFile(file, PROFILE_IMAGE_PATH)).thenReturn(newImageUrl);
+        when(imageFileService.uploadFile(any(MultipartFile.class), eq("/images/profile"))).thenReturn(newImageUrl);
         log.info("Mock 설정 완료");
 
         // when
@@ -64,7 +65,7 @@ class ProfileImageServiceTest {
         log.info("프로필 이미지 업데이트 실행");
 
         // then
-        verify(imageFileService).uploadFile(file, PROFILE_IMAGE_PATH);
+        verify(imageFileService).uploadFile(any(MultipartFile.class), eq("/images/profile"));
         assertThat(user.getProfileImage()).isEqualTo(newImageUrl);
         log.info("프로필 이미지 업데이트 테스트 완료");
     }
@@ -76,16 +77,16 @@ class ProfileImageServiceTest {
         log.info("이전 프로필 이미지 삭제 후 업데이트 테스트 시작");
         String previousImageUrl = PROFILE_IMAGE_PATH + "previous-image.jpg";
         MockMultipartFile file = new MockMultipartFile(
-                "file", "test.jpg", "image/jpeg", "test image content".getBytes()
+            "file", "test.jpg", "image/jpeg", "test image content".getBytes()
         );
         UserEntity user = UserEntity.builder()
-                .profileImage(previousImageUrl)
-                .build();
+            .profileImage(previousImageUrl)
+            .build();
         String newImageUrl = PROFILE_IMAGE_PATH + "new-image.jpg";
 
         ReflectionTestUtils.setField(profileImageService, "defaultImageUrl", DEFAULT_IMAGE_URL);
         when(userRepository.findById(TEST_USER_ID)).thenReturn(java.util.Optional.of(user));
-        when(imageFileService.uploadFile(file, PROFILE_IMAGE_PATH)).thenReturn(newImageUrl);
+        when(imageFileService.uploadFile(any(MultipartFile.class), eq("/images/profile"))).thenReturn(newImageUrl);
         log.info("Mock 설정 완료");
 
         // when
@@ -94,7 +95,7 @@ class ProfileImageServiceTest {
 
         // then
         verify(imageFileService).deleteFile(previousImageUrl);
-        verify(imageFileService).uploadFile(file, PROFILE_IMAGE_PATH);
+        verify(imageFileService).uploadFile(any(MultipartFile.class), eq("/images/profile"));
         assertThat(user.getProfileImage()).isEqualTo(newImageUrl);
         log.info("이전 프로필 이미지 삭제 후 업데이트 테스트 완료");
     }
@@ -105,15 +106,15 @@ class ProfileImageServiceTest {
         // given
         log.info("존재하지 않는 사용자 프로필 이미지 업데이트 테스트 시작");
         MockMultipartFile file = new MockMultipartFile(
-                "file", "test.jpg", "image/jpeg", "test image content".getBytes()
+            "file", "test.jpg", "image/jpeg", "test image content".getBytes()
         );
         when(userRepository.findById(TEST_USER_ID)).thenReturn(java.util.Optional.empty());
         log.info("Mock 설정 완료");
 
         // when & then
         assertThatThrownBy(() -> profileImageService.updateProfileImage(TEST_USER_ID, file))
-                .isInstanceOf(UserException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+            .isInstanceOf(UserException.class)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
         log.info("존재하지 않는 사용자 프로필 이미지 업데이트 테스트 완료");
     }
 
@@ -123,11 +124,11 @@ class ProfileImageServiceTest {
         // given
         log.info("파일 업로드 실패 테스트 시작");
         MockMultipartFile file = new MockMultipartFile(
-                "file", "test.jpg", "image/jpeg", "test image content".getBytes()
+            "file", "test.jpg", "image/jpeg", "test image content".getBytes()
         );
         UserEntity user = UserEntity.builder()
-                .profileImage(DEFAULT_IMAGE_URL)
-                .build();
+            .profileImage(DEFAULT_IMAGE_URL)
+            .build();
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(java.util.Optional.of(user));
         when(imageFileService.uploadFile(any(), anyString())).thenThrow(new IOException());
@@ -135,8 +136,8 @@ class ProfileImageServiceTest {
 
         // when & then
         assertThatThrownBy(() -> profileImageService.updateProfileImage(TEST_USER_ID, file))
-                .isInstanceOf(FileException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FILE_UPLOAD_FAILED);
+            .isInstanceOf(FileException.class)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.FILE_UPLOAD_FAILED);
         log.info("파일 업로드 실패 테스트 완료");
     }
 
@@ -147,8 +148,8 @@ class ProfileImageServiceTest {
         log.info("프로필 이미지 삭제 테스트 시작");
         String currentImageUrl = "/images/profile/current-image.jpg";
         UserEntity user = UserEntity.builder()
-                .profileImage(currentImageUrl)
-                .build();
+            .profileImage(currentImageUrl)
+            .build();
 
         ReflectionTestUtils.setField(profileImageService, "defaultImageUrl", DEFAULT_IMAGE_URL);
         when(userRepository.findById(TEST_USER_ID)).thenReturn(java.util.Optional.of(user));
@@ -172,8 +173,8 @@ class ProfileImageServiceTest {
         log.info("프로필 이미지 조회 테스트 시작");
         String imageUrl = PROFILE_IMAGE_PATH + "test-image.jpg";
         UserEntity user = UserEntity.builder()
-                .profileImage(imageUrl)
-                .build();
+            .profileImage(imageUrl)
+            .build();
 
         when(userRepository.findById(TEST_USER_ID)).thenReturn(java.util.Optional.of(user));
         log.info("Mock 설정 완료");
@@ -197,8 +198,8 @@ class ProfileImageServiceTest {
 
         // when & then
         assertThatThrownBy(() -> profileImageService.getProfileImage(TEST_USER_ID))
-                .isInstanceOf(UserException.class)
-                .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+            .isInstanceOf(UserException.class)
+            .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
         log.info("존재하지 않는 사용자 프로필 이미지 조회 테스트 완료");
     }
 }

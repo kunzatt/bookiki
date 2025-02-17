@@ -1,21 +1,9 @@
 package com.corp.bookiki.user.controller;
 
-import java.util.List;
-
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.corp.bookiki.global.error.dto.ErrorResponse;
 import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
 import com.corp.bookiki.user.service.UserInformationForAdminService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,6 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/admin/users")
@@ -54,9 +45,14 @@ public class UserInformationForAdminController {
 		)
 	})
 	@GetMapping
-	public ResponseEntity<List<UserInformationForAdminResponse>> getUserDetails() {
-		log.info("전체 사용자 정보 조회");
-		return ResponseEntity.ok(userInformationForAdminService.getUserDetails());
+	public ResponseEntity<Page<UserInformationForAdminResponse>> getUserDetails(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(defaultValue = "id") String sortBy,
+			@RequestParam(defaultValue = "desc") String direction
+	) {
+		log.info("전체 사용자 정보 조회 - 페이지: {}, 크기: {}, 정렬: {}, 방향: {}", page, size, sortBy, direction);
+		return ResponseEntity.ok(userInformationForAdminService.getUserDetails(page, size, sortBy, direction));
 	}
 
 	@Operation(summary = "개별 사용자 상세 조회", description = "특정 ID를 가진 사용자의 상세 정보를 조회합니다.")

@@ -48,10 +48,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     runtimeOnly 'com.mysql:mysql-connector-j'
 
-    // AWS
-    implementation 'io.awspring.cloud:spring-cloud-aws-starter:3.2.1'
-    implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3:3.2.1'
-
     // Dev Tools
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

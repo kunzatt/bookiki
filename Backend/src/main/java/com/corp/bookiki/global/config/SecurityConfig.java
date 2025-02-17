@@ -103,19 +103,17 @@ public class SecurityConfig {
 				log.debug("URL 기반 보안 설정 구성");
 				auth
 						.requestMatchers(
-								"/api/auth/**",  // 인증 관련 엔드포인트
-								"/api/email/**", // 이메일 인증
-								"/api/user/signup/**", // 이메일 인증
-								"/api/user/login/**", // 이메일 인증
-								"/api/books/**",
-								"/api/users/books/**",
-//								"/login/oauth2/code/*",
-//								"/api/login/oauth2/code/*",
-//								"/api/oauth2/**",
+								"/api/books/return/**",
+								"/api/iot-storage/**",
+								"/api/auth/**",
+								"/api/user/signup/**",
+								"/api/password/**",
+								"/iot/**",
+								"/api/ws/**",
 								"/api/oauth2/authorization/*",      // OAuth2 인증 시작 URL
 								"/api/login/oauth2/code/*",
 								"/api/oauth2/error",
-								"/oauth2/**",
+								"/api/oauth2/**",
 								"/api/login/**",
 								"/api/api-docs/**",
 								"/api/api-docs",
@@ -123,12 +121,7 @@ public class SecurityConfig {
 								"/api/swagger-ui.html",
 								"/api/swagger-resources/**",
 								"/api/webjars/**",
-								"/api/test-token/**",
 								"/api/configuration/**",
-								"/iot/**",
-								"/api/ws/**",
-								"/ws/**",
-								"/api/iot-storage",
 								"/oauth2/**", "/login/**"
 						).permitAll()   //  인증 없이 사용
 						.requestMatchers("/api/admin/**").hasRole("ADMIN")  // Role에 따라 권한 부여

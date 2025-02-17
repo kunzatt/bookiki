@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,9 +29,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -45,11 +48,14 @@ import com.corp.bookiki.global.config.SecurityConfig;
 import com.corp.bookiki.global.config.TestSecurityBeansConfig;
 import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 
 @WebMvcTest(BookHistoryController.class)
@@ -72,38 +78,69 @@ class BookHistoryControllerTest {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private JwtService jwtService;
+
 	private UserEntity testUserEntity;
-	private String testEmail;
-	private Authentication auth;
+	private UserEntity testAdminEntity;
+	private String testUserEmail;
+	private String testAdminEmail;
 
 	@BeforeEach
 	void setup() {
-		mockMvc = MockMvcBuilders
-			.webAppContextSetup(context)
-			.apply(springSecurity())
-			.build();
-
-		testEmail = "test@example.com";
+		// 일반 사용자 설정
+		testUserEmail = "user@example.com";
 		testUserEntity = UserEntity.builder()
-			.email(testEmail)
+			.email(testUserEmail)
 			.userName("Test User")
 			.role(Role.USER)
 			.build();
 		ReflectionTestUtils.setField(testUserEntity, "id", 2);
 
-		given(userRepository.findByEmail(eq(testEmail)))
-			.willReturn(Optional.of(testUserEntity));
+		// 관리자 설정
+		testAdminEmail = "admin@example.com";
+		testAdminEntity = UserEntity.builder()
+			.email(testAdminEmail)
+			.userName("Admin User")
+			.role(Role.ADMIN)
+			.build();
+		ReflectionTestUtils.setField(testAdminEntity, "id", 1);
 
-		auth = new UsernamePasswordAuthenticationToken(
-			testEmail,
-			null,
-			List.of(new SimpleGrantedAuthority("ROLE_USER"))
-		);
-		log.info("MockMvc 및 테스트 사용자 설정이 완료되었습니다.");
+		// 일반 사용자 Claims 설정
+		Claims userClaims = mock(Claims.class);
+		given(userClaims.getSubject()).willReturn("user:" + testUserEmail);
+		given(userClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(userClaims.get("authorities", String.class)).willReturn("ROLE_USER");
+
+		// 관리자 Claims 설정
+		Claims adminClaims = mock(Claims.class);
+		given(adminClaims.getSubject()).willReturn("user:" + testAdminEmail);
+		given(adminClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(adminClaims.get("authorities", String.class)).willReturn("ROLE_USER,ROLE_ADMIN");
+
+		// JWT Service 모킹
+		given(jwtService.validateToken(eq("user-jwt-token"))).willReturn(true);
+		given(jwtService.validateToken(eq("admin-jwt-token"))).willReturn(true);
+		given(jwtService.extractAllClaims(eq("user-jwt-token"))).willReturn(userClaims);
+		given(jwtService.extractAllClaims(eq("admin-jwt-token"))).willReturn(adminClaims);
+		given(jwtService.extractEmail(eq("user-jwt-token"))).willReturn(testUserEmail);
+		given(jwtService.extractEmail(eq("admin-jwt-token"))).willReturn(testAdminEmail);
+		given(jwtService.isTokenExpired(anyString())).willReturn(false);
+
+		// UserRepository 모킹
+		given(userRepository.findByEmail(eq(testUserEmail)))
+			.willReturn(Optional.of(testUserEntity));
+		given(userRepository.findByEmail(eq(testAdminEmail)))
+			.willReturn(Optional.of(testAdminEntity));
+
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
 	}
 
 	@Test
-	@WithMockUser(roles = "ADMIN")
+	@WithMockUser
 	@DisplayName("관리자의 도서 대출 기록 전체 조회 성공")
 	void getAdminBookHistories_WhenValidRequest_ThenReturnsOk() throws Exception {
 
@@ -135,6 +172,7 @@ class BookHistoryControllerTest {
 		)).willReturn(page);
 
 		mockMvc.perform(get("/api/admin/book-histories")
+				.cookie(getAdminJwtCookie())
 				.param("periodType", PeriodType.LAST_MONTH.name())
 				.param("startDate", startDate.toString())
 				.param("endDate", endDate.toString())
@@ -185,6 +223,7 @@ class BookHistoryControllerTest {
 		)).willReturn(page);
 
 		mockMvc.perform(get("/api/user/book-histories")
+				.cookie(getUserJwtCookie())
 				.param("periodType", PeriodType.LAST_MONTH.name())
 				.param("startDate", startDate.toString())
 				.param("endDate", endDate.toString())
@@ -192,8 +231,7 @@ class BookHistoryControllerTest {
 				.param("page", "0")
 				.param("size", "20")
 				.param("sort", "borrowedAt,desc")
-				.contentType(MediaType.APPLICATION_JSON)
-				.with(authentication(auth)))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content[0].id").value(1))
@@ -205,10 +243,11 @@ class BookHistoryControllerTest {
 	}
 
 	@Test
-	@WithMockUser(roles = "USER")
+	@WithMockUser()
 	@DisplayName("권한 없는 사용자의 관리자 API 접근 시 실패")
 	void getAdminBookHistories_WhenUnauthorized_ThenReturnsForbidden() throws Exception {
 		mockMvc.perform(get("/api/admin/book-histories")
+				.cookie(getUserJwtCookie())
 				.param("periodType", PeriodType.LAST_MONTH.name())
 				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
@@ -236,9 +275,9 @@ class BookHistoryControllerTest {
 			.willReturn(responses);
 
 		mockMvc.perform(get("/api/user/book-histories/current")
+				.cookie(getUserJwtCookie())
 				.param("onlyOverdue", "false")
-				.contentType(MediaType.APPLICATION_JSON)
-				.with(authentication(auth)))
+				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.[0].id").value(1))
@@ -254,9 +293,22 @@ class BookHistoryControllerTest {
 	@DisplayName("잘못된 기간 타입으로 조회 시 실패")
 	void getUserBookHistories_WhenInvalidPeriodType_ThenReturnsBadRequest() throws Exception {
 		mockMvc.perform(get("/api/user/book-histories")
+				.cookie(getUserJwtCookie())
 				.param("periodType", "INVALID_PERIOD")
 				.contentType(MediaType.APPLICATION_JSON))
 			.andDo(print())
 			.andExpect(status().isInternalServerError());
+	}
+
+	private Cookie getUserJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "user-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
+	}
+
+	private Cookie getAdminJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "admin-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
 	}
 }

@@ -100,4 +100,27 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 			@Param("keyword") String keyword,
 			Pageable pageable
 	);
+
+	// AI 추천을 위한 키워드 기반 검색
+	@Query("""
+        SELECT DISTINCT item FROM BookItemEntity item 
+        JOIN FETCH item.bookInformation info 
+        WHERE item.deleted = false 
+        AND item.bookStatus = 'AVAILABLE'
+        AND (
+            LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(info.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+        ORDER BY 
+        CASE 
+            WHEN LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1
+            WHEN LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2
+            ELSE 3 
+        END
+    """)
+	List<BookItemEntity> findRecommendedBooksByKeyword(
+			@Param("keyword") String keyword,
+			Pageable pageable
+	);
 }

@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -39,12 +41,16 @@ import com.corp.bookiki.global.config.WebMvcConfig;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.global.resolver.CurrentUserArgumentResolver;
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.user.entity.Role;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 
 @WebMvcTest(BookBorrowController.class)
@@ -69,34 +75,65 @@ class BookBorrowControllerTest {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private JwtService jwtService;
+
 	private UserEntity testUserEntity;
-	private String testEmail;
-	private Authentication auth;
+	private UserEntity testAdminEntity;
+	private String testUserEmail;
+	private String testAdminEmail;
 
 	@BeforeEach
 	void setup() {
-		mockMvc = MockMvcBuilders
-			.webAppContextSetup(context)
-			.apply(springSecurity())
-			.build();
-
-		testEmail = "test@example.com";
+		// 일반 사용자 설정
+		testUserEmail = "user@example.com";
 		testUserEntity = UserEntity.builder()
-			.email(testEmail)
+			.email(testUserEmail)
 			.userName("Test User")
 			.role(Role.USER)
 			.build();
 		ReflectionTestUtils.setField(testUserEntity, "id", 2);
 
-		given(userRepository.findByEmail(eq(testEmail)))
-			.willReturn(Optional.of(testUserEntity));
+		// 관리자 설정
+		testAdminEmail = "admin@example.com";
+		testAdminEntity = UserEntity.builder()
+			.email(testAdminEmail)
+			.userName("Admin User")
+			.role(Role.ADMIN)
+			.build();
+		ReflectionTestUtils.setField(testAdminEntity, "id", 1);
 
-		auth = new UsernamePasswordAuthenticationToken(
-			testEmail,
-			null,
-			List.of(new SimpleGrantedAuthority("ROLE_USER"))
-		);
-		log.info("MockMvc 및 테스트 사용자 설정이 완료되었습니다.");
+		// 일반 사용자 Claims 설정
+		Claims userClaims = mock(Claims.class);
+		given(userClaims.getSubject()).willReturn("user:" + testUserEmail);
+		given(userClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(userClaims.get("authorities", String.class)).willReturn("ROLE_USER");
+
+		// 관리자 Claims 설정
+		Claims adminClaims = mock(Claims.class);
+		given(adminClaims.getSubject()).willReturn("user:" + testAdminEmail);
+		given(adminClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(adminClaims.get("authorities", String.class)).willReturn("ROLE_USER,ROLE_ADMIN");
+
+		// JWT Service 모킹
+		given(jwtService.validateToken(eq("user-jwt-token"))).willReturn(true);
+		given(jwtService.validateToken(eq("admin-jwt-token"))).willReturn(true);
+		given(jwtService.extractAllClaims(eq("user-jwt-token"))).willReturn(userClaims);
+		given(jwtService.extractAllClaims(eq("admin-jwt-token"))).willReturn(adminClaims);
+		given(jwtService.extractEmail(eq("user-jwt-token"))).willReturn(testUserEmail);
+		given(jwtService.extractEmail(eq("admin-jwt-token"))).willReturn(testAdminEmail);
+		given(jwtService.isTokenExpired(anyString())).willReturn(false);
+
+		// UserRepository 모킹
+		given(userRepository.findByEmail(eq(testUserEmail)))
+			.willReturn(Optional.of(testUserEntity));
+		given(userRepository.findByEmail(eq(testAdminEmail)))
+			.willReturn(Optional.of(testAdminEntity));
+
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
 	}
 
 	@Nested
@@ -125,7 +162,7 @@ class BookBorrowControllerTest {
 			// when & then
 			mockMvc.perform(post("/api/books/borrow")
 					.with(csrf())
-					.with(authentication(auth))
+					.cookie(getUserJwtCookie())
 					.param("bookItemId", String.valueOf(bookItemId))
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
@@ -152,7 +189,7 @@ class BookBorrowControllerTest {
 			// when & then
 			mockMvc.perform(post("/api/books/borrow")
 					.with(csrf())
-					.with(authentication(auth))
+					.cookie(getUserJwtCookie())
 					.param("bookItemId", String.valueOf(bookItemId))
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isNotFound());
@@ -169,17 +206,26 @@ class BookBorrowControllerTest {
 
 			given(bookBorrowService.borrowBook(eq(testUserEntity.getId()), eq(bookItemId)))
 				.willThrow(new BookHistoryException(ErrorCode.BORROW_LIMIT_EXCEEDED));
-			log.info("대출 한도 초과 테스트 시작: userId={}", testUserEntity.getId());
 
 			// when & then
 			mockMvc.perform(post("/api/books/borrow")
 					.with(csrf())
-					.with(authentication(auth))
+					.cookie(getUserJwtCookie())
 					.param("bookItemId", String.valueOf(bookItemId))
 					.contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isBadRequest());
-
-			log.info("대출 한도 초과 테스트 완료");
 		}
+	}
+
+	private Cookie getUserJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "user-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
+	}
+
+	private Cookie getAdminJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "admin-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
 	}
 }

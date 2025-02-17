@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.corp.bookiki.jwt.service.JwtService;
 import com.corp.bookiki.notification.controller.NotificationController;
 import com.corp.bookiki.notification.dto.NotificationResponse;
 import com.corp.bookiki.notification.entity.NotificationStatus;
@@ -45,13 +47,16 @@ import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 import com.corp.bookiki.util.CookieUtil;
 
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @WebMvcTest(NotificationController.class)
+@Import({SecurityConfig.class, CookieUtil.class, TestSecurityBeansConfig.class,
+	CurrentUserArgumentResolver.class, WebMvcConfig.class})
 @MockBean(JpaMetamodelMappingContext.class)
 @DisplayName("알림 컨트롤러 테스트")
-@Import({WebMvcConfig.class, CurrentUserArgumentResolver.class, TestSecurityBeansConfig.class, SecurityConfig.class, CookieUtil.class})
 class NotificationControllerTest {
 
 	@Autowired
@@ -65,35 +70,65 @@ class NotificationControllerTest {
 	@Autowired
 	private UserRepository userRepository;
 
+	@Autowired
+	private JwtService jwtService;
+
 	private UserEntity testUserEntity;
-	private String testEmail;
-	private Authentication auth;
+	private UserEntity testAdminEntity;
+	private String testUserEmail;
+	private String testAdminEmail;
 
 	@BeforeEach
 	void setup() {
-		mockMvc = MockMvcBuilders
-			.webAppContextSetup(context)
-			.apply(springSecurity())
-			.build();
-
-		testEmail = "test@example.com";
+		// 일반 사용자 설정
+		testUserEmail = "user@example.com";
 		testUserEntity = UserEntity.builder()
-			.email(testEmail)
+			.email(testUserEmail)
 			.userName("Test User")
 			.role(Role.USER)
 			.build();
 		ReflectionTestUtils.setField(testUserEntity, "id", 2);
 
-		given(userRepository.findByEmail(eq(testEmail)))
+		// 관리자 설정
+		testAdminEmail = "admin@example.com";
+		testAdminEntity = UserEntity.builder()
+			.email(testAdminEmail)
+			.userName("Admin User")
+			.role(Role.ADMIN)
+			.build();
+		ReflectionTestUtils.setField(testAdminEntity, "id", 1);
+
+		// 일반 사용자 Claims 설정
+		Claims userClaims = mock(Claims.class);
+		given(userClaims.getSubject()).willReturn("user:" + testUserEmail);
+		given(userClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(userClaims.get("authorities", String.class)).willReturn("ROLE_USER");
+
+		// 관리자 Claims 설정
+		Claims adminClaims = mock(Claims.class);
+		given(adminClaims.getSubject()).willReturn("user:" + testAdminEmail);
+		given(adminClaims.getExpiration()).willReturn(new Date(System.currentTimeMillis() + 3600000));
+		given(adminClaims.get("authorities", String.class)).willReturn("ROLE_USER,ROLE_ADMIN");
+
+		// JWT Service 모킹
+		given(jwtService.validateToken(eq("user-jwt-token"))).willReturn(true);
+		given(jwtService.validateToken(eq("admin-jwt-token"))).willReturn(true);
+		given(jwtService.extractAllClaims(eq("user-jwt-token"))).willReturn(userClaims);
+		given(jwtService.extractAllClaims(eq("admin-jwt-token"))).willReturn(adminClaims);
+		given(jwtService.extractEmail(eq("user-jwt-token"))).willReturn(testUserEmail);
+		given(jwtService.extractEmail(eq("admin-jwt-token"))).willReturn(testAdminEmail);
+		given(jwtService.isTokenExpired(anyString())).willReturn(false);
+
+		// UserRepository 모킹
+		given(userRepository.findByEmail(eq(testUserEmail)))
 			.willReturn(Optional.of(testUserEntity));
+		given(userRepository.findByEmail(eq(testAdminEmail)))
+			.willReturn(Optional.of(testAdminEntity));
 
-		auth = new UsernamePasswordAuthenticationToken(
-			testEmail,
-			null,
-			List.of(new SimpleGrantedAuthority("ROLE_USER"))
-		);
-
-		log.info("MockMvc 및 테스트 사용자 설정이 완료되었습니다.");
+		mockMvc = MockMvcBuilders
+			.webAppContextSetup(context)
+			.apply(springSecurity())
+			.build();
 	}
 
 	@Nested
@@ -125,7 +160,7 @@ class NotificationControllerTest {
 
 			// when & then
 			mockMvc.perform(get("/api/notifications")
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.content[0].id").exists())
 				.andExpect(jsonPath("$.content[0].userId").value(2))
@@ -136,7 +171,7 @@ class NotificationControllerTest {
 		@DisplayName("인증되지 않은 사용자의 조회 시도")
 		void getNotifications_Unauthorized() throws Exception {
 			mockMvc.perform(get("/api/notifications"))
-				.andExpect(status().is3xxRedirection());
+				.andExpect(status().isUnauthorized());
 		}
 	}
 
@@ -163,7 +198,7 @@ class NotificationControllerTest {
 
 			// when & then
 			mockMvc.perform(get("/api/notifications/1")
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.id").value(1))
 				.andExpect(jsonPath("$.content").value("테스트 알림"));
@@ -179,7 +214,7 @@ class NotificationControllerTest {
 		void updateReadStatus_Success() throws Exception {
 			mockMvc.perform(put("/api/notifications/1")
 					.with(csrf())
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk());
 
 			verify(notificationService).UpdateNotificationReadStatus(eq(1));
@@ -195,10 +230,22 @@ class NotificationControllerTest {
 		void deleteNotification_Success() throws Exception {
 			mockMvc.perform(delete("/api/notifications/1")
 					.with(csrf())
-					.with(authentication(auth)))
+					.cookie(getUserJwtCookie()))
 				.andExpect(status().isOk());
 
 			verify(notificationService).UpdateNotificationDeleteStatus(eq(1));
 		}
+	}
+
+	private Cookie getUserJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "user-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
+	}
+
+	private Cookie getAdminJwtCookie() {
+		Cookie accessTokenCookie = new Cookie("access_token", "admin-jwt-token");
+		accessTokenCookie.setPath("/");
+		return accessTokenCookie;
 	}
 }
