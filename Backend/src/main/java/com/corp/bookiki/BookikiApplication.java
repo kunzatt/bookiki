@@ -2,12 +2,14 @@ package com.corp.bookiki;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
 public class BookikiApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(BookikiApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(BookikiApplication.class, args);
+	}
 
 }
