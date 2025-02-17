@@ -60,6 +60,7 @@ public class SecurityConfig {
 								CorsConfiguration configuration = new CorsConfiguration();
 								configuration.setAllowedOriginPatterns(List.of(frontendUrl,
 										"http://localhost:5173",
+										"http://localhost:3000",
 										"http://i12a206.p.ssafy.io:8088",
 										"ws://70.12.246.118:8088"));
 
