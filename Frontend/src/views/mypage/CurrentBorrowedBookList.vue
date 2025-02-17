@@ -8,6 +8,7 @@ import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import { getCurrentBorrowedBooks } from '@/api/bookHistory';
 import { getBookInformation } from '@/api/bookInformation';
 import { getBookItemById } from '@/api/bookItem';
+import { calculateDueDate } from '@/utils/dateUtils';
 import type { BookHistoryResponse } from '@/types/api/bookHistory';
 
 interface BookDetail extends Omit<BookHistoryResponse, 'overdue'> {
@@ -17,6 +18,7 @@ interface BookDetail extends Omit<BookHistoryResponse, 'overdue'> {
     author: string;
     image: string;
   };
+  dueDate?: string;
 }
 
 const router = useRouter();
@@ -31,7 +33,7 @@ const fetchBookDetails = async () => {
     const currentBooks = await getCurrentBorrowedBooks();
     console.log('1. 대출 중인 도서 목록:', currentBooks);
     
-    // 2. 각 도서의 상세 정보 조회
+    // 각 도서의 상세 정보를 가져오고 반납 예정일 계산
     const booksWithDetails = await Promise.all(
       currentBooks.map(async (book) => {
         try {
@@ -43,21 +45,25 @@ const fetchBookDetails = async () => {
           const bookInfo = await getBookInformation(bookItem.bookInformationId);
           console.log(`3. 도서 상세 정보 (ID: ${bookItem.bookInformationId}):`, bookInfo);
           
+          // 반납 예정일 계산
+          const dueDate = await calculateDueDate(book.borrowedAt);
+          
           return {
             ...book,
-            isOverdue: book.overdue, // overdue를 isOverdue로 변환
+            isOverdue: book.isOverdue, // overdue를 isOverdue로 변환
             bookInfo: {
               title: bookInfo.title,
               author: bookInfo.author,
               image: bookInfo.image
-            }
+            },
+            dueDate
           } as BookDetail;
         } catch (err) {
           console.error(`도서 ID ${book.bookItemId}의 상세 정보 조회 실패:`, err);
           // 기본 도서 정보로 반환
           return {
             ...book,
-            isOverdue: book.overdue,
+            isOverdue: book.isOverdue,
             bookInfo: {
               title: book.bookTitle || '제목 없음',
               author: book.bookAuthor || '저자 미상',
