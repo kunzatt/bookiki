@@ -177,6 +177,13 @@ const router = createRouter({
       component: () => import('@/views/admin/AdminBooksView.vue'),
       meta: { requiresAuth: true },
     },
+
+    {
+      path: '/admin/books/:id',
+      name: 'admin-book-detail',
+      component: () => import('@/views/admin/AdminBookDetailView.vue'),
+      meta: { requiresAuth: false },
+    },
     {
       path: '/password/change',
       name: 'passwordChange',

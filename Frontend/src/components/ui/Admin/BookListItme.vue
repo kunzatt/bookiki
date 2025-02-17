@@ -61,7 +61,7 @@ const handleStatusUpdate = () => {
 
     <!-- 도서명 -->
     <td class="py-4 px-4 text-sm">
-      <router-link :to="{ name: 'book-detail', params: { id: book.id } }">
+      <router-link :to="{ name: 'admin-book-detail', params: { id: book.id } }">
         <div class="line-clamp-2 max-w-[300px]">
           {{ book.title }}
         </div>
