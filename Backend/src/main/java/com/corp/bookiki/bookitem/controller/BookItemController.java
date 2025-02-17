@@ -18,8 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -256,5 +254,10 @@ public class BookItemController {
 	) {
 		bookItemService.updateBookStatus(id, request.getStatus());
 		return ResponseEntity.ok().build();
+	}
+
+	@GetMapping("/admin/books/{bookItemId}")
+	public ResponseEntity<BookAdminDetailResponse> getBookDetail(@PathVariable Integer bookItemId) {
+		return ResponseEntity.ok(bookItemService.getBookAdminDetail(bookItemId));
 	}
 }

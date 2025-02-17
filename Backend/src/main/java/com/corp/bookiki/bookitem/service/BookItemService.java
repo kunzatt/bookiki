@@ -1,9 +1,8 @@
 package com.corp.bookiki.bookitem.service;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-
+import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
+import com.corp.bookiki.bookinformation.entity.Category;
 import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
 import com.corp.bookiki.bookitem.dto.*;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
@@ -21,6 +20,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -32,6 +32,7 @@ public class BookItemService {
 
 	private final BookItemRepository bookItemRepository;
 	private final BookInformationRepository bookInformationRepository;
+	private final BookHistoryRepository bookHistoryRepository;
 
 	@Transactional
 	public Page<BookItemDisplayResponse> selectBooksByKeyword(int page, int size, String sortBy, String direction, String keyword) {
@@ -184,5 +185,29 @@ public class BookItemService {
 		return recommendations.stream()
 				.limit(limit)
 				.collect(Collectors.toList());
+	}
+
+	public BookAdminDetailResponse getBookAdminDetail(Integer bookItemId) {
+		// 1. BookItem 조회 (연관된 BookInformation도 함께 조회)
+		BookItemEntity bookItem = bookItemRepository.findById(bookItemId)
+				.orElseThrow(() -> new BookItemException(ErrorCode.BOOK_ITEM_NOT_FOUND));
+
+		// 2. BookInformation 정보 접근
+		BookInformationEntity bookInfo = bookItem.getBookInformation();
+
+		// 일단 여기까지 작성해서 기본 정보들이 잘 조회되는지 테스트해볼까요?
+		return BookAdminDetailResponse.builder()
+				.title(bookInfo.getTitle())
+				.author(bookInfo.getAuthor())
+				.publisher(bookInfo.getPublisher())
+				.isbn(bookInfo.getIsbn())
+				.publishedAt(bookInfo.getPublishedAt())
+				.image(bookInfo.getImage())
+				.description(bookInfo.getDescription())
+				.category(Category.ofCode(bookInfo.getCategory()))
+				.id(bookItem.getId())
+				.purchaseAt(bookItem.getPurchaseAt())
+				.bookStatus(bookItem.getBookStatus())
+				.build();
 	}
 }
