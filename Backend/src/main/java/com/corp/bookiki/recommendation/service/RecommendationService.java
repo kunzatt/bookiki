@@ -53,17 +53,26 @@ public class RecommendationService {
 
         log.info("사용자 대출 이력 조회 - userId={}, 건수={}", userId, borrowHistory.size());
 
-        String keywords = geminiService.getRecommendationKeywords(borrowHistory);
+        // 키워드 목록 가져오기
+        List<String> keywords = geminiService.getRecommendationKeywords(borrowHistory);
         log.info("추출된 키워드={}", keywords);
 
-        List<BookItemListResponse> recommendations = bookItemService.selectBooks(
-                SearchType.KEYWORD,
+        // 새로 만든 메서드 사용
+        List<BookItemListResponse> recommendations = bookItemService.getRecommendedBooksByKeywords(
                 keywords,
-                0,
                 request.getLimit()
-        ).getContent();
+        );
 
         log.info("키워드 기반 도서 검색 결과 - 건수={}", recommendations.size());
+
+        // 추천된 도서 목록 상세 로깅
+        recommendations.forEach(book ->
+                log.info("추천 도서 - 제목: {}, 저자: {}, ID: {}",
+                        book.getTitle(),
+                        book.getAuthor(),
+                        book.getId())
+        );
+
         return buildResponse(recommendations, "최근 대출 이력 기반 추천");
     }
 
@@ -75,6 +84,15 @@ public class RecommendationService {
         );
 
         log.info("인기 도서 조회 결과 - 건수={}", popularBooks.size());
+
+        // 추천된 도서 목록 상세 로깅
+        popularBooks.forEach(book ->
+                log.info("추천 도서 - 제목: {}, 저자: {}, ID: {}",
+                        book.getTitle(),
+                        book.getAuthor(),
+                        book.getId())
+        );
+
         return buildResponse(popularBooks, "인기 도서 기반 추천");
     }
 
