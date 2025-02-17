@@ -60,8 +60,8 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/public/books/:id',
-      name: 'PublicBookDetail',
+      path: '/qr/books/:id',
+      name: 'QRBookDetail',
       component: () => import('@/views/QRBookDetailView.vue'),
       meta: {
         requiresAuth: false,
@@ -138,25 +138,25 @@ const router = createRouter({
     {
       path: '/mypage/current-borrowed',
       name: 'currentBorrowed',
-      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
+      component: () => import('@/views/mypage/CurrentBorrowedBookListView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/mypage/history',
       name: 'borrowHistory',
-      component: () => import('@/views/mypage/BorrowHistoryList.vue'),
+      component: () => import('@/views/mypage/BorrowHistoryView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/mypage',
       name: 'mypage',
-      component: () => import('@/views/mypage/MyPage.vue'),
+      component: () => import('@/views/mypage/MyPageView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/favorites',
       name: 'favorites',
-      component: () => import('@/views/mypage/MyFavoriteList.vue'),
+      component: () => import('@/views/mypage/MyFavoriteListView.vue'),
       meta: { requiresAuth: true },
     },
     {
@@ -170,6 +170,20 @@ const router = createRouter({
       name: 'adminUser',
       component: () => import('@/views/admin/AdminUserView.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/password/change',
+      name: 'passwordChange',
+      component: () => import('@/views/password/PasswordChangeView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/reset-password/:token',
+      name: 'PasswordReset',
+      component: () => import('@/views/password/PasswordResetView.vue'),
+      meta: {
+        requiresAuth: false
+      }
     },
   ],
 });
