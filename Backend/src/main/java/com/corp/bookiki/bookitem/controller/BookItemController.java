@@ -1,9 +1,6 @@
 package com.corp.bookiki.bookitem.controller;
 
-import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
-import com.corp.bookiki.bookitem.dto.BookItemListResponse;
-import com.corp.bookiki.bookitem.dto.BookItemRequest;
-import com.corp.bookiki.bookitem.dto.BookItemResponse;
+import com.corp.bookiki.bookitem.dto.*;
 import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.error.dto.ErrorResponse;
@@ -14,11 +11,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api")
@@ -198,5 +198,63 @@ public class BookItemController {
 
 		BookItemResponse response = bookItemService.addBookItem(bookItemRequest);
 		return ResponseEntity.ok(response);
+	}
+
+	@Operation(summary = "관리자 - 도서 아이템 목록 조회", description = "관리자 페이지에서 도서 아이템 목록을 페이지 단위로 조회합니다.")
+	@ApiResponses({
+			@ApiResponse(
+					responseCode = "200",
+					description = "도서 아이템 목록 조회 성공",
+					content = @Content(
+							mediaType = "application/json",
+							schema = @Schema(
+									implementation = Page.class,
+									subTypes = {BookAdminListResponse.class}
+							)
+					)
+			),
+			@ApiResponse(
+					responseCode = "400",
+					description = "잘못된 요청 파라미터",
+					content = @Content(
+							mediaType = "application/json",
+							schema = @Schema(implementation = ErrorResponse.class)
+					)
+			)
+	})
+
+	@GetMapping("/admin/bookManage")
+	public ResponseEntity<?> selectAllBooksForAdmin(
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size,
+			@RequestParam(required = false) String keyword
+	) {
+		log.info("Admin 도서 아이템 조회 시작");
+		Page<BookAdminListResponse> books = bookItemService.selectBooksForAdmin(keyword, page, size);
+		return ResponseEntity.ok(books);
+	}
+
+	@PatchMapping("/admin/bookManage/{id}/status")
+	@Operation(summary = "도서 상태 수정", description = "도서의 상태를 변경합니다.")
+	@ApiResponses({
+			@ApiResponse(
+					responseCode = "200",
+					description = "도서 상태 수정 성공"
+			),
+			@ApiResponse(
+					responseCode = "404",
+					description = "도서를 찾을 수 없음",
+					content = @Content(
+							mediaType = "application/json",
+							schema = @Schema(implementation = ErrorResponse.class)
+					)
+			)
+	})
+	public ResponseEntity<Void> updateBookStatus(
+			@PathVariable Integer id,
+			@RequestBody @Valid UpdateBookStatusRequest request
+	) {
+		bookItemService.updateBookStatus(id, request.getStatus());
+		return ResponseEntity.ok().build();
 	}
 }

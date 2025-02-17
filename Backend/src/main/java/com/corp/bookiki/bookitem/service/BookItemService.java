@@ -4,16 +4,14 @@ import java.util.List;
 
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookinformation.repository.BookInformationRepository;
-import com.corp.bookiki.bookitem.dto.BookItemDisplayResponse;
-import com.corp.bookiki.bookitem.dto.BookItemListResponse;
-import com.corp.bookiki.bookitem.dto.BookItemRequest;
-import com.corp.bookiki.bookitem.dto.BookItemResponse;
+import com.corp.bookiki.bookitem.dto.*;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookItemException;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -120,4 +118,38 @@ public class BookItemService {
 	public List<Integer> getBooksIdSameBookInformation(Integer bookItemId){
 		return bookItemRepository.findIdsByBookInformationIdFromBookItemId(bookItemId);
 	}
+
+	public Page<BookAdminListResponse> selectBooksForAdmin(String keyword, int page, int size) {
+		PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "id"));
+
+		Page<BookItemEntity> bookItems = bookItemRepository.findAllBooksForAdmin(keyword, pageRequest);
+		log.info("조회된 도서 수: {}", bookItems.getContent().size());
+
+		Page<BookAdminListResponse> response = bookItems.map(item -> {
+			try {
+				log.debug("도서 ID {} 변환 시작", item.getId());
+				BookAdminListResponse dto = new BookAdminListResponse(item);
+				log.debug("도서 ID {} 변환 결과: {}", item.getId(), dto);  // 변환된 DTO 로깅
+				return dto;
+			} catch (Exception e) {
+				log.error("도서 ID {} DTO 변환 실패: {}", item.getId(), e.getMessage());
+				return null;
+			}
+		});
+
+		log.info("변환된 DTO 수: {}", response.getContent().size());  // 최종 응답 크기 로깅
+		return response;
+	}
+
+	public void updateBookStatus(Integer id, BookStatus newStatus) {
+		BookItemEntity bookItem = bookItemRepository.findById(id)
+				.orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + id));
+
+		if (newStatus == BookStatus.AVAILABLE) {
+			bookItem.returnBook();
+		} else if (newStatus == BookStatus.UNAVAILABLE) {
+			bookItem.markAsLost();
+		}
+	}
+
 }
