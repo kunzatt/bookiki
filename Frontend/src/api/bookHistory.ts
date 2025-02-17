@@ -5,18 +5,20 @@ import type {
   BookReturnRequest,
   BookRankingResponse,
   BookHistoryRequest,
+  CurrentBorrowerResponse,
 } from '@/types/api/bookHistory';
 import { PeriodType } from '@/types/enums/periodType';
 
 const API_URL = '/api';
 
 // 관리자용 도서 대출 기록 전체 조회
-export const getAdminBookHistories = async (params: BookHistoryRequest): Promise<BookHistoryResponse> => {
+export const getAdminBookHistories = async (
+  params: BookHistoryRequest,
+): Promise<BookHistoryResponse> => {
   try {
-    const response = await axios.get<BookHistoryResponse>(
-      `${API_URL}/admin/book-histories`,
-      { params }
-    );
+    const response = await axios.get<BookHistoryResponse>(`${API_URL}/admin/book-histories`, {
+      params,
+    });
     return response.data;
   } catch (error) {
     console.error('관리자용 도서 대출 기록 조회 실패:', error);
@@ -25,12 +27,13 @@ export const getAdminBookHistories = async (params: BookHistoryRequest): Promise
 };
 
 // 사용자용 도서 대출 기록 조회
-export const getUserBookHistories = async (params: BookHistoryRequest): Promise<BookHistoryResponse> => {
+export const getUserBookHistories = async (
+  params: BookHistoryRequest,
+): Promise<BookHistoryResponse> => {
   try {
-    const response = await axios.get<BookHistoryResponse>(
-      `${API_URL}/user/book-histories`,
-      { params }
-    );
+    const response = await axios.get<BookHistoryResponse>(`${API_URL}/user/book-histories`, {
+      params,
+    });
     return response.data;
   } catch (error) {
     console.error('사용자용 도서 대출 기록 조회 실패:', error);
@@ -39,7 +42,9 @@ export const getUserBookHistories = async (params: BookHistoryRequest): Promise<
 };
 
 // 현재 대출 중인 도서 목록 조회
-export const getCurrentBorrowedBooks = async (onlyOverdue?: boolean): Promise<BookHistoryResponse[]> => {
+export const getCurrentBorrowedBooks = async (
+  onlyOverdue?: boolean,
+): Promise<BookHistoryResponse[]> => {
   try {
     const response = await axios.get<BookHistoryResponse[]>(
       `${API_URL}/user/book-histories/current`,
@@ -57,13 +62,9 @@ export const getCurrentBorrowedBooks = async (onlyOverdue?: boolean): Promise<Bo
 // 도서 대출
 export const borrowBook = async (bookItemId: number): Promise<BookBorrowResponse> => {
   try {
-    const response = await axios.post<BookBorrowResponse>(
-      `${API_URL}/books/borrow`, 
-      null, 
-      {
-        params: { bookItemId },
-      }
-    );
+    const response = await axios.post<BookBorrowResponse>(`${API_URL}/books/borrow`, null, {
+      params: { bookItemId },
+    });
     return response.data;
   } catch (error) {
     console.error('도서 대출 실패:', error);
@@ -84,12 +85,17 @@ export const processScanResult = async (request: BookReturnRequest): Promise<voi
 // 도서 대출 순위 조회
 export const getBookRanking = async (): Promise<BookRankingResponse[]> => {
   try {
-    const response = await axios.get<BookRankingResponse[]>(
-      `${API_URL}/books/ranking`,
-    );
+    const response = await axios.get<BookRankingResponse[]>(`${API_URL}/books/ranking`);
     return response.data;
   } catch (error) {
     console.error('도서 대출 순위 조회 실패:', error);
     throw error;
   }
+};
+
+export const getCurrentBorrower = async (bookItemId: number): Promise<CurrentBorrowerResponse> => {
+  const response = await axios.get<CurrentBorrowerResponse>(
+    `${API_URL}/admin/bookDetail/${bookItemId}`,
+  );
+  return response.data;
 };
