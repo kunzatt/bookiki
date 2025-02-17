@@ -9,7 +9,10 @@ import { useRouter } from 'vue-router';
 import { getRecommendations } from '../api/recommendation';
 import type { RecommendationResponse } from '@/types/api/recommendation';
 import axios from '@/api/axios';
-import { BookRankingResponse } from '@/types/api/bookHistory';
+import type { BookRankingResponse } from '@/types/api/bookHistory';
+import type { BookItemListResponse } from '@/types/api/bookItem';
+import { getBookItemById } from '@/api/bookItem';
+import { getBookInformation } from '@/api/bookInformation';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -19,10 +22,8 @@ const prevDisplayCount = ref(4);
 const isLoading = ref(true);
 
 const monthlyBooks = ref<BookRankingResponse[]>([]);
-const recommendedBooks = ref<RecommendationResponse[]>([]);
-
-const currentIndex = ref(0);
-const recommendedIndex = ref(0);
+const recommendedBooks = ref<(BookItemListResponse & { bookItemId: number; bookInfo?: BookInformationResponse })[]>([]);
+const recommendationReason = ref<string>('');
 
 // Monthly Books 데이터 가져오기
 const fetchMonthlyBooks = async () => {
@@ -41,10 +42,29 @@ const fetchRecommendedBooks = async () => {
     // 디스플레이 카운트에 따라 적절한 수의 책을 요청
     const limit = Math.max(8, displayCount.value * 2); // 최소 8개 또는 현재 표시 수의 2배
     const response = await getRecommendations({ limit });
-    recommendedBooks.value = response;
+    console.log('추천 도서 데이터:', response); // 디버깅을 위한 로그 추가
+    recommendedBooks.value = response.recommendations || [];
+    recommendationReason.value = response.recommendationReason || '';
+
+    // 각 책의 상세 정보와 이미지 URL을 가져옵니다
+    await Promise.all(
+      recommendedBooks.value.map(async (book) => {
+        try {
+          const bookItem = await getBookItemById(book.bookItemId);
+          const bookInfo = await getBookInformation(bookItem.bookInformationId);
+          book.bookInfo = bookInfo; // 전체 책 정보를 저장
+          book.image = bookInfo.image;
+          book.title = bookInfo.title;
+          book.author = bookInfo.author;
+        } catch (error) {
+          console.error(`책 정보 가져오기 실패 (bookItemId: ${book.bookItemId}):`, error);
+        }
+      })
+    );
   } catch (error) {
     console.error('Error fetching recommended books:', error);
     recommendedBooks.value = [];
+    recommendationReason.value = '';
   }
 };
 
@@ -149,6 +169,9 @@ const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src = '/default-book-cover.svg';
 };
+
+const currentIndex = ref(0);
+const recommendedIndex = ref(0);
 </script>
 
 <template>
@@ -267,17 +290,12 @@ const handleImageError = (event: Event) => {
                       <div
                         v-if="recommendedBooks[recommendedIndex + index - 1]?.bookItemId"
                         class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                        @click="
-                          recommendedBooks[recommendedIndex + index - 1]?.bookItemId &&
-                          router.push(
-                            `/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`,
-                          )
-                        "
+                        @click="router.push(`/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`)"
                       >
                         <div class="relative">
                           <img
-                            :src="recommendedBooks[recommendedIndex + index - 1].image"
-                            :alt="recommendedBooks[recommendedIndex + index - 1].title"
+                            :src="recommendedBooks[recommendedIndex + index - 1].bookInfo?.image || '/default-book-cover.svg'"
+                            :alt="recommendedBooks[recommendedIndex + index - 1].bookInfo?.title"
                             class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
                             @error="handleImageError"
                           />
@@ -291,10 +309,10 @@ const handleImageError = (event: Event) => {
                         </div>
                         <div class="p-3 sm:p-4">
                           <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                            {{ recommendedBooks[recommendedIndex + index - 1].title }}
+                            {{ recommendedBooks[recommendedIndex + index - 1].bookInfo?.title }}
                           </h3>
                           <p class="text-xs sm:text-sm text-gray-600 truncate">
-                            {{ recommendedBooks[recommendedIndex + index - 1].author }}
+                            {{ recommendedBooks[recommendedIndex + index - 1].bookInfo?.author }}
                           </p>
                         </div>
                       </div>
