@@ -47,14 +47,12 @@ const handleModalClose = () => {
     <Sidebar class="hidden lg:block" />
 
     <div class="flex-1 flex flex-col overflow-hidden">
-      <HeaderMobile class="lg:hidden" />
-      <HeaderDesktop class="hidden lg:block" />
+      <HeaderMobile title="회원 관리" class="lg:hidden" />
+      <HeaderDesktop title="회원 관리" class="hidden lg:block" />
 
       <!-- 메인 컨텐츠 영역 -->
       <main class="flex-1 overflow-auto p-6">
         <div class="max-w-7xl mx-auto">
-          <h1 class="text-2xl font-bold mb-6">사용자 관리</h1>
-
           <!-- UserList 컴포넌트 -->
           <UserList />
         </div>
