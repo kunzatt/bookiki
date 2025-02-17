@@ -138,25 +138,25 @@ const router = createRouter({
     {
       path: '/mypage/current-borrowed',
       name: 'currentBorrowed',
-      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
+      component: () => import('@/views/mypage/CurrentBorrowedBookListView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/mypage/history',
       name: 'borrowHistory',
-      component: () => import('@/views/mypage/BorrowHistoryList.vue'),
+      component: () => import('@/views/mypage/BorrowHistoryView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/mypage',
       name: 'mypage',
-      component: () => import('@/views/mypage/MyPage.vue'),
+      component: () => import('@/views/mypage/MyPageView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/favorites',
       name: 'favorites',
-      component: () => import('@/views/mypage/MyFavoriteList.vue'),
+      component: () => import('@/views/mypage/MyFavoriteListView.vue'),
       meta: { requiresAuth: true },
     },
     {
