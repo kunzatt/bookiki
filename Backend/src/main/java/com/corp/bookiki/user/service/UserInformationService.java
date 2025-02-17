@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.user.dto.UserInformationResponse;
 import com.corp.bookiki.user.entity.UserEntity;
-import com.corp.bookiki.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,9 +21,12 @@ public class UserInformationService {
 	@Transactional(readOnly = true)
 	public UserInformationResponse getUserInformation(Integer userId) {
 		UserEntity userEntity = userService.getUserById(userId);
-		if(userEntity.getActiveAt().isAfter(LocalDateTime.now()))
-			return UserInformationResponse.from(userEntity, 0);
-		Integer availableLoans = bookHistoryService.countCanBorrowBook(userId);
-		return UserInformationResponse.from(userEntity, availableLoans);
+		if (userEntity.getActiveAt() == null || !userEntity.getActiveAt().isAfter(LocalDateTime.now())) {
+			Integer availableLoans = bookHistoryService.countCanBorrowBook(userId);
+			return UserInformationResponse.from(userEntity, availableLoans);
+		}
+
+		return UserInformationResponse.from(userEntity, 0);
+
 	}
 }
