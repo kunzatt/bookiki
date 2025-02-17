@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -30,7 +31,7 @@ public class GeminiService {
         this.apiUrl = apiUrl;
     }
 
-    public String getRecommendationKeywords(List<BookHistoryResponse> borrowHistory) {
+    public List<String> getRecommendationKeywords(List<BookHistoryResponse> borrowHistory) {
         try {
             StringBuilder prompt = new StringBuilder();
             prompt.append("Based on these books, suggest 5 search keywords for finding similar books: \n\n");
@@ -47,12 +48,15 @@ public class GeminiService {
 
             String response = callGeminiAPI(prompt.toString());
             log.debug("Gemini 실제 응답: {}", response);
-            return response;
+            return Arrays.stream(response.split(","))
+                    .map(String::trim)
+                    .map(keyword -> keyword.replaceAll("\\s+", "")) // 공백 제거
+                    .collect(Collectors.toList());
 
         } catch (Exception e) {
             log.error("Gemini API 호출 중 오류 발생: ", e);
             // 기본 키워드로 폴백
-            return "general, popular, recommended, new, trending";
+            return Arrays.asList("general", "popular", "recommended", "new", "trending");
         }
     }
 
