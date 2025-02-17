@@ -65,7 +65,7 @@ const closeModals = () => {
     >
       <!-- 상단: 로고 영역 -->
       <div class="flex justify-center mb-8">
-        <img src="@/assets/BookikiLogo.png" alt="Bookiki Logo" class="w-32" />
+        <img src="@/assets/BookikiLogo.PNG" alt="Bookiki Logo" class="w-32" />
       </div>
 
       <!-- 하단: 로그인 폼 영역 -->
@@ -166,11 +166,14 @@ const closeModals = () => {
   </div>
 
   <!-- 비밀번호 재설정 이메일 입력 모달 -->
-  <div v-if="showResetModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div
+    v-if="showResetModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
     <div class="bg-white rounded-lg p-6 w-full max-w-md">
       <h3 class="text-xl font-semibold mb-4">비밀번호 재설정</h3>
       <p class="text-gray-600 mb-4">비밀번호 재설정 링크를 받을 이메일 주소를 입력해주세요.</p>
-      
+
       <BasicInput
         v-model="resetEmail"
         type="full"
@@ -178,7 +181,7 @@ const closeModals = () => {
         inputType="email"
         class="mb-4"
       />
-      
+
       <p v-if="resetError" class="text-red-500 text-sm mb-4">{{ resetError }}</p>
 
       <div class="flex justify-end gap-2">
@@ -199,11 +202,16 @@ const closeModals = () => {
   </div>
 
   <!-- 이메일 전송 확인 모달 -->
-  <div v-if="showConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div
+    v-if="showConfirmModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
     <div class="bg-white rounded-lg p-6 w-full max-w-md">
       <h3 class="text-xl font-semibold mb-4">이메일 전송 완료</h3>
-      <p class="text-gray-600 mb-4">비밀번호 재설정 링크가 이메일로 전송되었습니다. 이메일 함을 확인해주세요.</p>
-      
+      <p class="text-gray-600 mb-4">
+        비밀번호 재설정 링크가 이메일로 전송되었습니다. 이메일 함을 확인해주세요.
+      </p>
+
       <div class="flex justify-end">
         <BasicButton
           size="M"
