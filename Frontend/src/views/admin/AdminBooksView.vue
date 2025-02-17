@@ -9,6 +9,7 @@ import BottomNav from '@/components/common/BottomNav.vue';
 import BaseModal from '@/components/ui/Modal/BaseModal.vue';
 import BookList from '@/components/ui/Admin/BookList.vue';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
+import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import { fetchAdminBookList } from '@/api/bookItem';
 
 const router = useRouter();
@@ -68,6 +69,11 @@ onMounted(() => {
   });
 });
 
+// 페이지 이동 버튼
+const goToOtherPage = () => {
+  router.push('/addBook');
+};
+
 // 모달 닫기 핸들러
 const handleModalClose = () => {
   router.push('/');
@@ -86,6 +92,7 @@ const handleModalClose = () => {
       <main class="flex-1 overflow-auto p-6">
         <div class="max-w-7xl mx-auto">
           <div class="flex justify-between items-center mb-6">
+            <BasicButton text="도서 등록" @click="goToOtherPage" />
             <!-- 검색바 -->
             <div class="w-96">
               <BasicInput
