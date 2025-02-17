@@ -113,14 +113,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-aws:
-  s3:
-    bucket: ${AWS_BUCKET_NAME}
-    region: ${AWS_REGION}
-    credentials:
-      access-key: ${AWS_ACCESS_KEY}
-      secret-key: ${AWS_SECRET_KEY}
-
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: ${MYBATIS_TYPE_ALIASES_PACKAGE}
