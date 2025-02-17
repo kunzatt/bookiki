@@ -56,7 +56,7 @@ const handleDeleteClick = () => {
     <td class="py-4 px-4">
       <Badge
         :text="user.hasOverdueBooks ? '연체' : '정상'"
-        :type?="user.hasOverdueBooks ? 'error' : 'primary'"
+        :type="user.hasOverdueBooks ? 'error' : 'primary'"
         :is-enabled="true"
       />
     </td>

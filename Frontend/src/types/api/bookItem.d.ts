@@ -36,5 +36,5 @@ interface BookAdminListResponse {
   isbn: string;
   category: Category; // enum은 별도로 타입 정의 필요
   bookStatus: BookStatus; // enum은 별도로 타입 정의 필요
-  qrCode: number | null;
+  qrCode: Integer | null;
 }

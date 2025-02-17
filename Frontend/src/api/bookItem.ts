@@ -11,6 +11,7 @@ import type {
 } from '@/types/api/bookItem';
 import { SearchType } from '@/types/enums/searchType';
 import type { PageResponse } from '@/types/common/pagination';
+import { BookStatus } from '@/types/enums/bookStatus';
 
 // 도서 아이템 목록 검색
 export const selectBooks = async (
@@ -115,7 +116,7 @@ export const fetchAdminBookList = async (
 };
 
 // api/bookApi.ts
-export const updateBookStatus = async (bookId: number, newStatus: string): Promise<void> => {
+export const updateBookStatus = async (bookId: number, newStatus: BookStatus): Promise<void> => {
   try {
     await axios.patch(`${API_URL}/admin/bookManage/${bookId}/status`, {
       status: newStatus,

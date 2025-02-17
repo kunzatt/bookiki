@@ -9,10 +9,14 @@ import BottomNav from '@/components/common/BottomNav.vue';
 import BaseModal from '@/components/ui/Modal/BaseModal.vue';
 import BookList from '@/components/ui/Admin/BookList.vue';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
+import { fetchAdminBookList } from '@/api/bookItem';
 
 const router = useRouter();
 const showDesktopModal = ref(false);
 const searchKeyword = ref('');
+const books = ref([]); // 도서 목록을 저장할 ref
+const currentPage = ref(0); // 현재 페이지 번호
+const pageSize = ref(10); // 페이지 크기
 
 // 메뉴 아이템 클릭 핸들러
 const handleMenuClick = async (path: string) => {
@@ -20,9 +24,29 @@ const handleMenuClick = async (path: string) => {
 };
 
 // 검색 핸들러
-const handleSearch = () => {
-  // 검색 로직 실행
-  console.log('Search keyword:', searchKeyword.value);
+const handleSearch = async () => {
+  currentPage.value = 0; // 검색 시 페이지 번호 초기화
+  await fetchBooks(); // 도서 목록 조회
+};
+
+// 도서 목록 조회 함수
+const fetchBooks = async () => {
+  try {
+    const response = await fetchAdminBookList(
+      currentPage.value,
+      pageSize.value,
+      searchKeyword.value,
+    );
+    books.value = response.content; // 도서 목록 업데이트
+  } catch (error) {
+    console.error('도서 목록 조회 실패:', error);
+  }
+};
+
+// 페이지 변경 핸들러
+const handlePageChange = async (page: number) => {
+  currentPage.value = page;
+  await fetchBooks();
 };
 
 // 모바일 체크 함수

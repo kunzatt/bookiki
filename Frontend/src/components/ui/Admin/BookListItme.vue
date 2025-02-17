@@ -3,6 +3,7 @@ import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import BasicStatusBadge from '@/components/ui/Badge/BasicStatusBadge.vue';
 import type { BookAdminListResponse } from '@/types/api/bookItem';
 import type { BadgeStatus } from '@/types/common/ui';
+import { BookStatus } from '@/types/enums/bookStatus';
 
 interface Props {
   book: BookAdminListResponse;
@@ -10,7 +11,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
-  updateStatus: [bookId: number, newStatus: string];
+  updateStatus: [bookId: number, newStatus: BookStatus];
 }>();
 
 // 도서 상태에 따른 Badge 설정
@@ -36,9 +37,10 @@ const getActionButtonProps = (status: string) => {
       newStatus: 'AVAILABLE',
     };
   } else {
+    // AVAILABLE이나 BORROWED일 때
     return {
       text: '분실',
-      isEnabled: false,
+      isEnabled: true,
       newStatus: 'UNAVAILABLE',
     };
   }
@@ -46,7 +48,7 @@ const getActionButtonProps = (status: string) => {
 
 const handleStatusUpdate = () => {
   const { newStatus } = getActionButtonProps(props.book.bookStatus);
-  emit('updateStatus', props.book.id, newStatus);
+  emit('updateStatus', props.book.id, newStatus as BookStatus);
 };
 </script>
 
@@ -59,7 +61,11 @@ const handleStatusUpdate = () => {
 
     <!-- 도서명 -->
     <td class="py-4 px-4 text-sm">
-      {{ book.title }}
+      <router-link :to="{ name: 'book-detail', params: { id: book.id } }">
+        <div class="line-clamp-2 max-w-[300px]">
+          {{ book.title }}
+        </div>
+      </router-link>
     </td>
 
     <!-- ISBN -->
@@ -71,11 +77,18 @@ const handleStatusUpdate = () => {
     <td class="py-4 px-4 text-sm">
       {{ book.category }}
     </td>
-    <td class="py-4 px-4 text-sm">
+
+    <!-- 상태 -->
+    <td class="py-4 px-4 text-sm whitespace-nowrap">
       <BasicStatusBadge
         :text="getStatusBadgeProps(book.bookStatus).text"
         :type="getStatusBadgeProps(book.bookStatus).type"
       />
+    </td>
+
+    <!-- QR 코드 -->
+    <td class="py-4 px-4 text-sm">
+      {{ book.qrCode ?? '-' }}
     </td>
 
     <td class="py-4 px-4">
