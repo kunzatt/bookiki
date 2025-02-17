@@ -147,3 +147,7 @@ temp/
 
 ### Etc ###
 HELP.md
+
+### Docker ###
+docker-compose.yml
+dockerfile
