@@ -15,6 +15,7 @@ const menuItems = [
   { id: 3, title: '회원 관리', path: '/admin/user' },
   { id: 4, title: '문의사항', path: '/qnas' },
   { id: 5, title: '알림', path: '/notifications' },
+  { id: 6, title: '챗봇 피드백 관리', path: '/feedbacks' },
 ];
 
 // 메뉴 아이템 클릭 핸들러
