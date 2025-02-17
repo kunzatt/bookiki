@@ -44,12 +44,6 @@ export const menuItems: MenuItem[] = [
     roles: ['USER', 'ADMIN'],
   },
   {
-    name: '설정',
-    path: '/settings',
-    icon: 'settings',
-    roles: ['USER', 'ADMIN'],
-  },
-  {
     name: '로그아웃',
     icon: 'logout',
     roles: ['USER', 'ADMIN'],
