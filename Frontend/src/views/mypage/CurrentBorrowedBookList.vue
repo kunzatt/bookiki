@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import BottomNav from '@/components/common/BottomNav.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
@@ -23,8 +23,16 @@ interface BookDetail extends Omit<BookHistoryResponse, 'overdue'> {
 
 const router = useRouter();
 const isLoading = ref(true);
-const borrowedBooks = ref<BookDetail[]>([]);
+const allBooks = ref<BookDetail[]>([]);
+const borrowedBooks = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return allBooks.value.slice(start, end);
+});
 const error = ref<string | null>(null);
+const currentPage = ref(1);
+const totalPages = ref(1);
+const pageSize = ref(8);
 
 const fetchBookDetails = async () => {
   try {
@@ -75,7 +83,8 @@ const fetchBookDetails = async () => {
     );
 
     console.log('4. 최종 도서 목록:', booksWithDetails);
-    borrowedBooks.value = booksWithDetails;
+    allBooks.value = booksWithDetails;
+    totalPages.value = Math.ceil(booksWithDetails.length / pageSize.value);
   } catch (err: any) {
     console.error('대출 중인 도서 목록 조회 실패:', err);
     const errorMessage = err.response?.data?.message || err.message;
@@ -102,8 +111,14 @@ const handleImageError = (event: Event) => {
   target.src = '/default-book-cover.svg';
 };
 
+import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
+
 onMounted(() => {
   fetchBookDetails();
+});
+
+watch(currentPage, () => {
+  borrowedBooks;
 });
 </script>
 
@@ -121,7 +136,7 @@ onMounted(() => {
         <div class="max-w-[1440px] mx-auto">
           <div class="flex justify-between items-center my-6">
             <h1 class="text-xl lg:text-2xl font-medium">대출 중인 도서</h1>
-            <span class="text-gray-600">총 {{ borrowedBooks.length }}권</span>
+            <span class="text-gray-600">총 {{ allBooks.length }}권</span>
           </div>
 
           <!-- 로딩 상태 -->
@@ -135,7 +150,7 @@ onMounted(() => {
           </div>
 
           <!-- 대출 도서 없음 -->
-          <div v-else-if="borrowedBooks.length === 0" class="text-center py-8 text-gray-600">
+          <div v-else-if="allBooks.length === 0" class="text-center py-8 text-gray-600">
             현재 대출 중인 도서가 없습니다.
           </div>
 
@@ -172,6 +187,15 @@ onMounted(() => {
                   반납 예정일: {{ formatDate(book.dueDate) }}
                 </p>
               </div>
+            </div>
+            
+            <!-- 페이지네이션 -->
+            <div v-if="allBooks.length > 0" class="mt-6 flex justify-center w-full col-span-full">
+              <BasicWebPagination
+                v-model:page="currentPage"
+                :total-pages="totalPages"
+                @update:page="(page) => currentPage = page"
+              />
             </div>
           </div>
         </div>

@@ -91,24 +91,12 @@
             />
 
             <!-- 페이지네이션 -->
-            <div v-if="histories.length > 0" class="mt-6 flex justify-center space-x-2">
-              <button
-                class="px-4 py-2 border rounded-md disabled:opacity-50"
-                :disabled="currentPage === 0"
-                @click="handlePageChange(currentPage - 1)"
-              >
-                이전
-              </button>
-              <span class="px-4 py-2">
-                {{ currentPage + 1 }} / {{ totalPages }}
-              </span>
-              <button
-                class="px-4 py-2 border rounded-md disabled:opacity-50"
-                :disabled="currentPage >= totalPages - 1"
-                @click="handlePageChange(currentPage + 1)"
-              >
-                다음
-              </button>
+            <div v-if="histories.length > 0" class="mt-6 flex justify-center">
+              <BasicWebPagination
+                v-model:page="currentPage"
+                :total-pages="totalPages"
+                @update:page="handlePageChange"
+              />
             </div>
           </div>
         </div>
@@ -123,12 +111,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
 import BookHistoryList from '@/components/ui/List/BookHistoryList.vue';
+import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
 import { getUserBookHistories } from '@/api/bookHistory';
 import { PeriodType, PeriodTypeDescriptions } from '@/types/enums/periodType';
 import type { BookHistoryResponse } from '@/types/api/bookHistory';
@@ -177,7 +166,6 @@ const fetchHistories = async () => {
   }
 };
 
-// 이벤트 핸들러
 const handlePeriodChange = () => {
   if (selectedPeriod.value !== PeriodType.CUSTOM) {
     startDate.value = '';
@@ -197,11 +185,10 @@ const handleDateChange = () => {
 };
 
 const handlePageChange = (newPage: number) => {
-  currentPage.value = newPage;
+  currentPage.value = newPage - 1;
   fetchHistories();
 };
 
-// 컴포넌트 마운트 시 데이터 로드
 onMounted(() => {
   fetchHistories();
 });
