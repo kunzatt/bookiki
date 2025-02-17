@@ -41,12 +41,12 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null;
 
     try {
-      await logoutApi();
-      // 상태 초기화
+      // 먼저 상태 초기화
       user.value = null;
       sessionStorage.clear(); // 모든 세션 데이터 삭제
 
-      // 로그인 페이지로 리다이렉트
+      // 그 다음 API 호출
+      await logoutApi();
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '로그아웃에 실패했습니다.';

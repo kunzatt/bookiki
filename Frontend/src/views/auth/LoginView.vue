@@ -5,11 +5,16 @@ import { useAuthStore } from '@/stores/auth';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import SocialLoginButtons from '@/components/ui/Button/SocialLoginButtons.vue';
+import { sendPasswordResetEmail } from '@/api/user';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
+const resetEmail = ref('');
+const showResetModal = ref(false);
+const showConfirmModal = ref(false);
+const resetError = ref('');
 
 const handleLogin = async () => {
   try {
@@ -25,11 +30,30 @@ const handleLogin = async () => {
 };
 
 const handleForgotPassword = () => {
-  // TODO: 비밀번호 찾기 페이지로 이동 또는 모달 표시
+  showResetModal.value = true;
 };
 
 const handleSignUp = () => {
   router.push('/signup');
+};
+
+const handleResetPassword = async () => {
+  try {
+    resetError.value = '';
+    await sendPasswordResetEmail({ email: resetEmail.value });
+    showResetModal.value = false;
+    showConfirmModal.value = true;
+  } catch (error) {
+    console.error('Password reset failed:', error);
+    resetError.value = '이메일 전송에 실패했습니다. 다시 시도해주세요.';
+  }
+};
+
+const closeModals = () => {
+  showResetModal.value = false;
+  showConfirmModal.value = false;
+  resetEmail.value = '';
+  resetError.value = '';
 };
 </script>
 
@@ -41,7 +65,7 @@ const handleSignUp = () => {
     >
       <!-- 상단: 로고 영역 -->
       <div class="flex justify-center mb-8">
-        <img src="@/assets/BookikiLogo.png" alt="Bookiki Logo" class="w-32" />
+        <img src="@/assets/BookikiLogo.PNG" alt="Bookiki Logo" class="w-32" />
       </div>
 
       <!-- 하단: 로그인 폼 영역 -->
@@ -138,6 +162,64 @@ const handleSignUp = () => {
           </div>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- 비밀번호 재설정 이메일 입력 모달 -->
+  <div
+    v-if="showResetModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-xl font-semibold mb-4">비밀번호 재설정</h3>
+      <p class="text-gray-600 mb-4">비밀번호 재설정 링크를 받을 이메일 주소를 입력해주세요.</p>
+
+      <BasicInput
+        v-model="resetEmail"
+        type="full"
+        placeholder="이메일 주소"
+        inputType="email"
+        class="mb-4"
+      />
+
+      <p v-if="resetError" class="text-red-500 text-sm mb-4">{{ resetError }}</p>
+
+      <div class="flex justify-end gap-2">
+        <BasicButton
+          size="M"
+          text="취소"
+          @click="closeModals"
+          class="!bg-gray-200 !text-gray-700 hover:!bg-gray-300"
+        />
+        <BasicButton
+          size="M"
+          text="전송"
+          @click="handleResetPassword"
+          class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- 이메일 전송 확인 모달 -->
+  <div
+    v-if="showConfirmModal"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-xl font-semibold mb-4">이메일 전송 완료</h3>
+      <p class="text-gray-600 mb-4">
+        비밀번호 재설정 링크가 이메일로 전송되었습니다. 이메일 함을 확인해주세요.
+      </p>
+
+      <div class="flex justify-end">
+        <BasicButton
+          size="M"
+          text="확인"
+          @click="closeModals"
+          class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
+        />
+      </div>
     </div>
   </div>
 </template>
