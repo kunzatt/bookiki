@@ -85,6 +85,22 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 	@Query("SELECT bi FROM BookItemEntity bi JOIN FETCH bi.bookInformation WHERE bi.id = :id")
 	Optional<BookItemEntity> findByIdWithBookInformation(@Param("id") Integer id);
 
+	@Query(value = """
+    SELECT item FROM BookItemEntity item 
+    JOIN FETCH item.bookInformation info 
+    LEFT JOIN FETCH item.qrCode
+    WHERE item.deleted = false 
+    AND (:keyword IS NULL OR 
+        LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+        LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+        LOWER(info.publisher) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+        info.isbn LIKE CONCAT('%', :keyword, '%'))
+    """)
+	Page<BookItemEntity> findAllBooksForAdmin(
+			@Param("keyword") String keyword,
+			Pageable pageable
+	);
+
 	// AI 추천을 위한 키워드 기반 검색
 	@Query("""
         SELECT DISTINCT item FROM BookItemEntity item 
