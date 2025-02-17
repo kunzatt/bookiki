@@ -60,8 +60,8 @@ const router = createRouter({
       meta: { requiresAuth: false },
     },
     {
-      path: '/public/books/:id',
-      name: 'PublicBookDetail',
+      path: '/qr/books/:id',
+      name: 'QRBookDetail',
       component: () => import('@/views/QRBookDetailView.vue'),
       meta: {
         requiresAuth: false,
