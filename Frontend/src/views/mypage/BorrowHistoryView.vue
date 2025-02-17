@@ -36,21 +36,31 @@
               <div v-if="selectedPeriod === PeriodType.CUSTOM" class="lg:col-span-2 grid grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">시작일</label>
-                  <input
-                    type="date"
-                    v-model="startDate"
-                    class="w-full border border-gray-300 rounded-md px-3 py-2"
-                    @change="handleDateChange"
-                  />
+                  <div class="relative">
+                    <input
+                      type="date"
+                      v-model="startDate"
+                      class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent transition-colors"
+                      @change="handleDateChange"
+                    />
+                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 material-icons text-gray-400">
+                      calendar_today
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">종료일</label>
-                  <input
-                    type="date"
-                    v-model="endDate"
-                    class="w-full border border-gray-300 rounded-md px-3 py-2"
-                    @change="handleDateChange"
-                  />
+                  <div class="relative">
+                    <input
+                      type="date"
+                      v-model="endDate"
+                      class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent transition-colors"
+                      @change="handleDateChange"
+                    />
+                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 material-icons text-gray-400">
+                      calendar_today
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -93,9 +103,11 @@
             <!-- 페이지네이션 -->
             <div v-if="histories.length > 0" class="mt-6 flex justify-center">
               <BasicWebPagination
-                v-model:page="currentPage"
+                :current-page="currentPage"
                 :total-pages="totalPages"
-                @update:page="handlePageChange"
+                :page-size="pageSize"
+                :sort="['borrowedAt,DESC']"
+                @update:pageInfo="handlePageInfoUpdate"
               />
             </div>
           </div>
@@ -130,10 +142,10 @@ const selectedPeriod = ref<PeriodType>(PeriodType.LAST_MONTH);
 const startDate = ref('');
 const endDate = ref('');
 const overdueFilter = ref<boolean | ''>('');
-const currentPage = ref(0);
+const currentPage = ref(1);
 const totalPages = ref(1);
 const totalElements = ref(0);
-const pageSize = 10;
+const pageSize = 8;
 
 // 대출 이력 조회
 const fetchHistories = async () => {
@@ -146,7 +158,7 @@ const fetchHistories = async () => {
       startDate: selectedPeriod.value === PeriodType.CUSTOM ? startDate.value : undefined,
       endDate: selectedPeriod.value === PeriodType.CUSTOM ? endDate.value : undefined,
       overdue: overdueFilter.value === '' ? undefined : overdueFilter.value,
-      page: currentPage.value,
+      page: currentPage.value - 1, // 1-based to 0-based
       size: pageSize,
       sort: 'borrowedAt,desc'
     };
@@ -170,7 +182,7 @@ const handlePeriodChange = () => {
   if (selectedPeriod.value !== PeriodType.CUSTOM) {
     startDate.value = '';
     endDate.value = '';
-    currentPage.value = 0;
+    currentPage.value = 1;
     fetchHistories();
   }
 };
@@ -178,14 +190,14 @@ const handlePeriodChange = () => {
 const handleDateChange = () => {
   if (selectedPeriod.value === PeriodType.CUSTOM) {
     if (startDate.value && endDate.value) {
-      currentPage.value = 0;
+      currentPage.value = 1;
       fetchHistories();
     }
   }
 };
 
-const handlePageChange = (newPage: number) => {
-  currentPage.value = newPage - 1;
+const handlePageInfoUpdate = (pageInfo: any) => {
+  currentPage.value = pageInfo.pageNumber + 1;
   fetchHistories();
 };
 
@@ -193,3 +205,59 @@ onMounted(() => {
   fetchHistories();
 });
 </script>
+
+<style>
+/* 달력 스타일 커스터마이징 */
+input[type="date"] {
+  position: relative;
+  background-color: white;
+  padding: 8px 12px;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+}
+
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+input[type="date"]::-webkit-datetime-edit {
+  color: #374151;
+}
+
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field {
+  padding: 0 4px;
+}
+
+input[type="date"]:focus {
+  outline: none;
+  border-color: #698469;
+  box-shadow: 0 0 0 2px rgba(105, 132, 105, 0.2);
+}
+
+/* 달력 팝업 스타일 */
+::-webkit-calendar-picker-indicator {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23698469' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+  padding: 8px;
+  cursor: pointer;
+}
+</style>
