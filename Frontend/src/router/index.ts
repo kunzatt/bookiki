@@ -182,8 +182,20 @@ const router = createRouter({
       name: 'PasswordReset',
       component: () => import('@/views/password/PasswordResetView.vue'),
       meta: {
-        requiresAuth: false
-      }
+        requiresAuth: false,
+      },
+    },
+    {
+      path: '/feedbacks',
+      name: 'chatbotFeedback',
+      component: () => import('@/views/feedback/FeedbackListView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feedbacks/:id',
+      name: 'FeedbackDetail',
+      component: () => import('@/views/feedback/FeedbackDetailVIew.vue'),
+      meta: { requiresAuth: true },
     },
   ],
 });

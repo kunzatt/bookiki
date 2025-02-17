@@ -120,6 +120,10 @@ onMounted(() => {
 watch(currentPage, () => {
   borrowedBooks;
 });
+
+const handlePageInfoUpdate = (pageInfo: any) => {
+  currentPage.value = pageInfo.pageNumber + 1;
+};
 </script>
 
 <template>
@@ -149,52 +153,56 @@ watch(currentPage, () => {
             {{ error }}
           </div>
 
-          <!-- 대출 도서 없음 -->
-          <div v-else-if="allBooks.length === 0" class="text-center py-8 text-gray-600">
-            현재 대출 중인 도서가 없습니다.
-          </div>
-
-          <!-- 대출 도서 목록 -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
-            <div
-              v-for="book in borrowedBooks"
-              :key="book.id"
-              class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-              @click="router.push(`/books/${book.bookItemId}`)"
-            >
-              <div class="relative">
-                <img
-                  :src="book.bookInfo?.image || '/default-book-cover.svg'"
-                  :alt="book.bookInfo?.title"
-                  @error="handleImageError"
-                  class="w-full h-[220px] object-cover rounded-t-lg"
-                />
-                <div
-                  v-if="isOverdue(book.isOverdue)"
-                  class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
-                >
-                  연체
+          <div v-else>
+            <!-- 도서가 없을 때 메시지 -->
+            <div v-if="allBooks.length === 0" class="text-center py-8 text-gray-500">
+              현재 대출 중인 도서가 없습니다.
+            </div>
+            
+            <!-- 도서 목록 -->
+            <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center">
+              <div
+                v-for="book in borrowedBooks"
+                :key="book.id"
+                class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                @click="router.push(`/books/${book.bookItemId}`)"
+              >
+                <div class="relative">
+                  <img
+                    :src="book.bookInfo?.image || '/default-book-cover.svg'"
+                    :alt="book.bookInfo?.title"
+                    @error="handleImageError"
+                    class="w-full h-[220px] object-cover rounded-t-lg"
+                  />
+                  <div
+                    v-if="isOverdue(book.isOverdue)"
+                    class="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded"
+                  >
+                    연체
+                  </div>
                 </div>
-              </div>
-              <div class="p-3 sm:p-4">
-                <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                  {{ book.bookInfo?.title }}
-                </h3>
-                <p class="text-xs sm:text-sm text-gray-600 mb-1">
-                  {{ book.bookInfo?.author }}
-                </p>
-                <p class="text-xs text-gray-500">
-                  반납 예정일: {{ formatDate(book.dueDate) }}
-                </p>
+                <div class="p-3 sm:p-4">
+                  <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                    {{ book.bookInfo?.title }}
+                  </h3>
+                  <p class="text-xs sm:text-sm text-gray-600 mb-1">
+                    {{ book.bookInfo?.author }}
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    반납 예정일: {{ formatDate(book.dueDate) }}
+                  </p>
+                </div>
               </div>
             </div>
             
             <!-- 페이지네이션 -->
-            <div v-if="allBooks.length > 0" class="mt-6 flex justify-center w-full col-span-full">
+            <div v-if="allBooks.length > 0" class="mt-6 flex justify-center">
               <BasicWebPagination
-                v-model:page="currentPage"
+                :current-page="currentPage"
                 :total-pages="totalPages"
-                @update:page="(page) => currentPage = page"
+                :page-size="pageSize"
+                :sort="['borrowedAt,DESC']"
+                @update:pageInfo="handlePageInfoUpdate"
               />
             </div>
           </div>

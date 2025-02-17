@@ -16,7 +16,7 @@ export interface ChatbotFeedbackResponse {
   feedbackMessage: string;
   category: string;
   status: FeedbackStatus;
-  createAt: string;
+  createdAt: string;
   updatedAt: string;
 }
 
