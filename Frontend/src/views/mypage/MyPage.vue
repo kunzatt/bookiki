@@ -13,7 +13,7 @@ import {
   deleteProfileImage,
 } from '@/api/user';
 import { getCurrentBorrowedBooks } from '@/api/bookHistory';
-import { getCurrentPolicy } from '@/api/loanpolicy';
+import { getCurrentPolicy } from '@/api/loanPolicy';
 import type { UserInformationResponse } from '@/types/api/user';
 
 const router = useRouter();
@@ -27,10 +27,10 @@ const userInfo = ref({
 });
 
 const menuItems = [
-  { id: 1, title: '대출 중 도서', path: '/loans' },
+  { id: 1, title: '대출 중 도서', path: '/mypage/current-borrowed' },
   { id: 2, title: '좋아요 목록', path: '/favorites' },
-  { id: 3, title: '나의 대출 이력', path: '/history' },
-  { id: 4, title: '문의사항', path: '/inquiries' },
+  { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
+  { id: 4, title: '문의사항', path: '/qnas' },
   { id: 5, title: '비밀번호 변경', path: '/password' },
   { id: 6, title: '로그아웃', path: '/logout' },
 ];
@@ -82,8 +82,8 @@ const fetchUserData = async () => {
 const handleMenuClick = async (path: string) => {
   if (path === '/logout') {
     try {
-      await logout();
-      router.push('/login');
+      await logout();  // 로그아웃 처리 (이미 store에서 세션을 먼저 지움)
+      router.push('/login');  // 이제 router.push를 사용해도 됨
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
@@ -190,7 +190,7 @@ onMounted(() => {
                 v-for="item in menuItems"
                 :key="item.id"
                 class="w-full text-left px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 rounded-lg transition-colors border border-gray-100"
-                @click="router.push(item.path)"
+                @click="handleMenuClick(item.path)"
               >
                 <span>{{ item.title }}</span>
                 <span class="text-gray-400">›</span>

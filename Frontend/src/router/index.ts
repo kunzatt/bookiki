@@ -136,15 +136,21 @@ const router = createRouter({
       component: () => import('@/views/qna/QnaCreateView.vue'),
     },
     {
-      path: '/mypage',
-      name: 'mypage',
-      component: () => import('@/views/mypage/MyPage.vue'),
+      path: '/mypage/current-borrowed',
+      name: 'currentBorrowed',
+      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
       meta: { requiresAuth: true },
     },
     {
-      path: '/loans',
-      name: 'loans',
-      component: () => import('@/views/mypage/CurrentBorrowedBookList.vue'),
+      path: '/mypage/history',
+      name: 'borrowHistory',
+      component: () => import('@/views/mypage/BorrowHistoryList.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/mypage',
+      name: 'mypage',
+      component: () => import('@/views/mypage/MyPage.vue'),
       meta: { requiresAuth: true },
     },
     {
@@ -187,7 +193,8 @@ router.beforeEach((to, from, next) => {
   // 기존 인증 체크 로직
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login');
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
+  } else if (to.path === '/login' && authStore.isAuthenticated && from.path !== '/mypage') {
+    // 마이페이지에서 로그아웃한 경우는 /login으로 이동
     next('/main');
   } else {
     next();
