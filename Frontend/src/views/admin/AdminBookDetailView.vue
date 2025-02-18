@@ -90,11 +90,10 @@ interface Props {
             :purchaseAt="bookDetail.purchaseAt"
           />
 
-            <!-- QR 코드 섹션 -->
-            <QrCode :qr-code="bookDetail.qrCode" :book-item-id="Number(route.params.id)" />
-          </div>
+          <!-- QR 코드 섹션 -->
+          <QrCode :qr-code="bookDetail.qrCode" :book-item-id="Number(route.params.id)" />
         </div>
-      </main>
+      </div>
 
       <div class="lg:hidden">
         <BottomNav />
