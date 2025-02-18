@@ -71,20 +71,32 @@ onMounted(() => {
 
 <template>
   <div class="h-full">
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
       <div class="max-w-[1440px] mx-auto">
         <!-- 필터 영역 -->
-        <div class="bg-white p-4 rounded-lg shadow-sm my-6">
-          <div class="flex items-center gap-4">
-            <!-- 검색 타입 선택 -->
-            <BasicSelect v-model="searchType" :options="searchTypes" size="M" />
-            <BasicInput
-              v-model="keyword"
-              type="full"
-              width="fixed"
-              :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
-            />
-            <BasicButton size="M" text="검색" @click="handleSearch" />
+        <div class="bg-white p-2 sm:p-4 rounded-lg shadow-sm my-2 sm:my-6">
+          <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+            <div class="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+              <BasicSelect
+                v-model="searchType"
+                :options="searchTypes"
+                size="M"
+                class="w-full sm:w-auto mb-2 sm:mb-0"
+              />
+              <BasicInput
+                v-model="keyword"
+                type="full"
+                width="full"
+                class="w-full"
+                :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
+              />
+              <BasicButton
+                size="M"
+                text="검색"
+                class="w-full sm:w-auto mt-2 sm:mt-0"
+                @click="handleSearch"
+              />
+            </div>
           </div>
         </div>
 
@@ -109,12 +121,12 @@ onMounted(() => {
         <!-- 도서 목록 -->
         <div v-else class="w-full relative">
           <div
-            class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-[32px] justify-items-center"
+            class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-[32px] justify-items-center"
           >
             <div
               v-for="book in books"
               :key="book.id"
-              class="book-card w-[140px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              class="book-card w-full max-w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
               @click="router.push(`/books/${book.id}`)"
             >
               <div class="relative">
