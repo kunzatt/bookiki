@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Category } from '@/enums/category';
-import { BookStatus } from '@/enums/bookStatus';
+import { Category } from '@/types/enums/category';
+import { BookStatus } from '@/types/enums/bookStatus';
 
 defineProps<{
   title: string;

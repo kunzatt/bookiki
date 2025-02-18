@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import naverLogo from '@/assets/images/naver-logo.png';
+import googleLogo from '@/assets/images/google-logo.png';
 
 interface SocialLoginButtonProps {
   provider: 'naver' | 'google';
   text: string;
 }
+
+const logoImages = {
+  naver: naverLogo,
+  google: googleLogo,
+};
 
 const props = defineProps<SocialLoginButtonProps>();
 const router = useRouter();
@@ -28,8 +35,7 @@ const handleSocialLogin = (provider: string) => {
     ]"
     @click="handleSocialLogin(provider)"
   >
-    <!-- 로고 이미지 -->
-    <img :src="`@/assets/images/${provider}-logo.png`" :alt="`${provider} 로고`" class="w-5 h-5" />
+    <img :src="logoImages[provider]" :alt="`${provider} 로고`" class="w-5 h-5" />
     <span class="font-medium">{{ text }}</span>
   </button>
 </template>
