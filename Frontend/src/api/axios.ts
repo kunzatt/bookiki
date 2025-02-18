@@ -6,7 +6,7 @@ let isRefreshing = false;
 let failedQueue: any[] = [];
 
 const instance = axios.create({
-  baseURL: '',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
   timeout: 5000,
   headers: {
