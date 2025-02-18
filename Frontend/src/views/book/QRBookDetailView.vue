@@ -189,6 +189,13 @@ const formatPublishDate = (dateStr: string) => {
 };
 
 onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    router.push({
+      path: '/login',
+      query: { redirect: route.fullPath }
+    });
+    return;
+  }
   window.addEventListener('resize', handleResize);
   await fetchBookData();
 });
@@ -199,107 +206,100 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <div class="flex min-h-screen bg-gray-100">
-    <Sidebar class="hidden lg:block fixed left-0 top-0 h-screen" />
-
-    <div class="flex-1 flex flex-col lg:ml-64">
-      <HeaderDesktop class="hidden lg:block" title="도서 상세" />
-      <HeaderMobile class="lg:hidden" title="도서 상세" type="default" />
-
-      <main class="flex-1 p-6 lg:p-10">
-        <div v-if="bookInfo" class="max-w-none mx-auto">
-          <div class="flex flex-col lg:flex-row gap-8 lg:gap-20">
-            <!-- Book Image Section -->
-            <div class="w-full lg:w-[400px]">
-              <div>
-                <div class="relative">
-                  <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
-                    <img
-                      :src="bookInfo.image"
-                      :alt="bookInfo.title"
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <!-- Favorite Button -->
-                  <div class="absolute top-4 right-4">
-                    <button
-                      @click="debouncedHandleFavorite"
-                      class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors duration-200"
-                      :class="{ 'text-red-500': isFavorite }"
-                    >
-                      <i class="material-icons text-2xl">
-                        {{ isFavorite ? 'favorite' : 'favorite_border' }}
-                      </i>
-                    </button>
-                  </div>
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <div v-if="bookInfo" class="max-w-none mx-auto">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-20">
+          <!-- Book Image Section -->
+          <div class="w-full lg:w-[400px]">
+            <div>
+              <div class="relative">
+                <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
+                  <img
+                    :src="bookInfo.image"
+                    :alt="bookInfo.title"
+                    class="w-full h-full object-cover"
+                  />
                 </div>
-                <!-- Desktop-only borrow button -->
-                <div class="mt-8 hidden lg:block">
+                <!-- Favorite Button -->
+                <div class="absolute top-4 right-4">
                   <button
-                    @click="handleBorrowClick"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg transition-colors duration-200 font-medium text-lg shadow-md"
+                    @click="debouncedHandleFavorite"
+                    class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors duration-200"
+                    :class="{ 'text-red-500': isFavorite }"
                   >
-                    도서 대출하기
+                    <i class="material-icons text-2xl">
+                      {{ isFavorite ? 'favorite' : 'favorite_border' }}
+                    </i>
                   </button>
                 </div>
               </div>
-            </div>
-
-            <!-- Book Info Section -->
-            <div class="flex-1 lg:py-4">
-              <div class="lg:max-w-3xl">
-                <span
-                  v-if="$window.width >= 1024"
-                  :class="{
-                    'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-                    'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
-                  }"
-                  class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
+              <!-- Desktop-only borrow button -->
+              <div class="mt-8 hidden lg:block">
+                <button
+                  @click="handleBorrowClick"
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg transition-colors duration-200 font-medium text-lg shadow-md"
                 >
-                  {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
-                </span>
+                  도서 대출하기
+                </button>
+              </div>
+            </div>
+          </div>
 
-                <div class="flex items-center gap-4 mb-4">
-                  <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
+          <!-- Book Info Section -->
+          <div class="flex-1 lg:py-4">
+            <div class="lg:max-w-3xl">
+              <span
+                v-if="$window.width >= 1024"
+                :class="{
+                  'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
+                  'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
+                }"
+                class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
+              >
+                {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
+              </span>
+
+              <div class="flex items-center gap-4 mb-4">
+                <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
+              </div>
+
+              <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
+                <span>{{ bookInfo.author }}</span>
+                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                <span>{{ bookInfo.publisher }}</span>
+              </div>
+
+              <div class="space-y-12">
+                <!-- Book Description -->
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-900 mb-4">책 소개</h2>
+                  <p class="text-gray-600 leading-relaxed whitespace-pre-line">
+                    {{ bookInfo.description }}
+                  </p>
                 </div>
 
-                <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
-                  <span>{{ bookInfo.author }}</span>
-                  <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-                  <span>{{ bookInfo.publisher }}</span>
-                </div>
-
-                <div class="space-y-12">
-                  <!-- Book Description -->
-                  <div>
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">책 소개</h2>
-                    <p class="text-gray-600 leading-relaxed whitespace-pre-line">
-                      {{ bookInfo.description }}
-                    </p>
-                  </div>
-
-                  <!-- Book Details -->
-                  <div>
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">도서 정보</h2>
-                    <div class="grid grid-cols-2 gap-y-6 max-w-2xl">
-                      <div>
-                        <span class="text-gray-500 text-sm">저자</span>
-                        <p class="text-gray-900 mt-1">{{ bookInfo.author }}</p>
-                      </div>
-                      <div>
-                        <span class="text-gray-500 text-sm">출판사</span>
-                        <p class="text-gray-900 mt-1">{{ bookInfo.publisher }}</p>
-                      </div>
-                      <div>
-                        <span class="text-gray-500 text-sm">출판일</span>
-                        <p class="text-gray-900 mt-1">
-                          {{ formatPublishDate(bookInfo.publishedAt) }}
-                        </p>
-                      </div>
-                      <div>
-                        <span class="text-gray-500 text-sm">ISBN</span>
-                        <p class="text-gray-900 mt-1">{{ bookInfo.isbn }}</p>
-                      </div>
+                <!-- Book Details -->
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-900 mb-4">도서 정보</h2>
+                  <div class="grid grid-cols-2 gap-y-6 max-w-2xl">
+                    <div>
+                      <span class="text-gray-500 text-sm">저자</span>
+                      <p class="text-gray-900 mt-1">{{ bookInfo.author }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 text-sm">출판사</span>
+                      <p class="text-gray-900 mt-1">{{ bookInfo.publisher }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 text-sm">출판일</span>
+                      <p class="text-gray-900 mt-1">
+                        {{ formatPublishDate(bookInfo.publishedAt) }}
+                      </p>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 text-sm">ISBN</span>
+                      <p class="text-gray-900 mt-1">{{ bookInfo.isbn }}</p>
                     </div>
                   </div>
                 </div>
@@ -307,7 +307,7 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       <!-- Mobile fixed bottom section -->
       <div
@@ -330,11 +330,6 @@ onUnmounted(() => {
             도서 대출하기
           </button>
         </div>
-      </div>
-
-      <!-- Bottom Nav only for mobile -->
-      <div class="block lg:hidden">
-        <BottomNav />
       </div>
     </div>
   </div>
