@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import type { SearchType } from '@/types/api/search';
 import type { BookItemListResponse } from '@/types/api/bookItem';
 import { selectBooks } from '@/api/bookItem';
 import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
+import BasicButton from '@/components/ui/Button/BasicButton.vue';
+import BasicInput from '@/components/ui/Input/BasicInput.vue';
+import BasicSelect from '@/components/ui/Select/BasicSelect.vue';
 
 const router = useRouter();
 const isLoading = ref(true);
@@ -70,27 +73,18 @@ onMounted(() => {
   <div class="h-full">
     <div class="max-w-7xl mx-auto">
       <div class="max-w-[1440px] mx-auto">
-        <div class="flex flex-col my-6 gap-4">
-          <div class="flex gap-4">
-            <select v-model="searchType" class="p-2 border rounded-lg flex-shrink-0 w-24">
-              <option v-for="type in searchTypes" :key="type.value" :value="type.value">
-                {{ type.label }}
-              </option>
-            </select>
-
-            <div class="relative flex-grow">
-              <input
-                v-model="keyword"
-                type="text"
-                :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
-                class="w-full p-2 border rounded-lg pr-12"
-              />
-              <span
-                class="material-icons absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
-              >
-                search
-              </span>
-            </div>
+        <!-- 필터 영역 -->
+        <div class="bg-white p-4 rounded-lg shadow-sm my-6">
+          <div class="flex items-center gap-4">
+            <!-- 검색 타입 선택 -->
+            <BasicSelect v-model="searchType" :options="searchTypes" size="S" class="w-[155px]" />
+            <BasicInput
+              v-model="keyword"
+              type="full"
+              :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
+              class="w-[285px] mx-2"
+            />
+            <BasicButton size="S" text="검색" @click="handleSearch" />
           </div>
         </div>
 
@@ -170,5 +164,19 @@ onMounted(() => {
   word-wrap: normal;
   direction: ltr;
   -webkit-font-smoothing: antialiased;
+}
+
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  background-size: 1.5em 1.5em;
+}
+
+select::-ms-expand {
+  display: none;
 }
 </style>
