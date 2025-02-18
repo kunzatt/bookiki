@@ -214,12 +214,18 @@ const router = createRouter({
       path: '/search',
       name: 'search',
       component: () => import('@/views/search/SearchView.vue'),
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true },
     },
-    {  
+    {
       path: '/admin/library',
       name: 'LibraryManagement',
       component: () => import('@/views/admin/LibraryManagementVIew.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/admin/addBook',
+      name: 'AddBookItem',
+      component: () => import('@/views/admin/AdminAddBookView.vue'),
       meta: { requiresAuth: true },
     },
   ],

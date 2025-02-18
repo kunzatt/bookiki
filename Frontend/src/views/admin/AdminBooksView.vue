@@ -71,7 +71,7 @@ onMounted(() => {
 
 // 페이지 이동 버튼
 const goToOtherPage = () => {
-  router.push('/addBook');
+  router.push('/admin/addBook');
 };
 
 // 모달 닫기 핸들러
