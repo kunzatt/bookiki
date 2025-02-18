@@ -15,8 +15,17 @@ const resetEmail = ref('');
 const showResetModal = ref(false);
 const showConfirmModal = ref(false);
 const resetError = ref('');
+const showLoginErrorModal = ref(false);
 
-const handleLogin = async () => {
+const handleLogin = async (e: Event) => {
+  e.preventDefault(); // 기본 form submit 동작 방지
+  
+  // 이메일이나 비밀번호가 비어있는 경우
+  if (!email.value || !password.value) {
+    showLoginErrorModal.value = true;
+    return;
+  }
+
   try {
     await authStore.login({
       email: email.value,
@@ -25,7 +34,7 @@ const handleLogin = async () => {
     await router.push('/main');
   } catch (error) {
     console.error('Login failed:', error);
-    // TODO: 에러 처리 (토스트 또는 알림)
+    showLoginErrorModal.value = true;
   }
 };
 
@@ -55,14 +64,16 @@ const closeModals = () => {
   resetEmail.value = '';
   resetError.value = '';
 };
+
+const closeLoginErrorModal = () => {
+  showLoginErrorModal.value = false;
+};
 </script>
 
 <template>
   <div class="min-h-screen flex justify-center items-center p-4">
     <!-- 데스크탑 크기에서만 보이는 카드형 컨테이너 -->
-    <div
-      class="hidden md:flex flex-col w-full max-w-[480px] bg-white rounded-lg shadow-lg p-8 border border-gray-200"
-    >
+    <div class="hidden md:flex flex-col w-full max-w-[480px] bg-white rounded-lg shadow-lg p-8 border border-gray-200">
       <!-- 상단: 로고 영역 -->
       <div class="flex justify-center mb-8">
         <img src="@/assets/BookikiLogo.PNG" alt="Bookiki Logo" class="w-32" />
@@ -73,46 +84,35 @@ const closeModals = () => {
         <h2 class="text-2xl font-bold mb-8">Welcome!</h2>
 
         <form @submit.prevent="handleLogin" class="space-y-4">
-          <BasicInput v-model="email" type="full" placeholder="ID" inputType="email" />
-
+          <BasicInput v-model="email" type="full" placeholder="ID" inputType="text" />
           <BasicInput v-model="password" type="password" placeholder="Password" />
 
           <div class="flex w-full justify-end">
-            <button
-              type="button"
-              class="text-sm text-gray-500 hover:text-gray-700"
-              @click="handleForgotPassword"
-            >
+            <button type="button" class="text-sm text-gray-500 hover:text-gray-700" @click="handleForgotPassword">
               비밀번호를 잊으셨나요?
             </button>
           </div>
 
-          <BasicButton
-            size="L"
-            text="로그인"
-            @click="handleLogin"
-            class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
-          />
-
-          <div class="flex w-full justify-center">
-            <button
-              type="button"
-              class="text-sm text-gray-500 hover:text-gray-700"
-              @click="handleSignUp"
-            >
-              회원이 아니신가요? <span class="text-[#698469]">회원가입</span>
-            </button>
-          </div>
-
-          <!-- 데스크탑 버전 SNS 로그인 섹션 -->
-          <div class="mt-8 flex flex-col items-center w-full">
-            <p class="text-center text-sm text-gray-500 mb-4">SNS 계정으로 로그인</p>
-            <div class="w-full">
-              <!-- flex justify-center 제거하고 w-full 추가 -->
-              <SocialLoginButtons />
-            </div>
-          </div>
+          <BasicButton type="submit" size="L" text="로그인" class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white" />
         </form>
+
+        <div class="mt-4">
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-full h-[1px] bg-gray-300"></div>
+            <span class="relative px-4 bg-white text-sm text-gray-500">또는</span>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <SocialLoginButtons />
+        </div>
+
+        <div class="mt-4 text-center">
+          <span class="text-sm text-gray-500">계정이 없으신가요?</span>
+          <button class="text-sm text-gray-700 font-medium ml-2 hover:text-gray-900" @click="handleSignUp">
+            회원가입
+          </button>
+        </div>
       </div>
     </div>
 
@@ -121,45 +121,33 @@ const closeModals = () => {
       <h2 class="text-2xl font-bold mb-8">Welcome!</h2>
 
       <form @submit.prevent="handleLogin" class="space-y-4">
-        <!-- 기존 폼 내용과 동일 -->
-        <BasicInput v-model="email" type="full" placeholder="ID" inputType="email" />
-
+        <BasicInput v-model="email" type="full" placeholder="ID" inputType="text" />
         <BasicInput v-model="password" type="password" placeholder="Password" />
 
         <div class="flex w-full justify-end">
-          <button
-            type="button"
-            class="text-sm text-gray-500 hover:text-gray-700"
-            @click="handleForgotPassword"
-          >
+          <button type="button" class="text-sm text-gray-500 hover:text-gray-700" @click="handleForgotPassword">
             비밀번호를 잊으셨나요?
           </button>
         </div>
 
-        <BasicButton
-          size="L"
-          text="로그인"
-          @click="handleLogin"
-          class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
-        />
+        <BasicButton type="submit" size="L" text="로그인" class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white" />
 
-        <div class="flex w-full justify-center">
-          <button
-            type="button"
-            class="text-sm text-gray-500 hover:text-gray-700"
-            @click="handleSignUp"
-          >
-            회원이 아니신가요? <span class="text-[#698469]">회원가입</span>
-          </button>
+        <div class="mt-4">
+          <div class="relative flex items-center justify-center">
+            <div class="absolute w-full h-[1px] bg-gray-300"></div>
+            <span class="relative px-4 bg-white text-sm text-gray-500">또는</span>
+          </div>
         </div>
 
-        <!-- 모바일 버전 SNS 로그인 섹션 -->
-        <div class="mt-8 flex flex-col items-center w-full">
-          <p class="text-center text-sm text-gray-500 mb-4">SNS 계정으로 로그인</p>
-          <div class="w-full">
-            <!-- flex justify-center 제거하고 w-full 추가 -->
-            <SocialLoginButtons />
-          </div>
+        <div class="mt-4">
+          <SocialLoginButtons />
+        </div>
+
+        <div class="mt-4 text-center">
+          <span class="text-sm text-gray-500">계정이 없으신가요?</span>
+          <button class="text-sm text-gray-700 font-medium ml-2 hover:text-gray-900" @click="handleSignUp">
+            회원가입
+          </button>
         </div>
       </form>
     </div>
@@ -220,6 +208,26 @@ const closeModals = () => {
           class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
         />
       </div>
+    </div>
+  </div>
+
+  <!-- 로그인 에러 모달 -->
+  <div 
+    v-if="showLoginErrorModal" 
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <form @submit.prevent="closeLoginErrorModal">
+        <p class="text-gray-600 mb-4">아이디와 비밀번호를 확인해주세요.</p>
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors"
+          >
+            확인
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
