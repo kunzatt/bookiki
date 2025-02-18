@@ -162,6 +162,13 @@ const formatPublishDate = (dateStr: string) => {
 };
 
 onMounted(async () => {
+  if (!authStore.isAuthenticated) {
+    router.push({
+      path: '/login',
+      query: { redirect: route.fullPath },
+    });
+    return;
+  }
   window.addEventListener('resize', handleResize);
   await fetchBookData();
 });

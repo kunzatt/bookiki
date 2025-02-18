@@ -7,6 +7,7 @@ import BaseModal from '@/components/ui/Modal/BaseModal.vue';
 import BookImage from '@/components/ui/Admin/BookImage.vue';
 import BookInfo from '@/components/ui/Admin/BookDetailInfo.vue';
 import QrCode from '@/components/ui/Admin/QrCode.vue';
+import type { QrCodeResponse } from '@/types/api/qrCode';
 
 const route = useRoute();
 const router = useRouter();
@@ -52,6 +53,11 @@ onMounted(() => {
     }
   });
 });
+
+interface Props {
+  qrCode: QrCodeResponse | null;
+  bookItemId: number;
+}
 </script>
 
 <template>
@@ -84,9 +90,14 @@ onMounted(() => {
             :purchaseAt="bookDetail.purchaseAt"
           />
 
-          <!-- QR 코드 섹션 -->
-          <QrCode :qrCode="bookDetail.qrCode" />
+            <!-- QR 코드 섹션 -->
+            <QrCode :qr-code="bookDetail.qrCode" :book-item-id="Number(route.params.id)" />
+          </div>
         </div>
+      </main>
+
+      <div class="lg:hidden">
+        <BottomNav />
       </div>
     </div>
 
