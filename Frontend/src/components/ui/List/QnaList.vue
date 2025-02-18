@@ -30,7 +30,7 @@ const filters = ref<FilterConfig[]>([
     type: 'search',
     key: 'keyword',
     label: '검색',
-    placeholder: '제목을 입력하세요',
+    placeholder: '검색어를 입력하세요',
   },
   {
     type: 'select',

@@ -97,8 +97,6 @@ const goBack = () => {
       <div class="flex-1">
         <!-- 컨텐츠 -->
         <div class="max-w-3xl mx-auto px-4 py-6">
-          <h1 class="text-2xl font-bold mb-6">비밀번호 변경</h1>
-
           <div class="bg-white rounded-lg shadow-sm p-6 space-y-6">
             <div
               v-if="success"

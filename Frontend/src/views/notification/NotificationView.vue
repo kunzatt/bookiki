@@ -88,7 +88,6 @@ const handleDeleteNotification = async (notificationId: number) => {
   try {
     await deleteNotification(notificationId);
     notifications.value = notifications.value.filter((n) => n.id !== notificationId);
-    // 마지막 항목을 삭제했고 현재 페이지가 마지막이 아닌 경우 새로고침
     if (notifications.value.length === 0 && currentPage.value > 0) {
       handlePageChange(currentPage.value - 1);
     } else {
@@ -100,17 +99,15 @@ const handleDeleteNotification = async (notificationId: number) => {
 };
 
 const formatDate = (dateArray: number[]): string => {
-  // 배열을 Date 객체로 변환 (주의: 월은 0-based 이므로 1을 빼줌)
   const date = new Date(
-    dateArray[0], // 년
-    dateArray[1] - 1, // 월 (0-based)
-    dateArray[2], // 일
-    dateArray[3] || 0, // 시
-    dateArray[4] || 0, // 분
-    dateArray[5] || 0, // 초
+    dateArray[0],
+    dateArray[1] - 1,
+    dateArray[2],
+    dateArray[3] || 0,
+    dateArray[4] || 0,
+    dateArray[5] || 0,
   );
 
-  // 날짜가 유효한지 확인
   if (isNaN(date.getTime())) {
     console.error('Invalid date array:', dateArray);
     return '날짜 없음';
@@ -122,22 +119,16 @@ const formatDate = (dateArray: number[]): string => {
   const hour = minute * 60;
   const day = hour * 24;
 
-  // 1시간 이내
   if (diff < hour) {
     const minutes = Math.floor(diff / minute);
     return `${minutes}분 전`;
-  }
-  // 24시간 이내
-  else if (diff < day) {
+  } else if (diff < day) {
     const hours = Math.floor(diff / hour);
     return `${hours}시간 전`;
-  }
-  // 7일 이내
-  else if (diff < day * 7) {
+  } else if (diff < day * 7) {
     const days = Math.floor(diff / day);
     return `${days}일 전`;
   }
-  // 그 외
   return new Intl.DateTimeFormat('ko-KR', {
     year: 'numeric',
     month: 'long',
@@ -160,18 +151,18 @@ onMounted(() => {
           <!-- 데스크톱 타이틀 -->
           <div class="hidden lg:flex justify-between items-center p-4 mb-4">
             <div class="flex items-center space-x-4"></div>
-            <span class="text-sm text-gray-500">전체 {{ totalElements }}개</span>
+            <span class="text-sm text-[#698469]">전체 {{ totalElements }}개</span>
           </div>
 
           <!-- 알림 리스트 -->
-          <div class="bg-white rounded-lg shadow-sm divide-y divide-gray-200">
+          <div class="bg-white rounded-lg shadow-sm divide-y divide-[#E8EDE8]">
             <TransitionGroup name="list" tag="div">
               <div
                 v-for="notification in notifications"
                 :key="notification.id"
-                class="hover:bg-gray-50 transition-colors"
+                class="hover:bg-[#F5F7F5] transition-colors"
                 :class="{
-                  'bg-blue-50 hover:bg-blue-100': notification.notificationStatus === 'UNREAD',
+                  'bg-[#E8EDE8]': notification.notificationStatus === 'UNREAD',
                 }"
               >
                 <div class="p-4">
@@ -181,23 +172,26 @@ onMounted(() => {
                         class="w-2 h-2 rounded-full"
                         :class="
                           notification.notificationStatus === 'UNREAD'
-                            ? 'bg-blue-500'
+                            ? 'bg-[#698469]'
                             : 'bg-gray-300'
                         "
                       ></span>
                     </div>
                     <button
                       @click="handleDeleteNotification(notification.id)"
-                      class="text-gray-400 hover:text-gray-600"
+                      class="text-gray-400 hover:text-[#698469] transition-colors"
                     >
                       <span class="sr-only">삭제</span>
                       <i class="material-icons !text-[20px]">close</i>
                     </button>
                   </div>
 
-                  <div @click="handleNotificationClick(notification)" class="cursor-pointer">
+                  <div
+                    @click="handleNotificationClick(notification)"
+                    class="cursor-pointer hover:text-[#698469] transition-colors"
+                  >
                     <p class="text-gray-900 mb-1">{{ notification.content }}</p>
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-[#698469]">
                       {{ formatDate(notification.createdAt) }}
                     </p>
                   </div>
@@ -208,48 +202,60 @@ onMounted(() => {
             <!-- 로딩 상태 -->
             <div v-if="loading" class="p-8 flex justify-center">
               <div
-                class="w-6 h-6 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"
+                class="w-6 h-6 border-2 border-[#698469] rounded-full animate-spin border-t-transparent"
               ></div>
             </div>
 
             <!-- 빈 상태 -->
             <div
               v-if="!loading && notifications.length === 0"
-              class="p-8 text-center text-gray-500"
+              class="p-8 text-center text-[#698469]"
             >
               알림이 없습니다.
             </div>
           </div>
 
           <!-- 페이지네이션 -->
-          <div v-if="totalPages > 1" class="flex justify-center items-center space-x-2 p-4 mt-4">
-            <button
-              @click="handlePageChange(currentPage - 1)"
-              :disabled="!canGoPrevious"
-              class="px-3 py-1 rounded border"
-              :class="canGoPrevious ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'"
-            >
-              이전
-            </button>
+          <div v-if="totalPages > 1" class="flex justify-center mt-4">
+            <div class="flex items-center justify-center gap-1">
+              <!-- 이전 페이지 버튼 -->
+              <button
+                class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+                :class="{ 'text-gray-300': !canGoPrevious }"
+                :disabled="!canGoPrevious"
+                @click="handlePageChange(currentPage - 1)"
+                aria-label="Previous page"
+              >
+                <span class="material-icons text-sm">chevron_left</span>
+              </button>
 
-            <button
-              v-for="page in pageNumbers"
-              :key="page"
-              @click="handlePageChange(page)"
-              class="px-3 py-1 rounded border"
-              :class="currentPage === page ? 'bg-blue-500 text-white' : 'hover:bg-gray-100'"
-            >
-              {{ page + 1 }}
-            </button>
+              <!-- 페이지 번호 -->
+              <button
+                v-for="page in pageNumbers"
+                :key="page"
+                class="w-8 h-8 flex items-center justify-center rounded text-sm"
+                :class="{
+                  'bg-[#698469] text-white': page === currentPage,
+                  'hover:bg-gray-100': page !== currentPage,
+                }"
+                @click="handlePageChange(page)"
+                :aria-label="`Go to page ${page + 1}`"
+                :aria-current="page === currentPage ? 'page' : undefined"
+              >
+                {{ page + 1 }}
+              </button>
 
-            <button
-              @click="handlePageChange(currentPage + 1)"
-              :disabled="!canGoNext"
-              class="px-3 py-1 rounded border"
-              :class="canGoNext ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'"
-            >
-              다음
-            </button>
+              <!-- 다음 페이지 버튼 -->
+              <button
+                class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
+                :class="{ 'text-gray-300': !canGoNext }"
+                :disabled="!canGoNext"
+                @click="handlePageChange(currentPage + 1)"
+                aria-label="Next page"
+              >
+                <span class="material-icons text-sm">chevron_right</span>
+              </button>
+            </div>
           </div>
         </div>
       </main>

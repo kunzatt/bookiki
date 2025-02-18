@@ -18,6 +18,7 @@ const showResetModal = ref(false);
 const showConfirmModal = ref(false);
 const resetError = ref('');
 const showLoginErrorModal = ref(false);
+const resetButtonDisabled = ref(false);  // 추가: 버튼 비활성화 상태 관리
 
 const handleLogin = async (e: Event) => {
   e.preventDefault(); // 기본 form submit 동작 방지
@@ -52,10 +53,14 @@ const handleSignUp = () => {
 };
 
 const handleResetPassword = async () => {
+  if (resetButtonDisabled.value) return;  // 버튼이 비활성화되어 있으면 실행하지 않음
+  resetButtonDisabled.value = true;  // 버튼 비활성화
+  
   try {
     resetError.value = '';
     if (!resetEmail.value || !resetName.value) {  // 이메일과 이름 모두 필수
       resetError.value = '이메일과 이름을 모두 입력해주세요.';
+      resetButtonDisabled.value = false;  // 유효성 검사 실패시 버튼 다시 활성화
       return;
     }
     await sendPasswordResetEmail({ 
@@ -67,6 +72,7 @@ const handleResetPassword = async () => {
   } catch (error) {
     console.error('Password reset failed:', error);
     resetError.value = '이메일 전송에 실패했습니다. 다시 시도해주세요.';
+    resetButtonDisabled.value = false;  // 에러 발생시 버튼 다시 활성화
   }
 };
 
@@ -76,6 +82,7 @@ const closeModals = () => {
   resetEmail.value = '';
   resetName.value = '';  // 추가: 이름 초기화
   resetError.value = '';
+  resetButtonDisabled.value = false;  // 모달 닫을 때 버튼 상태 초기화
 };
 
 const closeLoginErrorModal = () => {
@@ -202,6 +209,7 @@ const closeLoginErrorModal = () => {
         <BasicButton
           size="M"
           text="전송"
+          :disabled="resetButtonDisabled"
           @click="handleResetPassword"
           class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
         />

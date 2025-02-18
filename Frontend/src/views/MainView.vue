@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth';
+import { useMainPageStore } from '@/stores/index';
 import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getRecommendations } from '../api/recommendation';
@@ -11,6 +12,7 @@ import { getBookItemById } from '@/api/bookItem';
 import { getBookInformation } from '@/api/bookInformation';
 
 const authStore = useAuthStore();
+const mainPageStore = useMainPageStore();
 const router = useRouter();
 
 const displayCount = ref(4);
@@ -26,8 +28,16 @@ const recommendationReason = ref<string>('');
 // Monthly Books 데이터 가져오기
 const fetchMonthlyBooks = async () => {
   try {
+    // 캐시가 유효한 경우 캐시된 데이터 사용
+    if (mainPageStore.isMonthlyBooksCacheValid) {
+      monthlyBooks.value = mainPageStore.monthlyBooksCache!.data;
+      return;
+    }
+
     const response = await axios.get('/api/books/ranking');
     monthlyBooks.value = response.data;
+    // 새로운 데이터를 캐시에 저장
+    mainPageStore.setMonthlyBooksCache(response.data);
   } catch (error) {
     console.error('Error fetching monthly books:', error);
     monthlyBooks.value = [];
@@ -37,20 +47,25 @@ const fetchMonthlyBooks = async () => {
 // 추천 도서 데이터 가져오기
 const fetchRecommendedBooks = async () => {
   try {
-    // 디스플레이 카운트에 따라 적절한 수의 책을 요청
-    const limit = Math.max(8, displayCount.value * 2); // 최소 8개 또는 현재 표시 수의 2배
+    // 캐시가 유효한 경우 캐시된 데이터 사용
+    if (mainPageStore.isRecommendedBooksCacheValid) {
+      recommendedBooks.value = mainPageStore.recommendedBooksCache!.data;
+      recommendationReason.value = mainPageStore.recommendedBooksCache!.data.recommendationReason || '';
+      return;
+    }
+
+    const limit = Math.max(8, displayCount.value * 2);
     const response = await getRecommendations({ limit });
-    console.log('추천 도서 데이터:', response); // 디버깅을 위한 로그 추가
+    console.log('추천 도서 데이터:', response);
     recommendedBooks.value = response.recommendations || [];
     recommendationReason.value = response.recommendationReason || '';
 
-    // 각 책의 상세 정보와 이미지 URL을 가져옵니다
     await Promise.all(
       recommendedBooks.value.map(async (book) => {
         try {
           const bookItem = await getBookItemById(book.bookItemId);
           const bookInfo = await getBookInformation(bookItem.bookInformationId);
-          book.bookInfo = bookInfo; // 전체 책 정보를 저장
+          book.bookInfo = bookInfo;
           book.image = bookInfo.image;
           book.title = bookInfo.title;
           book.author = bookInfo.author;
@@ -59,6 +74,9 @@ const fetchRecommendedBooks = async () => {
         }
       }),
     );
+
+    // 새로운 데이터를 캐시에 저장
+    mainPageStore.setRecommendedBooksCache(recommendedBooks.value);
   } catch (error) {
     console.error('Error fetching recommended books:', error);
     recommendedBooks.value = [];
