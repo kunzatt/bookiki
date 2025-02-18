@@ -48,10 +48,9 @@ const isSearchOnly = computed(() => {
 
 <template>
   <div class="bg-white p-4 rounded-lg shadow-sm">
-    <div class="flex items-center gap-4">
-      <!-- 검색 필터 -->
+    <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
       <template v-for="filter in filters" :key="filter.key">
-        <div v-if="filter.type === 'search'" class="w-[300px]">
+        <div v-if="filter.type === 'search'" class="w-full md:w-[300px]">
           <!-- 기존 w-[400px]에서 수정 -->
           <BasicInput
             type="withButton"
@@ -74,7 +73,7 @@ const isSearchOnly = computed(() => {
           v-model="localFilters[filter.key]"
           :options="filter.options"
           :placeholder="filter.label"
-          class="w-[120px]"
+          class="w-full md:w-[120px]"
           @update:modelValue="
             (value) => {
               updateFilter(filter.key, value);
