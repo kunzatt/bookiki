@@ -19,6 +19,6 @@ onMounted(() => {
     return;
   }
 
-  window.location.href = `http://i12a206.p.ssafy.io/api/oauth2/authorization/${provider}`;
+  window.location.href = `http://i12a206.p.ssafy.io/oauth2/authorization/${provider}`;
 });
 </script>
