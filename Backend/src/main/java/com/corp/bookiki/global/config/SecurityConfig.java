@@ -141,7 +141,7 @@ public class SecurityConfig {
 					oauth2
 //							.loginPage("/login")  // 로그인 페이지 설정 추가
 							.authorizationEndpoint(authorization ->
-									authorization.baseUri("/oauth2/authorization")  // /api 제거
+									authorization.baseUri("/api/oauth2/authorization")
 							)
 							.redirectionEndpoint(redirection ->
 									redirection.baseUri("/api/login/oauth2/code/*")  // provider 변수 사용
