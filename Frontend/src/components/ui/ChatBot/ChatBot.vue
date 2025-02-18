@@ -149,7 +149,7 @@ watch(() => messages.value.length, scrollToBottom);
     <!-- 챗봇 모달 -->
     <div
       v-if="modelValue"
-      class="fixed bottom-5 right-5 w-[450px] bg-white rounded-lg shadow-xl z-50 flex flex-col"
+      class="fixed bottom-5 right-5 w-[400px] bg-white rounded-lg shadow-xl z-50 flex flex-col"
       @click.stop
     >
       <!-- 헤더 -->
