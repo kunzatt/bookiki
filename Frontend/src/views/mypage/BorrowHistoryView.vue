@@ -1,127 +1,3 @@
-<template>
-  <div class="flex h-screen overflow-hidden bg-gray-50">
-    <!-- 데스크톱 사이드바 - lg 이상에서만 표시 -->
-    <Sidebar class="hidden lg:block" />
-
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- 반응형 헤더 -->
-      <HeaderMobile class="lg:hidden" title="나의 대출 이력" />
-      <HeaderDesktop class="hidden lg:block" title="나의 대출 이력" />
-
-      <main class="flex-1 px-4 lg:px-8 pb-20 lg:pb-8 overflow-y-auto">
-        <div class="w-full max-w-4xl mx-auto">
-          <div class="flex justify-between items-center my-6">
-            <h1 class="text-xl lg:text-2xl font-medium">나의 대출 이력</h1>
-            <span class="text-gray-600">총 {{ totalElements }}권</span>
-          </div>
-
-          <!-- 필터 섹션 -->
-          <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <!-- 기간 선택 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">기간</label>
-                <select
-                  v-model="selectedPeriod"
-                  class="w-full border border-gray-300 rounded-md px-3 py-2"
-                  @change="handlePeriodChange"
-                >
-                  <option v-for="(desc, type) in PeriodTypeDescriptions" :key="type" :value="type">
-                    {{ desc }}
-                  </option>
-                </select>
-              </div>
-
-              <!-- 커스텀 기간 선택 -->
-              <div v-if="selectedPeriod === PeriodType.CUSTOM" class="lg:col-span-2 grid grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">시작일</label>
-                  <div class="relative">
-                    <input
-                      type="date"
-                      v-model="startDate"
-                      class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent transition-colors"
-                      @change="handleDateChange"
-                    />
-                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 material-icons text-gray-400">
-                      calendar_today
-                    </span>
-                  </div>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">종료일</label>
-                  <div class="relative">
-                    <input
-                      type="date"
-                      v-model="endDate"
-                      class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent transition-colors"
-                      @change="handleDateChange"
-                    />
-                    <span class="absolute right-3 top-1/2 transform -translate-y-1/2 material-icons text-gray-400">
-                      calendar_today
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 연체 여부 필터 -->
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">연체 여부</label>
-                <select
-                  v-model="overdueFilter"
-                  class="w-full border border-gray-300 rounded-md px-3 py-2"
-                  @change="fetchHistories"
-                >
-                  <option value="">전체</option>
-                  <option :value="true">연체</option>
-                  <option :value="false">정상 반납</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- 로딩 상태 -->
-          <div v-if="isLoading" class="flex justify-center items-center py-8">
-            <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-
-          <!-- 에러 메시지 -->
-          <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {{ error }}
-          </div>
-
-          <!-- 대출 이력 목록 -->
-          <div v-else>
-            <div v-if="histories.length === 0" class="text-center py-8 text-gray-500">
-              대출 이력이 없습니다.
-            </div>
-            <BookHistoryList
-              v-else
-              :items="histories"
-            />
-
-            <!-- 페이지네이션 -->
-            <div v-if="histories.length > 0" class="mt-6 flex justify-center">
-              <BasicWebPagination
-                :current-page="currentPage"
-                :total-pages="totalPages"
-                :page-size="pageSize"
-                :sort="['borrowedAt,DESC']"
-                @update:pageInfo="handlePageInfoUpdate"
-              />
-            </div>
-          </div>
-        </div>
-      </main>
-
-      <!-- 모바일 하단 네비게이션 - lg 미만에서만 표시 -->
-      <div class="block lg:hidden">
-        <BottomNav />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
@@ -160,13 +36,13 @@ const fetchHistories = async () => {
       overdue: overdueFilter.value === '' ? undefined : overdueFilter.value,
       page: currentPage.value - 1, // 1-based to 0-based
       size: pageSize,
-      sort: 'borrowedAt,desc'
+      sort: 'borrowedAt,desc',
     };
 
     console.log('대출 이력 조회 요청 파라미터:', params);
     const response = await getUserBookHistories(params);
     console.log('대출 이력 조회 응답:', response);
-    
+
     histories.value = response.content;
     totalPages.value = Math.ceil(response.totalElements / pageSize);
     totalElements.value = response.totalElements;
@@ -206,14 +82,129 @@ onMounted(() => {
 });
 </script>
 
+<template>
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex justify-between items-center my-6">
+        <h1 class="text-xl lg:text-2xl font-medium">나의 대출 이력</h1>
+        <span class="text-gray-600">총 {{ totalElements }}권</span>
+      </div>
+
+      <!-- 필터 섹션 -->
+      <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- 기간 선택 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">기간</label>
+            <select
+              v-model="selectedPeriod"
+              class="w-full border border-gray-300 rounded-md px-3 py-2"
+              @change="handlePeriodChange"
+            >
+              <option v-for="(desc, type) in PeriodTypeDescriptions" :key="type" :value="type">
+                {{ desc }}
+              </option>
+            </select>
+          </div>
+
+          <!-- 커스텀 기간 선택 -->
+          <div
+            v-if="selectedPeriod === PeriodType.CUSTOM"
+            class="lg:col-span-2 grid grid-cols-2 gap-4"
+          >
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">시작일</label>
+              <div class="relative">
+                <input
+                  type="date"
+                  v-model="startDate"
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent transition-colors"
+                  @change="handleDateChange"
+                />
+                <span
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 material-icons text-gray-400"
+                >
+                  calendar_today
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">종료일</label>
+              <div class="relative">
+                <input
+                  type="date"
+                  v-model="endDate"
+                  class="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-[#698469] focus:border-transparent transition-colors"
+                  @change="handleDateChange"
+                />
+                <span
+                  class="absolute right-3 top-1/2 transform -translate-y-1/2 material-icons text-gray-400"
+                >
+                  calendar_today
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 연체 여부 필터 -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">연체 여부</label>
+            <select
+              v-model="overdueFilter"
+              class="w-full border border-gray-300 rounded-md px-3 py-2"
+              @change="fetchHistories"
+            >
+              <option value="">전체</option>
+              <option :value="true">연체</option>
+              <option :value="false">정상 반납</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 로딩 상태 -->
+      <div v-if="isLoading" class="flex justify-center items-center py-8">
+        <div class="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+
+      <!-- 에러 메시지 -->
+      <div
+        v-else-if="error"
+        class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+      >
+        {{ error }}
+      </div>
+
+      <!-- 대출 이력 목록 -->
+      <div v-else>
+        <div v-if="histories.length === 0" class="text-center py-8 text-gray-500">
+          대출 이력이 없습니다.
+        </div>
+        <BookHistoryList v-else :items="histories" />
+
+        <!-- 페이지네이션 -->
+        <div v-if="histories.length > 0" class="mt-6 flex justify-center">
+          <BasicWebPagination
+            :current-page="currentPage"
+            :total-pages="totalPages"
+            :page-size="pageSize"
+            :sort="['borrowedAt,DESC']"
+            @update:pageInfo="handlePageInfoUpdate"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
 <style>
 /* 달력 스타일 커스터마이징 */
-input[type="date"] {
+input[type='date'] {
   position: relative;
   background-color: white;
   padding: 8px 12px;
   color: #374151;
-  border: 1px solid #D1D5DB;
+  border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -221,7 +212,7 @@ input[type="date"] {
   transition: all 0.2s;
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator {
+input[type='date']::-webkit-calendar-picker-indicator {
   background: transparent;
   bottom: 0;
   color: transparent;
@@ -234,21 +225,21 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   width: auto;
 }
 
-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+input[type='date']::-webkit-datetime-edit-fields-wrapper {
   padding: 0;
 }
 
-input[type="date"]::-webkit-datetime-edit {
+input[type='date']::-webkit-datetime-edit {
   color: #374151;
 }
 
-input[type="date"]::-webkit-datetime-edit-year-field,
-input[type="date"]::-webkit-datetime-edit-month-field,
-input[type="date"]::-webkit-datetime-edit-day-field {
+input[type='date']::-webkit-datetime-edit-year-field,
+input[type='date']::-webkit-datetime-edit-month-field,
+input[type='date']::-webkit-datetime-edit-day-field {
   padding: 0 4px;
 }
 
-input[type="date"]:focus {
+input[type='date']:focus {
   outline: none;
   border-color: #698469;
   box-shadow: 0 0 0 2px rgba(105, 132, 105, 0.2);

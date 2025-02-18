@@ -6,12 +6,14 @@ import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import SocialLoginButtons from '@/components/ui/Button/SocialLoginButtons.vue';
 import { sendPasswordResetEmail } from '@/api/user';
+import Modal from '@/components/ui/Modal/Modal.vue';  // Modal 컴포넌트 추가
 
 const router = useRouter();
 const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
 const resetEmail = ref('');
+const resetName = ref('');  // 추가: 이름 입력을 위한 ref
 const showResetModal = ref(false);
 const showConfirmModal = ref(false);
 const resetError = ref('');
@@ -49,7 +51,14 @@ const handleSignUp = () => {
 const handleResetPassword = async () => {
   try {
     resetError.value = '';
-    await sendPasswordResetEmail({ email: resetEmail.value });
+    if (!resetEmail.value || !resetName.value) {  // 이메일과 이름 모두 필수
+      resetError.value = '이메일과 이름을 모두 입력해주세요.';
+      return;
+    }
+    await sendPasswordResetEmail({ 
+      email: resetEmail.value,
+      userName: resetName.value 
+    });
     showResetModal.value = false;
     showConfirmModal.value = true;
   } catch (error) {
@@ -62,6 +71,7 @@ const closeModals = () => {
   showResetModal.value = false;
   showConfirmModal.value = false;
   resetEmail.value = '';
+  resetName.value = '';  // 추가: 이름 초기화
   resetError.value = '';
 };
 
@@ -160,17 +170,24 @@ const closeLoginErrorModal = () => {
   >
     <div class="bg-white rounded-lg p-6 w-full max-w-md">
       <h3 class="text-xl font-semibold mb-4">비밀번호 재설정</h3>
-      <p class="text-gray-600 mb-4">비밀번호 재설정 링크를 받을 이메일 주소를 입력해주세요.</p>
+      <p class="text-gray-600 mb-4">가입 시 등록한 이메일과 이름을 입력해주세요.</p>
 
-      <BasicInput
-        v-model="resetEmail"
-        type="full"
-        placeholder="이메일 주소"
-        inputType="email"
-        class="mb-4"
-      />
+      <div class="space-y-4">
+        <BasicInput
+          v-model="resetEmail"
+          type="full"
+          placeholder="이메일"
+          inputType="email"
+        />
+        <BasicInput
+          v-model="resetName"
+          type="full"
+          placeholder="이름"
+          inputType="text"
+        />
+      </div>
 
-      <p v-if="resetError" class="text-red-500 text-sm mb-4">{{ resetError }}</p>
+      <p v-if="resetError" class="text-red-500 text-sm mt-2 mb-4">{{ resetError }}</p>
 
       <div class="flex justify-end gap-2">
         <BasicButton

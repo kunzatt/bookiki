@@ -1,9 +1,5 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth';
-import BottomNav from '@/components/common/BottomNav.vue';
-import Sidebar from '@/components/common/Sidebar.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import { ref, onMounted, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getRecommendations } from '../api/recommendation';
@@ -22,7 +18,9 @@ const prevDisplayCount = ref(4);
 const isLoading = ref(true);
 
 const monthlyBooks = ref<BookRankingResponse[]>([]);
-const recommendedBooks = ref<(BookItemListResponse & { bookItemId: number; bookInfo?: BookInformationResponse })[]>([]);
+const recommendedBooks = ref<
+  (BookItemListResponse & { bookItemId: number; bookInfo?: BookInformationResponse })[]
+>([]);
 const recommendationReason = ref<string>('');
 
 // Monthly Books 데이터 가져오기
@@ -59,7 +57,7 @@ const fetchRecommendedBooks = async () => {
         } catch (error) {
           console.error(`책 정보 가져오기 실패 (bookItemId: ${book.bookItemId}):`, error);
         }
-      })
+      }),
     );
   } catch (error) {
     console.error('Error fetching recommended books:', error);
@@ -175,172 +173,165 @@ const recommendedIndex = ref(0);
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <!-- 데스크톱 사이드바 - lg 이상에서만 표시 -->
-    <Sidebar class="hidden lg:block" />
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <div class="max-w-[1440px] mx-auto">
+        <div class="h-full lg:flex lg:flex-col lg:gap-8">
+          <!-- 이달의 도서 섹션 -->
+          <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl lg:text-2xl font-medium">이달의 도서</h2>
+            </div>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- 반응형 헤더 -->
-      <HeaderMobile class="lg:hidden" />
-      <HeaderDesktop class="hidden lg:block" />
+            <!-- 로딩 상태 표시 -->
+            <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
 
-      <main class="flex-1 px-5 lg:px-8 pb-16 lg:pb-8 overflow-y-auto lg:overflow-hidden">
-        <div class="max-w-[1440px] mx-auto">
-          <div class="h-full lg:flex lg:flex-col lg:gap-8">
-            <!-- 이달의 도서 섹션 -->
-            <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
-              <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl lg:text-2xl font-medium">이달의 도서</h2>
-              </div>
+            <div v-else class="w-full relative flex items-center justify-center px-8">
+              <!-- 왼쪽 화살표 -->
+              <button
+                @click="slideLeft"
+                class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{ 'opacity-50 cursor-not-allowed': currentIndex === 0 }"
+                :disabled="currentIndex === 0"
+              >
+                <span class="material-icons">chevron_left</span>
+              </button>
 
-              <!-- 로딩 상태 표시 -->
-              <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-
-              <div v-else class="w-full relative flex items-center justify-center px-8">
-                <!-- 왼쪽 화살표 -->
-                <button
-                  @click="slideLeft"
-                  class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                  :class="{ 'opacity-50 cursor-not-allowed': currentIndex === 0 }"
-                  :disabled="currentIndex === 0"
+              <!-- 책 슬라이더 -->
+              <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
                 >
-                  <span class="material-icons">chevron_left</span>
-                </button>
+                  <template v-for="index in displayCount" :key="index">
+                    <div
+                      v-if="monthlyBooks[currentIndex + index - 1]?.bookItemId"
+                      class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      @click="
+                        monthlyBooks[currentIndex + index - 1]?.bookItemId &&
+                        router.push(`/books/${monthlyBooks[currentIndex + index - 1].bookItemId}`)
+                      "
+                    >
+                      <div class="relative">
+                        <img
+                          :src="monthlyBooks[currentIndex + index - 1].image"
+                          :alt="monthlyBooks[currentIndex + index - 1].title"
+                          class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                          @error="handleImageError"
+                        />
+                      </div>
+                      <div class="p-3 sm:p-4">
+                        <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                          {{ monthlyBooks[currentIndex + index - 1].title }}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-600 truncate">
+                          {{ monthlyBooks[currentIndex + index - 1].author }}
+                        </p>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
 
-                <!-- 책 슬라이더 -->
-                <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
-                  <div
-                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
-                  >
-                    <template v-for="index in displayCount" :key="index">
-                      <div
-                        v-if="monthlyBooks[currentIndex + index - 1]?.bookItemId"
-                        class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                        @click="
-                          monthlyBooks[currentIndex + index - 1]?.bookItemId &&
-                          router.push(`/books/${monthlyBooks[currentIndex + index - 1].bookItemId}`)
-                        "
-                      >
-                        <div class="relative">
-                          <img
-                            :src="monthlyBooks[currentIndex + index - 1].image"
-                            :alt="monthlyBooks[currentIndex + index - 1].title"
-                            class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
-                            @error="handleImageError"
-                          />
-                        </div>
-                        <div class="p-3 sm:p-4">
-                          <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                            {{ monthlyBooks[currentIndex + index - 1].title }}
-                          </h3>
-                          <p class="text-xs sm:text-sm text-gray-600 truncate">
-                            {{ monthlyBooks[currentIndex + index - 1].author }}
-                          </p>
+              <!-- 오른쪽 화살표 -->
+              <button
+                @click="slideRight"
+                class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{
+                  'opacity-50 cursor-not-allowed':
+                    currentIndex >= monthlyBooks.length - displayCount,
+                }"
+                :disabled="currentIndex >= monthlyBooks.length - displayCount"
+              >
+                <span class="material-icons">chevron_right</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- 추천 도서 섹션 -->
+          <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-xl lg:text-2xl font-medium">추천 도서</h2>
+            </div>
+
+            <!-- 로딩 상태 표시 -->
+            <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            </div>
+
+            <div v-else class="w-full relative flex items-center justify-center px-8">
+              <!-- 왼쪽 화살표 -->
+              <button
+                @click="slideLeftRecommended"
+                class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex === 0 }"
+                :disabled="recommendedIndex === 0"
+              >
+                <span class="material-icons">chevron_left</span>
+              </button>
+
+              <!-- 책 슬라이더 -->
+              <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
+                <div
+                  class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
+                >
+                  <template v-for="index in displayCount" :key="index">
+                    <div
+                      v-if="recommendedBooks[recommendedIndex + index - 1]?.bookItemId"
+                      class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                      @click="
+                        router.push(
+                          `/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`,
+                        )
+                      "
+                    >
+                      <div class="relative">
+                        <img
+                          :src="
+                            recommendedBooks[recommendedIndex + index - 1].bookInfo?.image ||
+                            '/default-book-cover.svg'
+                          "
+                          :alt="recommendedBooks[recommendedIndex + index - 1].bookInfo?.title"
+                          class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                          @error="handleImageError"
+                        />
+                        <!-- 신규 도서 뱃지 -->
+                        <div
+                          v-if="recommendedBooks[recommendedIndex + index - 1].isNew"
+                          class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded"
+                        >
+                          NEW
                         </div>
                       </div>
-                    </template>
-                  </div>
-                </div>
-
-                <!-- 오른쪽 화살표 -->
-                <button
-                  @click="slideRight"
-                  class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                  :class="{
-                    'opacity-50 cursor-not-allowed':
-                      currentIndex >= monthlyBooks.length - displayCount,
-                  }"
-                  :disabled="currentIndex >= monthlyBooks.length - displayCount"
-                >
-                  <span class="material-icons">chevron_right</span>
-                </button>
-              </div>
-            </section>
-
-            <!-- 추천 도서 섹션 -->
-            <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
-              <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl lg:text-2xl font-medium">추천 도서</h2>
-              </div>
-
-              <!-- 로딩 상태 표시 -->
-              <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-              </div>
-
-              <div v-else class="w-full relative flex items-center justify-center px-8">
-                <!-- 왼쪽 화살표 -->
-                <button
-                  @click="slideLeftRecommended"
-                  class="absolute left-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                  :class="{ 'opacity-50 cursor-not-allowed': recommendedIndex === 0 }"
-                  :disabled="recommendedIndex === 0"
-                >
-                  <span class="material-icons">chevron_left</span>
-                </button>
-
-                <!-- 책 슬라이더 -->
-                <div class="w-[calc(100%-4rem)] overflow-hidden py-4">
-                  <div
-                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
-                  >
-                    <template v-for="index in displayCount" :key="index">
-                      <div
-                        v-if="recommendedBooks[recommendedIndex + index - 1]?.bookItemId"
-                        class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                        @click="router.push(`/books/${recommendedBooks[recommendedIndex + index - 1].bookItemId}`)"
-                      >
-                        <div class="relative">
-                          <img
-                            :src="recommendedBooks[recommendedIndex + index - 1].bookInfo?.image || '/default-book-cover.svg'"
-                            :alt="recommendedBooks[recommendedIndex + index - 1].bookInfo?.title"
-                            class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
-                            @error="handleImageError"
-                          />
-                          <!-- 신규 도서 뱃지 -->
-                          <div
-                            v-if="recommendedBooks[recommendedIndex + index - 1].isNew"
-                            class="absolute top-2 right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded"
-                          >
-                            NEW
-                          </div>
-                        </div>
-                        <div class="p-3 sm:p-4">
-                          <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                            {{ recommendedBooks[recommendedIndex + index - 1].bookInfo?.title }}
-                          </h3>
-                          <p class="text-xs sm:text-sm text-gray-600 truncate">
-                            {{ recommendedBooks[recommendedIndex + index - 1].bookInfo?.author }}
-                          </p>
-                        </div>
+                      <div class="p-3 sm:p-4">
+                        <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                          {{ recommendedBooks[recommendedIndex + index - 1].bookInfo?.title }}
+                        </h3>
+                        <p class="text-xs sm:text-sm text-gray-600 truncate">
+                          {{ recommendedBooks[recommendedIndex + index - 1].bookInfo?.author }}
+                        </p>
                       </div>
-                    </template>
-                  </div>
+                    </div>
+                  </template>
                 </div>
-
-                <!-- 오른쪽 화살표 -->
-                <button
-                  @click="slideRightRecommended"
-                  class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
-                  :class="{
-                    'opacity-50 cursor-not-allowed':
-                      recommendedIndex >= recommendedBooks.length - displayCount,
-                  }"
-                  :disabled="recommendedIndex >= recommendedBooks.length - displayCount"
-                >
-                  <span class="material-icons">chevron_right</span>
-                </button>
               </div>
-            </section>
-          </div>
+
+              <!-- 오른쪽 화살표 -->
+              <button
+                @click="slideRightRecommended"
+                class="absolute right-2 z-10 bg-white rounded-full shadow-lg p-2 hover:bg-gray-50 transition-all"
+                :class="{
+                  'opacity-50 cursor-not-allowed':
+                    recommendedIndex >= recommendedBooks.length - displayCount,
+                }"
+                :disabled="recommendedIndex >= recommendedBooks.length - displayCount"
+              >
+                <span class="material-icons">chevron_right</span>
+              </button>
+            </div>
+          </section>
         </div>
-      </main>
-
-      <!-- 모바일에서만 BottomNav 표시 -->
-      <div class="lg:hidden">
-        <BottomNav />
       </div>
     </div>
   </div>

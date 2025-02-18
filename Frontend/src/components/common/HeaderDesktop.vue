@@ -1,3 +1,4 @@
+[components/common/HeaderDesktop.vue]
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import type { DesktopHeaderProps } from '../../types/common/header';
@@ -41,10 +42,7 @@ const handleNotice = () => {
 
 onMounted(() => {
   checkUnreadNotifications();
-
-  // 주기적으로 알림 상태 확인 (1분마다)
   const interval = setInterval(checkUnreadNotifications, 60000);
-
   onUnmounted(() => {
     clearInterval(interval);
   });
@@ -56,13 +54,18 @@ onMounted(() => {
     v-if="!isAuthPage"
     class="sticky top-0 left-0 right-0 bg-white border-b border-gray-200 shadow-sm z-10"
   >
-    <div class="ml-64">
-      <div class="max-w-[calc(100%-2rem)] mx-auto flex items-center justify-between h-16 px-6">
-        <!-- Title -->
-        <h1 class="text-xl font-semibold text-gray-800">{{ title }}</h1>
-
-        <!-- Right Icons -->
-        <div class="flex items-center space-x-6">
+    <div class="ml-10">
+      <!-- h-16을 h-20으로 변경 -->
+      <div class="relative flex items-center h-20 px-6">
+        <div class="flex-1 min-w-0 max-w-[calc(100%-160px)]">
+          <!-- text-xl을 text-2xl로 변경 -->
+          <h1 class="text-2xl font-semibold text-gray-800 truncate">{{ title }}</h1>
+        </div>
+        <!-- 아이콘 컨테이너의 높이도 맞춰서 변경 -->
+        <div
+          class="fixed top-0 transition-all duration-200 flex items-center h-20 space-x-6"
+          :style="{ right: '24px' }"
+        >
           <!-- Chatbot Button -->
           <button
             @click="handleChatbot"
@@ -85,7 +88,6 @@ onMounted(() => {
             class="relative flex items-center justify-center w-10 h-10 hover:bg-gray-100 rounded-full transition-colors duration-200"
           >
             <i class="material-icons text-gray-700 !text-[28px]">notifications_none</i>
-            <!-- Notification Badge -->
             <span
               v-if="hasUnreadNotification"
               class="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"
