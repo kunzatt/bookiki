@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import BottomNav from '@/components/common/BottomNav.vue';
-import Sidebar from '@/components/common/Sidebar.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import { getUserFavorites, toggleFavorite } from '@/api/bookFavorite';
 import type { BookFavoriteResponse } from '@/types/api/favorite';
 import type { PageResponse } from '@/types/common/pagination';
@@ -48,7 +44,7 @@ const fetchFavorites = async () => {
     const response = await getUserFavorites(
       pageInfo.value.pageNumber,
       pageInfo.value.pageSize,
-      pageInfo.value.sort[0]
+      pageInfo.value.sort[0],
     );
     favorites.value = response.content;
     totalPages.value = response.totalPages;
@@ -102,87 +98,76 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar class="hidden lg:block" />
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <div class="max-w-[1440px] mx-auto">
+        <div class="flex justify-between items-center my-6">
+          <h1 class="text-xl lg:text-2xl font-medium">좋아요 한 도서</h1>
+          <span class="text-gray-600">총 {{ totalPages * pageInfo.pageSize }}권</span>
+        </div>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <HeaderMobile class="lg:hidden" />
-      <HeaderDesktop class="hidden lg:block" />
+        <!-- 로딩 상태 -->
+        <div
+          v-if="isLoading && currentPage === 1"
+          class="flex justify-center items-center h-[300px]"
+        >
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
 
-      <main class="flex-1 px-5 lg:px-8 pb-16 lg:pb-8 overflow-y-auto">
-        <div class="max-w-[1440px] mx-auto">
-          <div class="flex justify-between items-center my-6">
-            <h1 class="text-xl lg:text-2xl font-medium">좋아요 한 도서</h1>
-            <span class="text-gray-600">총 {{ totalPages * pageInfo.pageSize }}권</span>
-          </div>
+        <!-- 에러 메시지 -->
+        <div v-else-if="error" class="text-center py-8 text-red-600">
+          {{ error }}
+        </div>
 
-          <!-- 로딩 상태 -->
+        <!-- 좋아요 도서 없음 -->
+        <div v-else-if="favorites.length === 0" class="text-center py-8 text-gray-600">
+          좋아요 한 도서가 없습니다.
+        </div>
+
+        <!-- 좋아요 도서 목록 -->
+        <div v-else class="w-full relative">
           <div
-            v-if="isLoading && currentPage === 1"
-            class="flex justify-center items-center h-[300px]"
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
           >
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-
-          <!-- 에러 메시지 -->
-          <div v-else-if="error" class="text-center py-8 text-red-600">
-            {{ error }}
-          </div>
-
-          <!-- 좋아요 도서 없음 -->
-          <div v-else-if="favorites.length === 0" class="text-center py-8 text-gray-600">
-            좋아요 한 도서가 없습니다.
-          </div>
-
-          <!-- 좋아요 도서 목록 -->
-          <div v-else class="w-full relative">
             <div
-              class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
+              v-for="book in favorites"
+              :key="book.id"
+              class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+              @click="router.push(`/books/${book.bookItemId}`)"
             >
-              <div
-                v-for="book in favorites"
-                :key="book.id"
-                class="book-card w-[160px] sm:w-[165px] md:w-[170px] lg:w-[175px] bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                @click="router.push(`/books/${book.bookItemId}`)"
-              >
-                <div class="relative">
-                  <img
-                    :src="book.bookImage"
-                    :alt="book.bookTitle"
-                    class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
-                    @error="handleImageError"
-                  />
-                  <button
-                    @click.stop="handleToggleFavorite(book.bookItemId)"
-                    class="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-50"
-                  >
-                    <span class="material-icons text-red-500">favorite</span>
-                  </button>
-                </div>
-                <div class="p-3 sm:p-4">
-                  <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
-                    {{ book.bookTitle }}
-                  </h3>
-                </div>
+              <div class="relative">
+                <img
+                  :src="book.bookImage"
+                  :alt="book.bookTitle"
+                  class="w-full h-[200px] sm:h-[205px] md:h-[210px] lg:h-[215px] object-cover rounded-t-lg"
+                  @error="handleImageError"
+                />
+                <button
+                  @click.stop="handleToggleFavorite(book.bookItemId)"
+                  class="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-50"
+                >
+                  <span class="material-icons text-red-500">favorite</span>
+                </button>
+              </div>
+              <div class="p-3 sm:p-4">
+                <h3 class="font-semibold text-sm sm:text-base mb-1 sm:mb-2 truncate">
+                  {{ book.bookTitle }}
+                </h3>
               </div>
             </div>
+          </div>
 
-            <!-- 페이지네이션 -->
-            <div class="mt-6 flex justify-center">
-              <BasicWebPagination
-                v-model:pageInfo="pageInfo"
-                :current-page="currentPage"
-                :total-pages="totalPages"
-                :page-size="pageInfo.pageSize"
-                :sort="pageInfo.sort"
-              />
-            </div>
+          <!-- 페이지네이션 -->
+          <div class="mt-6 flex justify-center">
+            <BasicWebPagination
+              v-model:pageInfo="pageInfo"
+              :current-page="currentPage"
+              :total-pages="totalPages"
+              :page-size="pageInfo.pageSize"
+              :sort="pageInfo.sort"
+            />
           </div>
         </div>
-      </main>
-
-      <div class="lg:hidden">
-        <BottomNav />
       </div>
     </div>
   </div>
