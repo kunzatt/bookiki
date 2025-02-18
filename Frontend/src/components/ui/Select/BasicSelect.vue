@@ -22,7 +22,7 @@ const emit = defineEmits<{
 const sizeClasses = {
   L: 'w-64',
   M: 'w-32',
-  S: 'w-24',
+  S: 'w-20',
 } as const;
 </script>
 

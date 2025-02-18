@@ -7,6 +7,7 @@ import type { BookItemDisplayResponse } from '@/types/api/bookItem';
 import type { Pageable } from '@/types/common/pagination';
 import DefaultBookCover from '@/assets/images/DEFAULT_BOOK_COVER.png';
 import { useRouter } from 'vue-router';
+import { AxiosError } from 'axios';
 
 const books = ref<BookItemDisplayResponse[]>([]);
 const searchKeyword = ref('');
@@ -28,13 +29,19 @@ const fetchBooks = async () => {
       pageInfo.value.pageSize,
       'id',
       'desc',
-      searchKeyword.value,
+      searchKeyword.value || undefined, // 빈 문자열일 경우 undefined로 처리
     );
 
     books.value = response.content;
     totalPages.value = response.totalPages;
   } catch (error) {
-    console.error('도서 목록 조회 실패:', error);
+    // 404 에러는 검색 결과가 없는 경우이므로 조용히 처리
+    if (error instanceof AxiosError && error.response?.status === 404) {
+      books.value = [];
+      totalPages.value = 0;
+    } else {
+      console.error('도서 목록 조회 실패:', error);
+    }
   } finally {
     loading.value = false;
   }
@@ -72,6 +79,13 @@ watch(pageInfo, async () => {
   await fetchBooks();
 });
 
+// searchKeyword 변경 감시
+watch(searchKeyword, () => {
+  currentPage.value = 1;
+  pageInfo.value.pageNumber = 0;
+  fetchBooks();
+});
+
 onMounted(async () => {
   await fetchBooks();
 });
@@ -88,12 +102,10 @@ onMounted(async () => {
             type="withButton"
             placeholder="도서명을 입력하세요"
             buttonText="검색"
-            @buttonClick="handleSearch"
           />
         </div>
-
         <!-- 책장 -->
-        <div v-if="books.length > 0" class="bg-[#8B4513] p-6 rounded-lg">
+        <div class="bg-[#8B4513] p-6 rounded-lg">
           <div class="space-y-8">
             <div
               v-for="(row, rowIndex) in bookRows"
@@ -101,23 +113,25 @@ onMounted(async () => {
               class="relative bg-[#F5E6D3] p-4 rounded"
             >
               <div class="grid grid-cols-4 gap-4">
-                <div v-for="book in row" :key="book.id" class="aspect-[3/4] relative group">
-                  <div
-                    class="book absolute inset-0 transform transition-transform duration-200 group-hover:scale-105"
-                  >
-                    <img
-                      :src="getBookCoverImage(book.image)"
-                      :alt="'Book cover ' + book.id"
-                      class="w-full h-full object-cover rounded shadow-lg cursor-pointer"
-                      @click="navigateToBook(book.id)"
-                    />
+                <template v-for="colIndex in 4" :key="colIndex">
+                  <div v-if="row[colIndex - 1]" class="aspect-[3/4] relative group">
                     <div
-                      class="absolute top-0 left-0 w-2 h-full bg-black bg-opacity-10 rounded-l"
-                    ></div>
+                      class="book absolute inset-0 transform transition-transform duration-200 group-hover:scale-105"
+                    >
+                      <img
+                        :src="getBookCoverImage(row[colIndex - 1].image)"
+                        :alt="'Book cover ' + row[colIndex - 1].id"
+                        class="w-full h-full object-cover rounded shadow-lg cursor-pointer"
+                        @click="navigateToBook(row[colIndex - 1].id)"
+                      />
+                      <div
+                        class="absolute top-0 left-0 w-2 h-full bg-black bg-opacity-10 rounded-l"
+                      ></div>
+                    </div>
                   </div>
-                </div>
+                  <div v-else class="aspect-[3/4] relative bg-gray-100 rounded opacity-30"></div>
+                </template>
               </div>
-
               <!-- 선반 효과 -->
               <div
                 class="absolute -bottom-4 left-0 right-0 h-4 bg-[#8B4513] shadow-md transform skew-y-1"
@@ -128,7 +142,6 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-
         <!-- 페이지네이션 -->
         <div v-if="books.length > 0" class="mt-8 mb-16 md:mb-8">
           <BasicWebPagination
@@ -139,7 +152,6 @@ onMounted(async () => {
             :sort="pageInfo.sort"
           />
         </div>
-
         <!-- 검색 결과 없음 -->
         <div
           v-if="!loading && books.length === 0"
@@ -150,7 +162,6 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-
   <!-- 로딩 스피너 -->
   <div
     v-if="loading"
@@ -170,10 +181,9 @@ onMounted(async () => {
     -2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 모바일에서 하단 네비게이션바 높이만큼 패딩 추가 */
 @media (max-width: 768px) {
   .flex-1 {
-    padding-bottom: 56px; /* 하단 네비게이션바 높이 */
+    padding-bottom: 56px;
   }
 }
 </style>

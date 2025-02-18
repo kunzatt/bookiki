@@ -31,17 +31,20 @@ const pageTitles: { [key: string]: string } = {
   '/qnas': '문의사항',
   '/mypage': '마이페이지',
   '/admin': '관리자',
-  '/admin/user': '사용자 관리',
+  '/admin/user': '회원 관리',
   '/admin/books': '도서 관리',
   '/admin/library': '도서관 관리',
   '/password/change': '비밀번호 변경',
-  '/feedbacks': '피드백 관리',
+  '/feedbacks': '챗봇 피드백 관리',
   '/search': '도서 검색',
+  '/mypage/current-borrowed': '대출 중인 도서',
+  '/favorites': '좋아요 목록',
+  '/mypage/history': '나의 대출 이력',
 };
 
 // 현재 페이지 제목
 const pageTitle = computed(() => {
-  return pageTitles[route.path] || '북키키';
+  return pageTitles[route.path] || ' ';
 });
 
 onMounted(() => {

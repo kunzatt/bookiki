@@ -54,7 +54,7 @@ const handleModalClose = () => {
       title="데스크탑 환경에서 확인해주세요"
       content="이 페이지는 데스크탑 환경에서만 이용 가능합니다. PC에서 다시 접속해 주시기 바랍니다."
       icon="desktop_windows"
-      confirm-text="메인으로 이동"
+      confirm-text="메인으로"
       @update:model-value="handleModalClose"
     />
   </div>
