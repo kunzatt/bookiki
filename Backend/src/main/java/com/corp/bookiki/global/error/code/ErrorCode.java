@@ -28,6 +28,7 @@ public enum ErrorCode {
 	USER_NOT_ACTIVE(400, "대출 가능 기한이 아니므로 대출이 불가능합니다"),
 	PASSWORD_MISMATCH(400, "새 비밀번호가 일치하지 않습니다"),
 	USERNAME_EMAIL_MISMATCH(400, "사용자 이름과 이메일이 일치하지 않습니다"),
+	UNVALID_PROVIDER(400, "Provider 불일치합니다."),
 	
 	// 사용자 관련 에러
 	USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "사용자를 찾을 수 없습니다."),

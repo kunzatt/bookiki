@@ -9,6 +9,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UpdateBookStatusRequest {
-    @NotBlank(message = "상태는 필수 입력값입니다.")
+
     private BookStatus status;
 }

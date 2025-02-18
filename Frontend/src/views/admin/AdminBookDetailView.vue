@@ -112,7 +112,6 @@ onMounted(() => {
             cancel-text="취소"
             @confirm="handleDelete"
           />
-
           <!-- 삭제 성공 토스트 -->
           <Toast :is-visible="showToast" :message="toastMessage" type="success" />
 
@@ -133,6 +132,8 @@ onMounted(() => {
               :purchaseAt="bookDetail.purchaseAt"
             />
           </div>
+          <!-- QR 코드 섹션 -->
+          <QrCode :qr-code="bookDetail.qrCode" :book-item-id="Number(route.params.id)" />
         </div>
       </div>
 

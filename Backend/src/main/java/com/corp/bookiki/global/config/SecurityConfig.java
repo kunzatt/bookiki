@@ -60,6 +60,7 @@ public class SecurityConfig {
 								CorsConfiguration configuration = new CorsConfiguration();
 								configuration.setAllowedOriginPatterns(List.of(frontendUrl,
 										"http://localhost:5173",
+										"http://localhost:3000",
 										"http://i12a206.p.ssafy.io:8088",
 										"ws://70.12.246.118:8088"));
 
@@ -140,7 +141,7 @@ public class SecurityConfig {
 					oauth2
 //							.loginPage("/login")  // 로그인 페이지 설정 추가
 							.authorizationEndpoint(authorization ->
-									authorization.baseUri("/oauth2/authorization")  // /api 제거
+									authorization.baseUri("/api/oauth2/authorization")
 							)
 							.redirectionEndpoint(redirection ->
 									redirection.baseUri("/api/login/oauth2/code/*")  // provider 변수 사용

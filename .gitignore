@@ -151,6 +151,12 @@ HELP.md
 ### Docker ###
 docker-compose.yml
 dockerfile
+backend-dockerfile
+frontend-dockerfile
 
 ### Nginx ###
 nginx.conf
+
+### image ###
+spring-images/*
+!spring-images/.gitkeep

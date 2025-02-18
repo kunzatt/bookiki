@@ -39,7 +39,7 @@ public class QrCodeEntity {
 
 	public static QrCodeEntity create(BookItemEntity bookItem) {
 		QrCodeEntity qrCode = new QrCodeEntity();
-		qrCode.qrValue = "https://naver.com/" + bookItem.getId();
+		qrCode.qrValue = "http://i12a206.p.ssafy.io/qr/books/" + bookItem.getId();
 		qrCode.createdAt = LocalDateTime.now();
 		qrCode.bookItem = bookItem;
 		return qrCode;

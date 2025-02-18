@@ -39,7 +39,7 @@ public class BookItemListResponse {
     public static BookItemListResponse from(BookItemEntity bookItemEntity) {
         BookInformationEntity bookinfo = bookItemEntity.getBookInformation();
         BookItemListResponse response = new BookItemListResponse();
-        response.id = bookinfo.getId();
+        response.id = bookItemEntity.getId();
         response.image = bookinfo.getImage();
         response.title = bookinfo.getTitle();
         response.author = bookinfo.getAuthor();

@@ -1,9 +1,8 @@
 package com.corp.bookiki.bookhistory.repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
+import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
+import com.corp.bookiki.bookitem.entity.BookItemEntity;
+import com.corp.bookiki.user.entity.UserEntity;
 import org.springframework.data.domain.Limit;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,9 +10,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
-import com.corp.bookiki.bookitem.entity.BookItemEntity;
-import com.corp.bookiki.user.entity.UserEntity;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, Integer> {
 
@@ -234,4 +233,6 @@ public interface BookHistoryRepository extends JpaRepository<BookHistoryEntity, 
 	);
 
 	Integer countByUserIdAndReturnedAtIsNull(Integer userId);
+
+	Optional<BookHistoryEntity> findByBookItemIdAndReturnedAtIsNull(Integer bookItemId);
 }

@@ -6,14 +6,13 @@ import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import SocialLoginButtons from '@/components/ui/Button/SocialLoginButtons.vue';
 import { sendPasswordResetEmail } from '@/api/user';
-import Modal from '@/components/ui/Modal/Modal.vue';  // Modal 컴포넌트 추가
 
 const router = useRouter();
 const authStore = useAuthStore();
 const email = ref('');
 const password = ref('');
 const resetEmail = ref('');
-const resetName = ref('');  // 추가: 이름 입력을 위한 ref
+const resetName = ref(''); // 추가: 이름 입력을 위한 ref
 const showResetModal = ref(false);
 const showConfirmModal = ref(false);
 const resetError = ref('');
@@ -22,7 +21,7 @@ const resetButtonDisabled = ref(false);  // 추가: 버튼 비활성화 상태 �
 
 const handleLogin = async (e: Event) => {
   e.preventDefault(); // 기본 form submit 동작 방지
-  
+
   // 이메일이나 비밀번호가 비어있는 경우
   if (!email.value || !password.value) {
     showLoginErrorModal.value = true;
@@ -58,14 +57,15 @@ const handleResetPassword = async () => {
   
   try {
     resetError.value = '';
-    if (!resetEmail.value || !resetName.value) {  // 이메일과 이름 모두 필수
+    if (!resetEmail.value || !resetName.value) {
+      // 이메일과 이름 모두 필수
       resetError.value = '이메일과 이름을 모두 입력해주세요.';
       resetButtonDisabled.value = false;  // 유효성 검사 실패시 버튼 다시 활성화
       return;
     }
-    await sendPasswordResetEmail({ 
+    await sendPasswordResetEmail({
       email: resetEmail.value,
-      userName: resetName.value 
+      userName: resetName.value,
     });
     showResetModal.value = false;
     showConfirmModal.value = true;
@@ -80,7 +80,7 @@ const closeModals = () => {
   showResetModal.value = false;
   showConfirmModal.value = false;
   resetEmail.value = '';
-  resetName.value = '';  // 추가: 이름 초기화
+  resetName.value = ''; // 추가: 이름 초기화
   resetError.value = '';
   resetButtonDisabled.value = false;  // 모달 닫을 때 버튼 상태 초기화
 };
@@ -93,7 +93,9 @@ const closeLoginErrorModal = () => {
 <template>
   <div class="min-h-screen flex justify-center items-center p-4">
     <!-- 데스크탑 크기에서만 보이는 카드형 컨테이너 -->
-    <div class="hidden md:flex flex-col w-full max-w-[480px] bg-white rounded-lg shadow-lg p-8 border border-gray-200">
+    <div
+      class="hidden md:flex flex-col w-full max-w-[480px] bg-white rounded-lg shadow-lg p-8 border border-gray-200"
+    >
       <!-- 상단: 로고 영역 -->
       <div class="flex justify-center mb-8">
         <img src="@/assets/BookikiLogo.PNG" alt="Bookiki Logo" class="w-32" />
@@ -108,12 +110,21 @@ const closeLoginErrorModal = () => {
           <BasicInput v-model="password" type="password" placeholder="Password" />
 
           <div class="flex w-full justify-end">
-            <button type="button" class="text-sm text-gray-500 hover:text-gray-700" @click="handleForgotPassword">
+            <button
+              type="button"
+              class="text-sm text-gray-500 hover:text-gray-700"
+              @click="handleForgotPassword"
+            >
               비밀번호를 잊으셨나요?
             </button>
           </div>
 
-          <BasicButton type="submit" size="L" text="로그인" class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white" />
+          <BasicButton
+            type="submit"
+            size="L"
+            text="로그인"
+            class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
+          />
         </form>
 
         <div class="mt-4">
@@ -129,7 +140,10 @@ const closeLoginErrorModal = () => {
 
         <div class="mt-4 text-center">
           <span class="text-sm text-gray-500">계정이 없으신가요?</span>
-          <button class="text-sm text-gray-700 font-medium ml-2 hover:text-gray-900" @click="handleSignUp">
+          <button
+            class="text-sm text-gray-700 font-medium ml-2 hover:text-gray-900"
+            @click="handleSignUp"
+          >
             회원가입
           </button>
         </div>
@@ -145,12 +159,21 @@ const closeLoginErrorModal = () => {
         <BasicInput v-model="password" type="password" placeholder="Password" />
 
         <div class="flex w-full justify-end">
-          <button type="button" class="text-sm text-gray-500 hover:text-gray-700" @click="handleForgotPassword">
+          <button
+            type="button"
+            class="text-sm text-gray-500 hover:text-gray-700"
+            @click="handleForgotPassword"
+          >
             비밀번호를 잊으셨나요?
           </button>
         </div>
 
-        <BasicButton type="submit" size="L" text="로그인" class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white" />
+        <BasicButton
+          type="submit"
+          size="L"
+          text="로그인"
+          class="!bg-[#F6F6F3] !text-black hover:!bg-[#DAD7CD] hover:!text-white"
+        />
 
         <div class="mt-4">
           <div class="relative flex items-center justify-center">
@@ -165,7 +188,10 @@ const closeLoginErrorModal = () => {
 
         <div class="mt-4 text-center">
           <span class="text-sm text-gray-500">계정이 없으신가요?</span>
-          <button class="text-sm text-gray-700 font-medium ml-2 hover:text-gray-900" @click="handleSignUp">
+          <button
+            class="text-sm text-gray-700 font-medium ml-2 hover:text-gray-900"
+            @click="handleSignUp"
+          >
             회원가입
           </button>
         </div>
@@ -183,18 +209,8 @@ const closeLoginErrorModal = () => {
       <p class="text-gray-600 mb-4">가입 시 등록한 이메일과 이름을 입력해주세요.</p>
 
       <div class="space-y-4">
-        <BasicInput
-          v-model="resetEmail"
-          type="full"
-          placeholder="이메일"
-          inputType="email"
-        />
-        <BasicInput
-          v-model="resetName"
-          type="full"
-          placeholder="이름"
-          inputType="text"
-        />
+        <BasicInput v-model="resetEmail" type="full" placeholder="이메일" inputType="email" />
+        <BasicInput v-model="resetName" type="full" placeholder="이름" inputType="text" />
       </div>
 
       <p v-if="resetError" class="text-red-500 text-sm mt-2 mb-4">{{ resetError }}</p>
@@ -240,8 +256,8 @@ const closeLoginErrorModal = () => {
   </div>
 
   <!-- 로그인 에러 모달 -->
-  <div 
-    v-if="showLoginErrorModal" 
+  <div
+    v-if="showLoginErrorModal"
     class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
   >
     <div class="bg-white rounded-lg p-6 w-full max-w-md">

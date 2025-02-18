@@ -81,6 +81,7 @@ public class BookInformationController {
 		@PathVariable(name = "isbn") String isbn) {
 
 		log.info("ISBN으로 도서 정보 조회: {}", isbn);
+		isbn = isbn.trim();
 		BookInformationResponse bookInfo = bookInformationService.addBookInformationByIsbn(isbn);
 		return ResponseEntity.ok(bookInfo);
 	}
