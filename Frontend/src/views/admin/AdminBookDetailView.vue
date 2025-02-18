@@ -3,10 +3,6 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getBookAdminDetail } from '@/api/bookItem';
 import type { BookAdminDetailResponse } from '@/types/api/bookItem';
-import Sidebar from '@/components/common/Sidebar.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import BottomNav from '@/components/common/BottomNav.vue';
 import BaseModal from '@/components/ui/Modal/BaseModal.vue';
 import BookImage from '@/components/ui/Admin/BookImage.vue';
 import BookInfo from '@/components/ui/Admin/BookDetailInfo.vue';
@@ -59,49 +55,38 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar class="hidden lg:block" />
-
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <HeaderMobile title="도서 상세 정보" class="lg:hidden" />
-      <HeaderDesktop title="도서 상세 정보" class="hidden lg:block" />
-
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
       <!-- 메인 컨텐츠 영역 -->
-      <main class="flex-1 overflow-auto p-6">
-        <div class="max-w-7xl mx-auto">
-          <div v-if="loading" class="text-center">
-            <p>데이터를 불러오는 중...</p>
-          </div>
-
-          <div v-else-if="error" class="text-red-600">
-            <p>데이터를 불러오는데 실패했습니다: {{ error }}</p>
-          </div>
-
-          <div v-else-if="bookDetail" class="space-y-6">
-            <!-- 이미지 섹션 -->
-            <BookImage :image="bookDetail.image" :title="bookDetail.title" />
-
-            <!-- 도서 정보 섹션 -->
-            <BookInfo
-              :title="bookDetail.title"
-              :author="bookDetail.author"
-              :publisher="bookDetail.publisher"
-              :isbn="bookDetail.isbn"
-              :publishedAt="bookDetail.publishedAt"
-              :description="bookDetail.description"
-              :category="bookDetail.category"
-              :bookStatus="bookDetail.bookStatus"
-              :purchaseAt="bookDetail.purchaseAt"
-            />
-
-            <!-- QR 코드 섹션 -->
-            <QrCode :qrCode="bookDetail.qrCode" />
-          </div>
+      <div class="max-w-7xl mx-auto">
+        <div v-if="loading" class="text-center">
+          <p>데이터를 불러오는 중...</p>
         </div>
-      </main>
 
-      <div class="lg:hidden">
-        <BottomNav />
+        <div v-else-if="error" class="text-red-600">
+          <p>데이터를 불러오는데 실패했습니다: {{ error }}</p>
+        </div>
+
+        <div v-else-if="bookDetail" class="space-y-6">
+          <!-- 이미지 섹션 -->
+          <BookImage :image="bookDetail.image" :title="bookDetail.title" />
+
+          <!-- 도서 정보 섹션 -->
+          <BookInfo
+            :title="bookDetail.title"
+            :author="bookDetail.author"
+            :publisher="bookDetail.publisher"
+            :isbn="bookDetail.isbn"
+            :publishedAt="bookDetail.publishedAt"
+            :description="bookDetail.description"
+            :category="bookDetail.category"
+            :bookStatus="bookDetail.bookStatus"
+            :purchaseAt="bookDetail.purchaseAt"
+          />
+
+          <!-- QR 코드 섹션 -->
+          <QrCode :qrCode="bookDetail.qrCode" />
+        </div>
       </div>
     </div>
 

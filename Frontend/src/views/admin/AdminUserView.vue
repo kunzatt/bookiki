@@ -2,10 +2,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import Sidebar from '@/components/common/Sidebar.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import BottomNav from '@/components/common/BottomNav.vue';
 import BaseModal from '@/components/ui/Modal/BaseModal.vue';
 import UserList from '@/components/ui/Admin/UserList.vue';
 
@@ -43,23 +39,12 @@ const handleModalClose = () => {
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <Sidebar class="hidden lg:block" />
-
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <HeaderMobile title="회원 관리" class="lg:hidden" />
-      <HeaderDesktop title="회원 관리" class="hidden lg:block" />
-
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
       <!-- 메인 컨텐츠 영역 -->
-      <main class="flex-1 overflow-auto p-6">
-        <div class="max-w-7xl mx-auto">
-          <!-- UserList 컴포넌트 -->
-          <UserList />
-        </div>
-      </main>
-
-      <div class="lg:hidden">
-        <BottomNav />
+      <div class="max-w-7xl mx-auto">
+        <!-- UserList 컴포넌트 -->
+        <UserList />
       </div>
     </div>
 
