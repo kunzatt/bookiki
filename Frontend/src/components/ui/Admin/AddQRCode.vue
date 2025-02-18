@@ -41,6 +41,14 @@ const downloadQRCode = () => {
   link.click();
   document.body.removeChild(link);
 };
+
+// 디버깅용 watch 추가
+watch(
+  () => props.qrCode,
+  (newValue) => {
+    console.log('QR Code props changed:', newValue);
+  },
+);
 </script>
 
 <template>
@@ -62,6 +70,6 @@ const downloadQRCode = () => {
     <p class="text-gray-500 mb-4">도서ID: {{ bookItemId }}</p>
 
     <!-- 다운로드 버튼 -->
-    <BasicButton text="QR 코드 저장" @click="downloadQRCode" />
+    <BasicButton text="QR 저장" @click="downloadQRCode" />
   </div>
 </template>

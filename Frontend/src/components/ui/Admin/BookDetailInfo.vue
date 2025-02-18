@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Category } from '@/enums/category';
 import { BookStatus } from '@/enums/bookStatus';
+import { formatDate } from '@/types/functions/dateFormats';
 
 defineProps<{
   title: string;
@@ -13,19 +14,10 @@ defineProps<{
   bookStatus: BookStatus;
   purchaseAt: string;
 }>();
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-};
 </script>
 
 <template>
   <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold mb-4">도서 정보</h2>
     <div class="grid grid-cols-2 gap-4">
       <div>
         <p class="text-gray-600">제목</p>
