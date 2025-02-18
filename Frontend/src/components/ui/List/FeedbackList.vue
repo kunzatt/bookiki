@@ -306,6 +306,7 @@ defineEmits(['delete']);
             :text="FeedbackCategoryDescriptions[feedback.category as FeedbackCategory]"
             type="category"
             :isEnabled="true"
+            class="min-w-[8rem]"
           />
           <div class="flex flex-col items-end">
             <span class="text-sm text-gray-500 mb-1">{{ formatDate(feedback.createdAt) }}</span>

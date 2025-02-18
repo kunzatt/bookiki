@@ -4,6 +4,8 @@ import { getBookInformation } from '@/api/bookInformation';
 import { getBookItemById } from '@/api/bookItem';
 import { ref, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import BasicStatusBadge from '../Badge/BasicStatusBadge.vue';
+import type { BadgeStatus } from '@/types/common/ui';
 
 interface BookDetail extends BookHistoryResponse {
   bookInfo?: {
@@ -21,16 +23,42 @@ const props = defineProps<BookHistoryProps>();
 const booksWithDetails = ref<BookDetail[]>([]);
 const router = useRouter();
 
+// 상태에 따른 뱃지 스타일 결정
+const getStatusBadgeProps = (item: BookDetail) => {
+  if (!item.returnedAt && !item.overdue) {
+    return {
+      text: '대출중',
+      type: 'info' as BadgeStatus,
+    };
+  }
+  if (!item.returnedAt && item.overdue) {
+    return {
+      text: '연체중',
+      type: 'error' as BadgeStatus,
+    };
+  }
+  if (item.overdue) {
+    return {
+      text: '연체 반납',
+      type: 'warning' as BadgeStatus,
+    };
+  }
+  return {
+    text: '정상 반납',
+    type: success as BadgeStatus,
+  };
+};
+
 // 날짜 포맷팅 함수 (YYYY.MM.DD)
 const formatDate = (dateString: string | number[] | null) => {
   if (!dateString) return '-';
-  
+
   // 배열인 경우 ([2025, 1, 20, 0, 0])
   if (Array.isArray(dateString)) {
     const [year, month, day] = dateString;
     return `${year}.${String(month).padStart(2, '0')}.${String(day).padStart(2, '0')}`;
   }
-  
+
   // 문자열인 경우 ("2025-01-20T00:00:00")
   if (typeof dateString === 'string') {
     const [date] = dateString.split('T');
@@ -38,7 +66,7 @@ const formatDate = (dateString: string | number[] | null) => {
     const [year, month, day] = date.split('-');
     return `${year}.${month}.${day}`;
   }
-  
+
   return '-';
 };
 
@@ -58,18 +86,18 @@ const fetchBookDetails = async () => {
           // 1. bookItemId로 도서 아이템 정보 조회
           const bookItem = await getBookItemById(book.bookItemId);
           console.log(`도서 아이템 정보 (ID: ${book.bookItemId}):`, bookItem);
-          
+
           // 2. bookInformationId로 도서 정보 조회
           const bookInfo = await getBookInformation(bookItem.bookInformationId);
           console.log(`도서 상세 정보 (ID: ${bookItem.bookInformationId}):`, bookInfo);
-          
+
           return {
             ...book,
             bookInfo: {
               title: bookInfo.title,
               author: bookInfo.author,
-              image: bookInfo.image // 직접 bookInfo.image 사용
-            }
+              image: bookInfo.image, // 직접 bookInfo.image 사용
+            },
           };
         } catch (error) {
           console.error(`도서 정보 조회 실패 (ID: ${book.bookItemId}):`, error);
@@ -78,24 +106,24 @@ const fetchBookDetails = async () => {
             bookInfo: {
               title: book.bookTitle || '제목 없음',
               author: book.bookAuthor || '저자 미상',
-              image: '/default-book-cover.svg'
-            }
+              image: '/default-book-cover.svg',
+            },
           };
         }
-      })
+      }),
     );
-    
+
     console.log('도서 상세 정보 조회 완료:', detailedBooks);
     booksWithDetails.value = detailedBooks;
   } catch (error) {
     console.error('도서 상세 정보 조회 실패:', error);
-    booksWithDetails.value = props.items.map(book => ({
+    booksWithDetails.value = props.items.map((book) => ({
       ...book,
       bookInfo: {
         title: book.bookTitle || '제목 없음',
         author: book.bookAuthor || '저자 미상',
-        image: '/default-book-cover.svg'
-      }
+        image: '/default-book-cover.svg',
+      },
     }));
   }
 };
@@ -121,8 +149,8 @@ onMounted(() => {
 <template>
   <div class="w-full max-w-4xl mx-auto">
     <ul class="space-y-4">
-      <li 
-        v-for="(item, index) in booksWithDetails" 
+      <li
+        v-for="(item, index) in booksWithDetails"
         :key="index"
         class="bg-white p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
         @click="navigateToBookDetail(item.bookItemId)"
@@ -165,21 +193,7 @@ onMounted(() => {
                   </span>
                 </div>
                 <!-- 상태 표시 -->
-                <div 
-                  :class="[
-                    'px-2 py-0.5 rounded-full text-xs',
-                    !item.returnedAt && !item.overdue ? 'bg-blue-100 text-blue-800' : // 대출중
-                    !item.returnedAt && item.overdue ? 'bg-red-100 text-red-800' : // 연체중
-                    item.overdue ? 'bg-red-100 text-red-800' : // 연체 반납
-                    'bg-green-100 text-green-800' // 정상 반납
-                  ]"
-                >
-                  {{ 
-                    !item.returnedAt && !item.overdue ? '대출중' :
-                    !item.returnedAt && item.overdue ? '연체중' :
-                    item.overdue ? '연체 반납' : '정상 반납'
-                  }}
-                </div>
+                <BasicStatusBadge v-bind="getStatusBadgeProps(item)" size="S" :is-enabled="true" />
               </div>
             </div>
           </div>

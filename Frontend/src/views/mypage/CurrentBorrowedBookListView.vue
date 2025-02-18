@@ -6,6 +6,7 @@ import { getBookInformation } from '@/api/bookInformation';
 import { getBookItemById } from '@/api/bookItem';
 import { calculateDueDate } from '@/utils/dateUtils';
 import type { BookHistoryResponse } from '@/types/api/bookHistory';
+import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
 
 interface BookDetail extends Omit<BookHistoryResponse, 'overdue'> {
   isOverdue: boolean;
@@ -107,8 +108,6 @@ const handleImageError = (event: Event) => {
   target.src = '/default-book-cover.svg';
 };
 
-import BasicWebPagination from '@/components/ui/Pagination/BasicWebPagination.vue';
-
 onMounted(() => {
   fetchBookDetails();
 });
@@ -126,8 +125,7 @@ const handlePageInfoUpdate = (pageInfo: any) => {
   <div class="h-full">
     <div class="max-w-7xl mx-auto">
       <div class="max-w-[1440px] mx-auto">
-        <div class="flex justify-between items-center my-6">
-          <h1 class="text-xl lg:text-2xl font-medium">대출 중인 도서</h1>
+        <div class="flex justify-end my-6">
           <span class="text-gray-600">총 {{ allBooks.length }}권</span>
         </div>
 
@@ -150,7 +148,7 @@ const handlePageInfoUpdate = (pageInfo: any) => {
           <!-- 도서 목록 -->
           <div
             v-else
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
+            class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
           >
             <div
               v-for="book in borrowedBooks"
