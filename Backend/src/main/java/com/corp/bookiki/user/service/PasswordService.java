@@ -46,6 +46,10 @@ public class PasswordService {
 		UserEntity user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new PasswordUpdateException(ErrorCode.USER_NOT_FOUND));
 
+		if (!user.getProvider().equals("BOOKIKI")) {
+			throw new PasswordUpdateException(ErrorCode.UNVALID_PROVIDER);
+		}
+
 		if (!userName.equals(user.getUserName())) {
 			throw new PasswordUpdateException(ErrorCode.USERNAME_EMAIL_MISMATCH);
 		}
