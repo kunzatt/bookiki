@@ -101,8 +101,8 @@ onUnmounted(() => {
   <div class="h-full">
     <div class="max-w-7xl mx-auto">
       <div class="max-w-[1440px] mx-auto">
-        <div class="flex justify-between items-center my-6">
-          <h1 class="text-xl lg:text-2xl font-medium">좋아요 한 도서</h1>
+        <div class="flex justify-end my-6">
+          =
           <span class="text-gray-600">총 {{ totalPages * pageInfo.pageSize }}권</span>
         </div>
 
@@ -127,7 +127,7 @@ onUnmounted(() => {
         <!-- 좋아요 도서 목록 -->
         <div v-else class="w-full relative">
           <div
-            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
+            class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-[32px] justify-items-center"
           >
             <div
               v-for="book in favorites"

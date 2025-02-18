@@ -12,6 +12,9 @@ import { getBookInformation } from '@/api/bookInformation';
 import { checkFavorite, toggleFavorite, getBookFavoriteCount } from '@/api/bookFavorite';
 
 import debounce from 'lodash/debounce';
+import BasicButton from '@/components/ui/Button/BasicButton.vue';
+import BasicStatusBadge from '@/components/ui/Badge/BasicStatusBadge.vue';
+import BaseError from '@/components/ui/Error/BaseError.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -33,6 +36,10 @@ const $window = ref({
 
 const handleResize = () => {
   $window.value.width = window.innerWidth;
+};
+
+const handleErrorConfirm = () => {
+  errorMessage.value = '';
 };
 
 // 공통 에러 처리 함수
@@ -198,10 +205,10 @@ onUnmounted(() => {
 <template>
   <div class="h-full">
     <div class="max-w-7xl mx-auto">
-      <div v-if="bookInfo" class="max-w-none mx-auto">
-        <div class="flex flex-col lg:flex-row gap-8 lg:gap-20">
+      <div v-if="bookInfo">
+        <div class="flex flex-col md:flex-row gap-8 md:gap-20">
           <!-- Book Image Section -->
-          <div class="w-full lg:w-[400px]">
+          <div class="w-full md:w-[400px]">
             <div>
               <div class="relative">
                 <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
@@ -225,30 +232,27 @@ onUnmounted(() => {
                 </div>
               </div>
               <!-- Desktop-only location button -->
-              <div class="mt-8 hidden lg:block">
-                <button
+              <div class="mt-8 hidden md:block">
+                <BasicButton
+                  text="책 위치 찾기"
+                  size="L"
                   @click="handleLocationClick"
-                  class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg transition-colors duration-200 font-medium text-lg shadow-md"
-                >
-                  책 위치 찾기
-                </button>
+                  :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
+                />
               </div>
             </div>
           </div>
 
           <!-- Book Info Section -->
           <div class="flex-1 lg:py-4">
-            <div class="lg:max-w-3xl">
-              <span
-                v-if="$window.width >= 1024"
-                :class="{
-                  'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-                  'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
-                }"
-                class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
-              >
-                {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
-              </span>
+            <div class="lg:w-[600px]">
+              <BasicStatusBadge
+                v-if="$window.width >= 768"
+                :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+                :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
+                size="S"
+                class="mb-4"
+              />
 
               <div class="flex items-center gap-4 mb-4">
                 <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
@@ -300,28 +304,24 @@ onUnmounted(() => {
       </div>
 
       <!-- Mobile fixed bottom section -->
-      <div
-        class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3"
-      >
-        <div class="flex items-center justify-between gap-4 mb-[56px]">
-          <span
-            :class="{
-              'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-              'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
-            }"
-            class="px-4 py-2 rounded-full text-sm font-medium shadow-sm"
-          >
-            {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
-          </span>
-          <button
-            @click="handleLocationClick"
-            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-medium shadow-sm"
-          >
-            책 위치 찾기
-          </button>
+      <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div class="px-4 py-3 mx-auto w-full min-w-[320px] max-w-[1280px]">
+          <div class="flex items-center justify-between gap-4 mb-[56px]">
+            <BasicStatusBadge
+              :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+              :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
+              size="S"
+            />
+            <BasicButton
+              text="책 위치 찾기"
+              size="L"
+              @click="handleLocationClick"
+              :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
+              class="flex-1"
+            />
+          </div>
         </div>
       </div>
-      >
     </div>
   </div>
 
@@ -333,37 +333,14 @@ onUnmounted(() => {
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
       <h2 class="text-xl font-bold mb-4">로그인이 필요합니다</h2>
       <div class="flex justify-end gap-4">
-        <button @click="showLoginModal = false" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-          취소
-        </button>
-        <button
-          @click="goToLogin"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          로그인하기
-        </button>
+        <BasicButton text="취소" :isEnabled="false" @click="showLoginModal = false" />
+        <BasicButton text="로그인하기" @click="goToLogin" />
       </div>
     </div>
   </div>
 
   <!-- 에러 모달 -->
-  <div
-    v-if="showErrorModal"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-  >
-    <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
-      <h2 class="text-xl font-bold mb-4">오류</h2>
-      <p class="text-gray-600 mb-6">{{ errorMessage }}</p>
-      <div class="flex justify-end">
-        <button
-          @click="showErrorModal = false"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          확인
-        </button>
-      </div>
-    </div>
-  </div>
+  <BaseError v-model="showErrorModal" :content="errorMessage" @confirm="handleErrorConfirm" />
 
   <!-- Location Modal -->
   <div
@@ -374,12 +351,7 @@ onUnmounted(() => {
       <h2 class="text-xl font-bold mb-4">책 위치 정보</h2>
       <p class="text-gray-600 mb-6">{{ locationMessage }}</p>
       <div class="flex justify-end">
-        <button
-          @click="showLocationModal = false"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          확인
-        </button>
+        <BasicButton text="확인" @click="showLocationModal = false" />
       </div>
     </div>
   </div>
@@ -387,7 +359,7 @@ onUnmounted(() => {
 
 <style scoped>
 /* Add padding to main content to prevent overlap with fixed bottom section on mobile */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   main {
     padding-bottom: 120px;
   }

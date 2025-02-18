@@ -6,10 +6,6 @@ import { AxiosError } from 'axios';
 import type { BookItemResponse } from '@/types/api/bookItem';
 import type { BookInformationResponse } from '@/types/api/bookInformation';
 import type { BookBorrowResponse } from '@/types/api/bookHistory';
-import Sidebar from '@/components/common/Sidebar.vue';
-import BottomNav from '@/components/common/BottomNav.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
 
 // API 메서드들 import
 import { getBookItemById } from '@/api/bookItem';
@@ -18,6 +14,9 @@ import { checkFavorite, toggleFavorite, getBookFavoriteCount } from '@/api/bookF
 import { borrowBook } from '@/api/bookHistory';
 
 import debounce from 'lodash/debounce';
+import BasicButton from '@/components/ui/Button/BasicButton.vue';
+import BasicStatusBadge from '@/components/ui/Badge/BasicStatusBadge.vue';
+import BaseError from '@/components/ui/Error/BaseError.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -41,15 +40,8 @@ const handleResize = () => {
   $window.value.width = window.innerWidth;
 };
 
-// 공통 에러 처리 함수
 const handleError = (error: unknown, defaultMessage: string) => {
   if (error instanceof AxiosError) {
-    console.error('API Error:', {
-      status: error.response?.status,
-      data: error.response?.data,
-      message: error.message,
-    });
-
     if (error.response?.status === 401) {
       showLoginModal.value = true;
     } else {
@@ -57,7 +49,6 @@ const handleError = (error: unknown, defaultMessage: string) => {
       showErrorModal.value = true;
     }
   } else {
-    console.error('Unexpected error:', error);
     errorMessage.value = defaultMessage;
     showErrorModal.value = true;
   }
@@ -66,34 +57,18 @@ const handleError = (error: unknown, defaultMessage: string) => {
 const fetchBookData = async () => {
   try {
     const bookItemId = Number(route.params.id);
-    console.log('Fetching book item:', bookItemId);
-
     const itemResponse = await getBookItemById(bookItemId);
-    console.log('Book item response:', itemResponse);
-
     bookItem.value = itemResponse;
 
     if (itemResponse.id) {
-      console.log('Fetching book info for id:', itemResponse.bookInformationId);
       const infoResponse = await getBookInformation(itemResponse.bookInformationId);
-      console.log('Book info response:', infoResponse);
-
       bookInfo.value = infoResponse;
 
-      // 로그인한 경우에만 좋아요 상태 초기화
       if (authStore.isAuthenticated) {
         await initializeFavoriteStatus(itemResponse.id);
       }
     }
   } catch (error) {
-    console.error('Error details:', error);
-    if (error instanceof AxiosError) {
-      console.error('API Error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
-    }
     handleError(error, '도서 정보를 불러오는데 실패했습니다.');
   }
 };
@@ -105,9 +80,7 @@ const handleFavorite = async () => {
   }
 
   try {
-    if (!bookItem.value?.id) {
-      return;
-    }
+    if (!bookItem.value?.id) return;
 
     await toggleFavorite(bookItem.value.id);
     const newStatus = await checkFavorite(bookItem.value.id);
@@ -143,7 +116,6 @@ const initializeFavoriteStatus = async (bookItemId: number) => {
     isFavorite.value = status;
     favoriteCount.value = await getBookFavoriteCount(bookItemId);
   } catch (error) {
-    console.error('[initializeFavoriteStatus] Error:', error);
     isFavorite.value = false;
     favoriteCount.value = 0;
   }
@@ -163,17 +135,18 @@ const handleBorrowClick = async () => {
         return;
       }
 
-      const response = await borrowBook(bookItem.value.id);
+      await borrowBook(bookItem.value.id);
       borrowMessage.value = '도서가 성공적으로 대출되었습니다.';
       showBorrowModal.value = true;
-
-      // 대출 후 도서 상태 갱신
       await fetchBookData();
     }
   } catch (error) {
-    console.error('도서 대출 실패:', error);
     handleError(error, '도서 대출에 실패했습니다.');
   }
+};
+
+const handleErrorConfirm = () => {
+  errorMessage.value = '';
 };
 
 const goToLogin = () => {
@@ -198,108 +171,99 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
 });
 </script>
+
 <template>
-  <div class="flex min-h-screen bg-gray-100">
-    <Sidebar class="hidden lg:block fixed left-0 top-0 h-screen" />
-
-    <div class="flex-1 flex flex-col lg:ml-64">
-      <HeaderDesktop class="hidden lg:block" title="도서 상세" />
-      <HeaderMobile class="lg:hidden" title="도서 상세" type="default" />
-
-      <main class="flex-1 p-6 lg:p-10">
-        <div v-if="bookInfo" class="max-w-none mx-auto">
-          <div class="flex flex-col lg:flex-row gap-8 lg:gap-20">
-            <!-- Book Image Section -->
-            <div class="w-full lg:w-[400px]">
-              <div>
-                <div class="relative">
-                  <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
-                    <img
-                      :src="bookInfo.image"
-                      :alt="bookInfo.title"
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <!-- Favorite Button -->
-                  <div class="absolute top-4 right-4">
-                    <button
-                      @click="debouncedHandleFavorite"
-                      class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors duration-200"
-                      :class="{ 'text-red-500': isFavorite }"
-                    >
-                      <i class="material-icons text-2xl">
-                        {{ isFavorite ? 'favorite' : 'favorite_border' }}
-                      </i>
-                    </button>
-                  </div>
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <div v-if="bookInfo">
+        <div class="flex flex-col md:flex-row gap-8 md:gap-20">
+          <!-- Book Image Section -->
+          <div class="w-full md:w-[400px]">
+            <div>
+              <div class="relative">
+                <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
+                  <img
+                    :src="bookInfo.image"
+                    :alt="bookInfo.title"
+                    class="w-full h-full object-cover"
+                  />
                 </div>
-                <!-- Desktop-only borrow button -->
-                <div class="mt-8 hidden lg:block">
+                <!-- Favorite Button -->
+                <div class="absolute top-4 right-4">
                   <button
-                    @click="handleBorrowClick"
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg transition-colors duration-200 font-medium text-lg shadow-md"
+                    @click="debouncedHandleFavorite"
+                    class="p-3 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors duration-200"
+                    :class="{ 'text-red-500': isFavorite }"
                   >
-                    도서 대출하기
+                    <i class="material-icons text-2xl">
+                      {{ isFavorite ? 'favorite' : 'favorite_border' }}
+                    </i>
                   </button>
                 </div>
               </div>
+              <!-- Desktop-only borrow button -->
+              <div class="mt-8 hidden md:block">
+                <BasicButton
+                  text="도서 대출하기"
+                  size="L"
+                  @click="handleBorrowClick"
+                  :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
+                />
+              </div>
             </div>
+          </div>
 
-            <!-- Book Info Section -->
-            <div class="flex-1 lg:py-4">
-              <div class="lg:max-w-3xl">
-                <span
-                  v-if="$window.width >= 1024"
-                  :class="{
-                    'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-                    'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
-                  }"
-                  class="hidden lg:inline-block px-4 py-2 rounded-full text-sm font-medium shadow-sm mb-4"
-                >
-                  {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
-                </span>
+          <!-- Book Info Section -->
+          <div class="flex-1 md:py-4">
+            <div class="lg:w-[600px]">
+              <BasicStatusBadge
+                v-if="$window.width >= 768"
+                :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+                :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
+                size="S"
+                class="mb-4"
+              />
 
-                <div class="flex items-center gap-4 mb-4">
-                  <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
+              <div class="flex items-center gap-4 mb-4">
+                <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
+              </div>
+
+              <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
+                <span>{{ bookInfo.author }}</span>
+                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                <span>{{ bookInfo.publisher }}</span>
+              </div>
+
+              <div class="space-y-12">
+                <!-- Book Description -->
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-900 mb-4">책 소개</h2>
+                  <p class="text-gray-600 leading-relaxed whitespace-pre-line">
+                    {{ bookInfo.description }}
+                  </p>
                 </div>
 
-                <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
-                  <span>{{ bookInfo.author }}</span>
-                  <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-                  <span>{{ bookInfo.publisher }}</span>
-                </div>
-
-                <div class="space-y-12">
-                  <!-- Book Description -->
-                  <div>
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">책 소개</h2>
-                    <p class="text-gray-600 leading-relaxed whitespace-pre-line">
-                      {{ bookInfo.description }}
-                    </p>
-                  </div>
-
-                  <!-- Book Details -->
-                  <div>
-                    <h2 class="text-2xl font-semibold text-gray-900 mb-4">도서 정보</h2>
-                    <div class="grid grid-cols-2 gap-y-6 max-w-2xl">
-                      <div>
-                        <span class="text-gray-500 text-sm">저자</span>
-                        <p class="text-gray-900 mt-1">{{ bookInfo.author }}</p>
-                      </div>
-                      <div>
-                        <span class="text-gray-500 text-sm">출판사</span>
-                        <p class="text-gray-900 mt-1">{{ bookInfo.publisher }}</p>
-                      </div>
-                      <div>
-                        <span class="text-gray-500 text-sm">출판일</span>
-                        <p class="text-gray-900 mt-1">
-                          {{ formatPublishDate(bookInfo.publishedAt) }}
-                        </p>
-                      </div>
-                      <div>
-                        <span class="text-gray-500 text-sm">ISBN</span>
-                        <p class="text-gray-900 mt-1">{{ bookInfo.isbn }}</p>
-                      </div>
+                <!-- Book Details -->
+                <div>
+                  <h2 class="text-2xl font-semibold text-gray-900 mb-4">도서 정보</h2>
+                  <div class="grid grid-cols-2 gap-y-6 max-w-2xl">
+                    <div>
+                      <span class="text-gray-500 text-sm">저자</span>
+                      <p class="text-gray-900 mt-1">{{ bookInfo.author }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 text-sm">출판사</span>
+                      <p class="text-gray-900 mt-1">{{ bookInfo.publisher }}</p>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 text-sm">출판일</span>
+                      <p class="text-gray-900 mt-1">
+                        {{ formatPublishDate(bookInfo.publishedAt) }}
+                      </p>
+                    </div>
+                    <div>
+                      <span class="text-gray-500 text-sm">ISBN</span>
+                      <p class="text-gray-900 mt-1">{{ bookInfo.isbn }}</p>
                     </div>
                   </div>
                 </div>
@@ -307,38 +271,31 @@ onUnmounted(() => {
             </div>
           </div>
         </div>
-      </main>
-
-      <!-- Mobile fixed bottom section -->
-      <div
-        class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3"
-      >
-        <div class="flex items-center justify-between gap-4 mb-[56px]">
-          <span
-            :class="{
-              'bg-green-500 text-white': bookItem?.bookStatus === 'AVAILABLE',
-              'bg-red-500 text-white': bookItem?.bookStatus !== 'AVAILABLE',
-            }"
-            class="px-4 py-2 rounded-full text-sm font-medium shadow-sm"
-          >
-            {{ bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가' }}
-          </span>
-          <button
-            @click="handleBorrowClick"
-            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors duration-200 font-medium shadow-sm"
-          >
-            도서 대출하기
-          </button>
-        </div>
       </div>
 
-      <!-- Bottom Nav only for mobile -->
-      <div class="block lg:hidden">
-        <BottomNav />
+      <!-- Mobile fixed bottom section -->
+      <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div class="px-4 py-3 mx-auto w-full min-w-[320px] max-w-[1280px]">
+          <div class="flex items-center justify-between gap-4 mb-[56px]">
+            <BasicStatusBadge
+              :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+              :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
+              size="S"
+            />
+            <BasicButton
+              text="도서 대출하기"
+              size="L"
+              @click="handleBorrowClick"
+              :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
+              class="flex-1"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- 모달들은 동일하게 유지 -->
   <!-- 로그인 모달 -->
   <div
     v-if="showLoginModal"
@@ -347,37 +304,14 @@ onUnmounted(() => {
     <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
       <h2 class="text-xl font-bold mb-4">로그인이 필요합니다</h2>
       <div class="flex justify-end gap-4">
-        <button @click="showLoginModal = false" class="px-4 py-2 text-gray-600 hover:text-gray-800">
-          취소
-        </button>
-        <button
-          @click="goToLogin"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          로그인하기
-        </button>
+        <BasicButton text="취소" :isEnabled="false" @click="showLoginModal = false" />
+        <BasicButton text="로그인하기" @click="goToLogin" />
       </div>
     </div>
   </div>
 
   <!-- 에러 모달 -->
-  <div
-    v-if="showErrorModal"
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-  >
-    <div class="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
-      <h2 class="text-xl font-bold mb-4">오류</h2>
-      <p class="text-gray-600 mb-6">{{ errorMessage }}</p>
-      <div class="flex justify-end">
-        <button
-          @click="showErrorModal = false"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          확인
-        </button>
-      </div>
-    </div>
-  </div>
+  <BaseError v-model="showErrorModal" :content="errorMessage" @confirm="handleErrorConfirm" />
 
   <!-- Borrow Success Modal -->
   <div
@@ -388,20 +322,14 @@ onUnmounted(() => {
       <h2 class="text-xl font-bold mb-4">도서 대출</h2>
       <p class="text-gray-600 mb-6">{{ borrowMessage }}</p>
       <div class="flex justify-end">
-        <button
-          @click="showBorrowModal = false"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          확인
-        </button>
+        <BasicButton text="확인" @click="showBorrowModal = false" />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Add padding to main content to prevent overlap with fixed bottom section on mobile */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   main {
     padding-bottom: 120px;
   }

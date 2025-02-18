@@ -85,8 +85,7 @@ onMounted(() => {
 <template>
   <div class="h-full">
     <div class="max-w-7xl mx-auto">
-      <div class="flex justify-between items-center my-6">
-        <h1 class="text-xl lg:text-2xl font-medium">나의 대출 이력</h1>
+      <div class="flex justify-end my-6">
         <span class="text-gray-600">총 {{ totalElements }}권</span>
       </div>
 
