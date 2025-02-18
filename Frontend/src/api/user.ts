@@ -248,11 +248,14 @@ export const sendPasswordResetEmail = async (request: PasswordResetEmailRequest)
 };
 
 // 비밀번호 재설정
-export const resetPassword = async (token: string, request: { newPassword: string; newPasswordConfirm: string }): Promise<void> => {
+export const resetPassword = async (
+  token: string,
+  request: { newPassword: string; newPasswordConfirm: string },
+): Promise<void> => {
   try {
-    await instance.put(`${API_URL}/password/reset`, {
-      ...request,
-      token
+    await instance.put(`${API_URL}/password/reset/${token}`, {
+      newPassword: request.newPassword,
+      newPasswordConfirm: request.newPasswordConfirm,
     });
   } catch (error) {
     console.error('비밀번호 재설정 실패:', error);
