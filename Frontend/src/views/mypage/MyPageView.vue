@@ -26,14 +26,12 @@ const userInfo = ref({
   availableLoans: 0,
 });
 
-const menuItems = [
+const menuItems = ref([
   { id: 1, title: '대출 중 도서', path: '/mypage/current-borrowed' },
   { id: 2, title: '좋아요 목록', path: '/favorites' },
   { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
   { id: 4, title: '문의사항', path: '/qnas' },
-  { id: 5, title: '비밀번호 변경', path: '/password/change' },
-  { id: 6, title: '로그아웃', path: '/logout' },
-];
+]);
 
 // 사용자 데이터 가져오기
 const fetchUserData = async () => {
@@ -53,6 +51,14 @@ const fetchUserData = async () => {
       console.error('프로필 이미지 로드 실패:', error);
       userInfo.value.profileImage = '/default-book-cover.svg';
     }
+
+    // provider가 BOOKIKI일 때만 비밀번호 변경 메뉴 추가
+    if (userData.provider === 'BOOKIKI') {
+      menuItems.value.push({ id: 5, title: '비밀번호 변경', path: '/password/change' });
+    }
+
+    // 로그아웃은 항상 마지막에 추가
+    menuItems.value.push({ id: 6, title: '로그아웃', path: '/logout' });
 
     // 현재 대출 중인 도서 목록 조회
     const currentBooks = await getCurrentBorrowedBooks();
@@ -125,10 +131,11 @@ const handleImageError = (event: Event) => {
 };
 
 // 프로필 사진 삭제 처리
-const handleImageDelete = async () => {
+const handleImageDelete = async (event: Event) => {
+  event.stopPropagation();
   try {
     await deleteProfileImage();
-    userInfo.value.profileImage = '/default-book-cover.svg';
+    await fetchUserData(); // 사용자 데이터를 다시 불러와서 기본 이미지로 업데이트
   } catch (error) {
     console.error('프로필 이미지 삭제 실패:', error);
   }
@@ -159,12 +166,17 @@ onMounted(() => {
             <!-- Profile Section -->
             <div class="flex items-center space-x-4 mb-8 pt-6">
               <div class="relative">
-                <img
-                  :src="userInfo.profileImage"
-                  :alt="userInfo.name"
-                  class="w-24 h-24 rounded-full object-cover bg-gray-100"
-                  @error="handleImageError"
-                />
+                <div class="profile-image-container" @click="handleImageClick">
+                  <img
+                    :src="userInfo.profileImage"
+                    :alt="userInfo.name"
+                    class="w-24 h-24 rounded-full object-cover bg-gray-100 profile-image"
+                    @error="handleImageError"
+                  />
+                  <div class="delete-overlay" @click.stop="handleImageDelete" v-if="userInfo.profileImage !== '/default-book-cover.svg'">
+                    <i class="fas fa-trash delete-icon"></i>
+                  </div>
+                </div>
                 <button
                   @click="handleImageClick"
                   class="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full text-white hover:bg-blue-600 transition-colors"
@@ -259,6 +271,36 @@ button:hover {
 .profile-image {
   @apply rounded-full object-cover;
   aspect-ratio: 1 / 1;
+}
+
+.profile-image-container {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.profile-image-container:hover .delete-overlay {
+  opacity: 1;
+}
+
+.delete-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 50%;
+}
+
+.delete-icon {
+  color: white;
+  font-size: 24px;
 }
 
 /* 메뉴 아이템 스타일 */

@@ -172,6 +172,19 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/admin/books',
+      name: 'adminBooks',
+      component: () => import('@/views/admin/AdminBooksView.vue'),
+      meta: { requiresAuth: true },
+    },
+
+    {
+      path: '/admin/books/:id',
+      name: 'admin-book-detail',
+      component: () => import('@/views/admin/AdminBookDetailView.vue'),
+      meta: { requiresAuth: false },
+    },
+    {
       path: '/password/change',
       name: 'passwordChange',
       component: () => import('@/views/password/PasswordChangeView.vue'),
@@ -182,8 +195,32 @@ const router = createRouter({
       name: 'PasswordReset',
       component: () => import('@/views/password/PasswordResetView.vue'),
       meta: {
-        requiresAuth: false
-      }
+        requiresAuth: false,
+      },
+    },
+    {
+      path: '/feedbacks',
+      name: 'chatbotFeedback',
+      component: () => import('@/views/feedback/FeedbackListView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/feedbacks/:id',
+      name: 'FeedbackDetail',
+      component: () => import('@/views/feedback/FeedbackDetailVIew.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/search',
+      name: 'search',
+      component: () => import('@/views/search/SearchView.vue'),
+      meta: { requiresAuth: true }
+    },
+    {  
+      path: '/admin/library',
+      name: 'LibraryManagement',
+      component: () => import('@/views/admin/LibraryManagementVIew.vue'),
+      meta: { requiresAuth: true },
     },
   ],
 });
