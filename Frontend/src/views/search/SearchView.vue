@@ -77,12 +77,12 @@ onMounted(() => {
         <div class="bg-white p-4 rounded-lg shadow-sm my-6">
           <div class="flex items-center gap-4">
             <!-- 검색 타입 선택 -->
-            <BasicSelect v-model="searchType" :options="searchTypes" size="S" class="w-[155px]" />
+            <BasicSelect v-model="searchType" :options="searchTypes" size="S" class="w-[135px]" />
             <BasicInput
               v-model="keyword"
               type="full"
               :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
-              class="w-[285px] mx-2"
+              class="w-[255px] mx-2"
             />
             <BasicButton size="S" text="검색" @click="handleSearch" />
           </div>
