@@ -41,6 +41,14 @@ const showToast = (message: string, type: 'success' | 'info' = 'info') => {
   };
 };
 
+// 이메일 인증 버튼 클릭 시 이메일만 유효성 검사하도록 수정
+const handleEmailVerifyClick = () => {
+  if (!formData.value.email) {
+    showToast(AUTH_MESSAGES.ERROR.INVALID_EMAIL);
+    return;
+  }
+};
+
 // 이메일 인증 완료 핸들러
 const handleEmailVerified = () => {
   isEmailVerified.value = true;
@@ -116,7 +124,11 @@ const handleSubmit = async () => {
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
           <!-- 이메일 인증 -->
-          <EmailVerify v-model="formData.email" @verified="handleEmailVerified" />
+          <EmailVerify
+            v-model="formData.email"
+            @verified="handleEmailVerified"
+            @click="handleEmailVerifyClick"
+          />
 
           <!-- 이름 -->
           <BasicInput v-model="formData.userName" type="full" placeholder="Name" label="이름" />

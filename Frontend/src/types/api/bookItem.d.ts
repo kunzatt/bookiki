@@ -68,7 +68,11 @@ export interface BookAdminDetailResponse {
   bookStatus: BookStatus;
 
   // QR 코드 정보
-  qrCode: string | null;
+  qrCode: {
+    id: number;
+    qrValue: string;
+    createAt: string;
+  } | null;
 
   // 현재 대출자 정보 (optional)
   currentBorrower?: BorrowerInfo;
