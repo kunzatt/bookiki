@@ -1,14 +1,9 @@
-
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { updatePassword } from '@/api/user';
 import BasicInput from '@/components/ui/Input/BasicInput.vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
-import BottomNav from '@/components/common/BottomNav.vue';
-import Sidebar from '@/components/common/Sidebar.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 
 const router = useRouter();
 const currentPassword = ref('');
@@ -65,7 +60,7 @@ const handleSubmit = async () => {
       await updatePassword({
         currentPassword: currentPassword.value,
         newPassword: newPassword.value,
-        newPasswordConfirm: confirmPassword.value
+        newPasswordConfirm: confirmPassword.value,
       });
 
       success.value = true;
@@ -96,30 +91,26 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50">
-    <!-- 모바일 헤더 -->
-    <HeaderMobile class="md:hidden" title="비밀번호 변경" @back="goBack" />
-
-    <!-- 데스크톱 레이아웃 -->
-    <div class="hidden md:flex">
-      <!-- 사이드바 -->
-      <Sidebar class="w-64 min-h-screen" />
-
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
       <!-- 메인 컨텐츠 영역 -->
       <div class="flex-1">
-        <!-- 데스크톱 헤더 -->
-        <HeaderDesktop />
-
         <!-- 컨텐츠 -->
         <div class="max-w-3xl mx-auto px-4 py-6">
           <h1 class="text-2xl font-bold mb-6">비밀번호 변경</h1>
-          
+
           <div class="bg-white rounded-lg shadow-sm p-6 space-y-6">
-            <div v-if="success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+            <div
+              v-if="success"
+              class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+            >
               비밀번호가 성공적으로 변경되었습니다. 마이페이지로 이동합니다.
             </div>
 
-            <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <div
+              v-if="error"
+              class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+            >
               {{ error }}
             </div>
 
@@ -179,7 +170,10 @@ const goBack = () => {
     <div class="md:hidden">
       <div class="px-4 py-6">
         <div class="bg-white rounded-lg shadow-sm p-6 space-y-6">
-          <div v-if="success" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div
+            v-if="success"
+            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+          >
             비밀번호가 성공적으로 변경되었습니다. 마이페이지로 이동합니다.
           </div>
 
@@ -236,9 +230,6 @@ const goBack = () => {
           </form>
         </div>
       </div>
-
-      <!-- 모바일 하단 네비게이션 -->
-      <BottomNav />
     </div>
   </div>
 </template>
