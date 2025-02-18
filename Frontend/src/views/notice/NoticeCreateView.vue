@@ -2,12 +2,8 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import BasicMobilePostForm from '@/components/ui/Forms/BasicMobilePostForm.vue';
 import BasicWebPostForm from '@/components/ui/Forms/BasicWebPostForm.vue';
-import Sidebar from '@/components/common/Sidebar.vue';
-import BottomNav from '@/components/common/BottomNav.vue';
 import { createNotice, updateNotice, selectNoticeById } from '@/api/notice';
 import type { NoticeRequest, NoticeUpdate } from '@/types/api/notice';
 
@@ -110,32 +106,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex">
-    <Sidebar class="hidden md:block fixed h-full" />
-    <div class="flex-1 flex flex-col md:ml-64">
-      <HeaderMobile
-        class="md:hidden fixed top-0 left-0 right-0 z-10"
-        :title="pageTitle"
-        type="main"
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <component
+        :is="isMobile ? BasicMobilePostForm : BasicWebPostForm"
+        type="notice"
+        :initial-data="initialFormData"
+        :submit-button-text="isEditMode ? '수정' : '작성'"
+        @submit="handleSubmit"
+        @cancel="handleCancel"
       />
-      <HeaderDesktop class="hidden md:block fixed top-0 right-0 left-64 z-10" :title="pageTitle" />
-      <div class="flex-1 overflow-y-auto pt-16">
-        <div class="h-full p-4 md:p-8">
-          <main :class="{ 'mt-4': isMobile }">
-            <component
-              :is="isMobile ? BasicMobilePostForm : BasicWebPostForm"
-              type="notice"
-              :initial-data="initialFormData"
-              :submit-button-text="isEditMode ? '수정' : '작성'"
-              @submit="handleSubmit"
-              @cancel="handleCancel"
-            />
-          </main>
-        </div>
-      </div>
-      <div class="md:hidden fixed bottom-0 left-0 right-0">
-        <BottomNav />
-      </div>
     </div>
   </div>
 </template>

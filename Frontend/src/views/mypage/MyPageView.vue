@@ -1,10 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import BottomNav from '@/components/common/BottomNav.vue';
-import Sidebar from '@/components/common/Sidebar.vue';
-import HeaderMobile from '@/components/common/HeaderMobile.vue';
-import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import {
   getCurrentUserInformation,
   getProfileImageData,
@@ -52,6 +48,14 @@ const fetchUserData = async () => {
       userInfo.value.profileImage = '/default-book-cover.svg';
     }
 
+    // 메뉴 아이템 초기화
+    menuItems.value = [
+      { id: 1, title: '대출 중 도서', path: '/mypage/current-borrowed' },
+      { id: 2, title: '좋아요 목록', path: '/favorites' },
+      { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
+      { id: 4, title: '문의사항', path: '/qnas' },
+    ];
+
     // provider가 BOOKIKI일 때만 비밀번호 변경 메뉴 추가
     if (userData.provider === 'BOOKIKI') {
       menuItems.value.push({ id: 5, title: '비밀번호 변경', path: '/password/change' });
@@ -88,8 +92,8 @@ const fetchUserData = async () => {
 const handleMenuClick = async (path: string) => {
   if (path === '/logout') {
     try {
-      await logout();  // 로그아웃 처리 (이미 store에서 세션을 먼저 지움)
-      router.push('/login');  // 이제 router.push를 사용해도 됨
+      await logout(); // 로그아웃 처리 (이미 store에서 세션을 먼저 지움)
+      router.push('/login'); // 이제 router.push를 사용해도 됨
     } catch (error) {
       console.error('로그아웃 실패:', error);
     }
@@ -147,74 +151,64 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <!-- 데스크톱 사이드바 - lg 이상에서만 표시 -->
-    <Sidebar class="hidden lg:block" />
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <div class="max-w-[1440px] mx-auto">
+        <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
 
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- 반응형 헤더 -->
-      <HeaderMobile class="lg:hidden" />
-      <HeaderDesktop class="hidden lg:block" />
-
-      <main class="flex-1 px-5 lg:px-8 pb-16 lg:pb-8 overflow-y-auto">
-        <div class="max-w-[1440px] mx-auto">
-          <div v-if="isLoading" class="flex justify-center items-center h-[300px]">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-
-          <template v-else>
-            <!-- Profile Section -->
-            <div class="flex items-center space-x-4 mb-8 pt-6">
-              <div class="relative">
-                <div class="profile-image-container" @click="handleImageClick">
-                  <img
-                    :src="userInfo.profileImage"
-                    :alt="userInfo.name"
-                    class="w-24 h-24 rounded-full object-cover bg-gray-100 profile-image"
-                    @error="handleImageError"
-                  />
-                  <div class="delete-overlay" @click.stop="handleImageDelete" v-if="userInfo.profileImage !== '/default-book-cover.svg'">
-                    <i class="fas fa-trash delete-icon"></i>
-                  </div>
+        <template v-else>
+          <!-- Profile Section -->
+          <div class="flex items-center space-x-4 mb-8 pt-6">
+            <div class="relative">
+              <div class="profile-image-container" @click="handleImageClick">
+                <img
+                  :src="userInfo.profileImage"
+                  :alt="userInfo.name"
+                  class="w-24 h-24 rounded-full object-cover bg-gray-100 profile-image"
+                  @error="handleImageError"
+                />
+                <div
+                  class="delete-overlay"
+                  @click.stop="handleImageDelete"
+                  v-if="userInfo.profileImage !== '/default-book-cover.svg'"
+                >
+                  <i class="fas fa-trash delete-icon"></i>
                 </div>
-                <button
-                  @click="handleImageClick"
-                  class="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full text-white hover:bg-blue-600 transition-colors"
-                >
-                  <span class="material-icons text-lg">photo_camera</span>
-                </button>
               </div>
-              <div>
-                <h2 class="text-xl font-semibold">{{ userInfo.name }}</h2>
-                <p class="text-gray-600">{{ userInfo.companyId }}</p>
-                <span
-                  v-if="userInfo.availableLoans > 0"
-                  class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-sm"
-                >
-                  현재 {{ userInfo.availableLoans }}권 대출 가능
-                </span>
-              </div>
-            </div>
-
-            <!-- Menu Items -->
-            <div class="space-y-2">
               <button
-                v-for="item in menuItems"
-                :key="item.id"
-                class="w-full text-left px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 rounded-lg transition-colors border border-gray-100"
-                @click="handleMenuClick(item.path)"
+                @click="handleImageClick"
+                class="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full text-white hover:bg-blue-600 transition-colors"
               >
-                <span>{{ item.title }}</span>
-                <span class="text-gray-400">›</span>
+                <span class="material-icons text-lg">photo_camera</span>
               </button>
             </div>
-          </template>
-        </div>
-      </main>
+            <div>
+              <h2 class="text-xl font-semibold">{{ userInfo.name }}</h2>
+              <p class="text-gray-600">{{ userInfo.companyId }}</p>
+              <span
+                v-if="userInfo.availableLoans > 0"
+                class="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 rounded text-sm"
+              >
+                현재 {{ userInfo.availableLoans }}권 대출 가능
+              </span>
+            </div>
+          </div>
 
-      <!-- 모바일에서만 BottomNav 표시 -->
-      <div class="lg:hidden">
-        <BottomNav />
+          <!-- Menu Items -->
+          <div class="space-y-2">
+            <button
+              v-for="item in menuItems"
+              :key="item.id"
+              class="w-full text-left px-4 py-3 flex items-center justify-between bg-white hover:bg-gray-50 rounded-lg transition-colors border border-gray-100"
+              @click="handleMenuClick(item.path)"
+            >
+              <span>{{ item.title }}</span>
+              <span class="text-gray-400">›</span>
+            </button>
+          </div>
+        </template>
       </div>
     </div>
   </div>

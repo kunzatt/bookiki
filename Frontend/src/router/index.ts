@@ -1,7 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import HomeView from '../views/HomeView.vue';
-import MainView from '@/views/MainView.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -56,28 +54,17 @@ const router = createRouter({
     {
       path: '/books/:id',
       name: 'book-detail',
-      component: () => import('@/views/BookDetailView.vue'),
+      component: () => import('@/views/book/BookDetailView.vue'),
       meta: { requiresAuth: false },
     },
     {
       path: '/qr/books/:id',
       name: 'QRBookDetail',
-      component: () => import('@/views/QRBookDetailView.vue'),
+      component: () => import('@/views/book/QRBookDetailView.vue'),
       meta: {
         requiresAuth: false,
       },
     },
-    // 404 페이지
-    // {
-    //   path: '/:pathMatch(.*)*',
-    //   name: 'not-found',
-    //   component: () => import('@/views/NotFoundView.vue')
-    // }
-    // {
-    //   path: '/',
-    //   name: 'home',
-    //   component: HomeView,
-    // },
     {
       path: '/library',
       name: 'VirtualShelf',
@@ -87,19 +74,17 @@ const router = createRouter({
       path: '/notices/create',
       name: 'NoticeCreate',
       component: () => import('@/views/notice/NoticeCreateView.vue'),
-      // meta: { requiresAuth: true }, // 인증 필요 추가
+      meta: { requiresAuth: true },
     },
     {
       path: '/notices',
       name: 'NoticeList',
       component: () => import('@/views/notice/NoticeListView.vue'),
-      // meta: { requiresAuth: true }, // 인증 필요 추가
     },
     {
       path: '/notices/:id',
       name: 'NoticeDetail',
       component: () => import('@/views/notice/NoticeDetailView.vue'),
-      // meta: { requiresAuth: true },
     },
     {
       path: '/notices/:id/edit',

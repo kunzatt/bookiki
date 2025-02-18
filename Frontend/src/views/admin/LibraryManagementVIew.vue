@@ -179,234 +179,219 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex">
-    <Sidebar class="hidden md:block fixed h-full" />
-    <div class="flex-1 flex flex-col md:ml-64">
-      <HeaderMobile
-        class="md:hidden fixed top-0 left-0 right-0 z-10"
-        title="도서관 관리"
-        type="main"
-      />
-      <HeaderDesktop class="hidden md:block fixed top-0 right-0 left-64 z-10" title="도서관 관리" />
-      <div class="flex-1 overflow-y-auto pt-16">
-        <div class="h-full p-4 md:p-8">
-          <!-- 대출 정책 관리 섹션 -->
-          <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-xl font-semibold text-gray-800">대출 정책 관리</h2>
-              <div class="space-x-2">
-                <button
-                  v-if="!isEditing"
-                  @click="isEditing = true"
-                  class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
-                >
-                  수정
-                </button>
-                <template v-else>
-                  <button
-                    @click="cancelEdit"
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-                    :disabled="isSaving"
-                  >
-                    취소
-                  </button>
-                  <button
-                    @click="savePolicy"
-                    class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
-                    :disabled="isSaving"
-                  >
-                    저장
-                  </button>
-                </template>
-              </div>
+  <div class="h-full">
+    <div class="max-w-7xl mx-auto">
+      <!-- 대출 정책 관리 섹션 -->
+      <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">대출 정책 관리</h2>
+          <div class="space-x-2">
+            <button
+              v-if="!isEditing"
+              @click="isEditing = true"
+              class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
+            >
+              수정
+            </button>
+            <template v-else>
+              <button
+                @click="cancelEdit"
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+                :disabled="isSaving"
+              >
+                취소
+              </button>
+              <button
+                @click="savePolicy"
+                class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
+                :disabled="isSaving"
+              >
+                저장
+              </button>
+            </template>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 최대 대출 가능 도서 수 -->
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <label class="block text-sm font-medium text-gray-700"> 대출 가능 도서 수 </label>
+              <span class="text-gray-600">현재: {{ currentPolicy.maxBooks }}권</span>
             </div>
-
-            <div class="grid md:grid-cols-2 gap-6">
-              <!-- 최대 대출 가능 도서 수 -->
-              <div class="space-y-2">
-                <div class="flex justify-between">
-                  <label class="block text-sm font-medium text-gray-700"> 대출 가능 도서 수 </label>
-                  <span class="text-gray-600">현재: {{ currentPolicy.maxBooks }}권</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <BasicSelect
-                    :options="maxBooksOptions"
-                    v-model="selectedMaxBooks"
-                    :disabled="!isEditing"
-                    size="L"
-                  />
-                </div>
-              </div>
-
-              <!-- 대출 기간 -->
-              <div class="space-y-2">
-                <div class="flex justify-between">
-                  <label class="block text-sm font-medium text-gray-700"> 대출 기간 </label>
-                  <span class="text-gray-600">현재: {{ currentPolicy.loanPeriod }}일</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <BasicSelect
-                    :options="loanPeriodOptions"
-                    v-model="selectedLoanPeriod"
-                    :disabled="!isEditing"
-                    size="L"
-                  />
-                </div>
-              </div>
+            <div class="flex items-center space-x-2">
+              <BasicSelect
+                :options="maxBooksOptions"
+                v-model="selectedMaxBooks"
+                :disabled="!isEditing"
+                size="L"
+              />
             </div>
           </div>
 
-          <!-- 책장 관리 섹션 -->
-          <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 mt-8">
-            <div class="flex justify-between items-center mb-6">
-              <h2 class="text-xl font-semibold text-gray-800">책장 관리</h2>
-              <button
-                @click="openCreateModal"
-                class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
-              >
-                책장 추가
-              </button>
+          <!-- 대출 기간 -->
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <label class="block text-sm font-medium text-gray-700"> 대출 기간 </label>
+              <span class="text-gray-600">현재: {{ currentPolicy.loanPeriod }}일</span>
             </div>
-
-            <!-- 책장 목록 테이블 -->
-            <div class="overflow-x-auto">
-              <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      책장 번호
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      행 번호
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      카테고리
-                    </th>
-                    <th
-                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      관리
-                    </th>
-                  </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                  <tr v-for="shelf in shelves" :key="shelf.id">
-                    <td class="px-6 py-4 whitespace-nowrap">{{ shelf.shelfNumber }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">{{ shelf.lineNumber }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      {{ CategoryNames[shelf.category] }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <button
-                        @click="openEditModal(shelf)"
-                        class="text-[#698469] hover:text-[#4F6349] mr-2"
-                      >
-                        수정
-                      </button>
-                      <button
-                        @click="deleteShelfItem(shelf.id)"
-                        class="text-red-600 hover:text-red-800"
-                      >
-                        삭제
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- 책장 추가/수정 모달 -->
-            <div
-              v-if="isShelfModalOpen"
-              class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-            >
-              <div class="bg-white rounded-lg p-6 w-full max-w-md">
-                <h3 class="text-lg font-medium mb-4">
-                  {{ isCreateMode ? '책장 추가' : '책장 수정' }}
-                </h3>
-                <div class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1"> 책장 번호 </label>
-                    <input
-                      type="number"
-                      :value="isCreateMode ? newShelf.shelfNumber : selectedShelf?.shelfNumber"
-                      @input="
-                        (e) => {
-                          if (isCreateMode) {
-                            newShelf.shelfNumber = Number(e.target.value);
-                          } else if (selectedShelf) {
-                            selectedShelf.shelfNumber = Number(e.target.value);
-                          }
-                        }
-                      "
-                      class="w-full border rounded-md px-3 py-2"
-                      min="1"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1"> 행 번호 </label>
-                    <input
-                      type="number"
-                      :value="isCreateMode ? newShelf.lineNumber : selectedShelf?.lineNumber"
-                      @input="
-                        (e) => {
-                          if (isCreateMode) {
-                            newShelf.lineNumber = Number(e.target.value);
-                          } else if (selectedShelf) {
-                            selectedShelf.lineNumber = Number(e.target.value);
-                          }
-                        }
-                      "
-                      class="w-full border rounded-md px-3 py-2"
-                      min="1"
-                    />
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1"> 카테고리 </label>
-                    <BasicSelect
-                      :options="categoryOptions"
-                      :modelValue="isCreateMode ? newShelf.category : selectedShelf?.category"
-                      @update:modelValue="
-                        (value) => {
-                          if (isCreateMode) {
-                            newShelf.category = value;
-                          } else if (selectedShelf) {
-                            selectedShelf.category = value;
-                          }
-                        }
-                      "
-                      size="L"
-                    />
-                  </div>
-                </div>
-                <div class="mt-6 flex justify-end space-x-2">
-                  <button
-                    @click="isShelfModalOpen = false"
-                    class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-                  >
-                    취소
-                  </button>
-                  <button
-                    @click="saveShelf"
-                    class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
-                  >
-                    저장
-                  </button>
-                </div>
-              </div>
+            <div class="flex items-center space-x-2">
+              <BasicSelect
+                :options="loanPeriodOptions"
+                v-model="selectedLoanPeriod"
+                :disabled="!isEditing"
+                size="L"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      <div class="md:hidden fixed bottom-0 left-0 right-0">
-        <BottomNav />
+      <!-- 책장 관리 섹션 -->
+      <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6 mt-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-semibold text-gray-800">책장 관리</h2>
+          <button
+            @click="openCreateModal"
+            class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
+          >
+            책장 추가
+          </button>
+        </div>
+
+        <!-- 책장 목록 테이블 -->
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  책장 번호
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  행 번호
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  카테고리
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  관리
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <tr v-for="shelf in shelves" :key="shelf.id">
+                <td class="px-6 py-4 whitespace-nowrap">{{ shelf.shelfNumber }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">{{ shelf.lineNumber }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {{ CategoryNames[shelf.category] }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <button
+                    @click="openEditModal(shelf)"
+                    class="text-[#698469] hover:text-[#4F6349] mr-2"
+                  >
+                    수정
+                  </button>
+                  <button
+                    @click="deleteShelfItem(shelf.id)"
+                    class="text-red-600 hover:text-red-800"
+                  >
+                    삭제
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 책장 추가/수정 모달 -->
+        <div
+          v-if="isShelfModalOpen"
+          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+        >
+          <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 class="text-lg font-medium mb-4">
+              {{ isCreateMode ? '책장 추가' : '책장 수정' }}
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"> 책장 번호 </label>
+                <input
+                  type="number"
+                  :value="isCreateMode ? newShelf.shelfNumber : selectedShelf?.shelfNumber"
+                  @input="
+                    (e) => {
+                      if (isCreateMode) {
+                        newShelf.shelfNumber = Number(e.target.value);
+                      } else if (selectedShelf) {
+                        selectedShelf.shelfNumber = Number(e.target.value);
+                      }
+                    }
+                  "
+                  class="w-full border rounded-md px-3 py-2"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"> 행 번호 </label>
+                <input
+                  type="number"
+                  :value="isCreateMode ? newShelf.lineNumber : selectedShelf?.lineNumber"
+                  @input="
+                    (e) => {
+                      if (isCreateMode) {
+                        newShelf.lineNumber = Number(e.target.value);
+                      } else if (selectedShelf) {
+                        selectedShelf.lineNumber = Number(e.target.value);
+                      }
+                    }
+                  "
+                  class="w-full border rounded-md px-3 py-2"
+                  min="1"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1"> 카테고리 </label>
+                <BasicSelect
+                  :options="categoryOptions"
+                  :modelValue="isCreateMode ? newShelf.category : selectedShelf?.category"
+                  @update:modelValue="
+                    (value) => {
+                      if (isCreateMode) {
+                        newShelf.category = value;
+                      } else if (selectedShelf) {
+                        selectedShelf.category = value;
+                      }
+                    }
+                  "
+                  size="L"
+                />
+              </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-2">
+              <button
+                @click="isShelfModalOpen = false"
+                class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                @click="saveShelf"
+                class="px-4 py-2 bg-[#698469] text-white rounded hover:bg-[#4F6349] transition-colors"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
