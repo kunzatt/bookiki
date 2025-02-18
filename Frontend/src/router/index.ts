@@ -207,6 +207,12 @@ const router = createRouter({
       component: () => import('@/views/admin/LibraryManagementVIew.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/admin/addBook',
+      name: 'AddBookItem',
+      component: () => import('@/views/admin/AdminAddBookView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
 });
 
