@@ -21,11 +21,15 @@ public class UserInformationResponse {
 	@Schema(description = "대출 가능 여부", example = "현재 3권 대출 가능")
 	private String loanStatus;
 
+	@Schema(description = "로그인 provider", example = "BOOKIKI")
+	private String provider;
+
 	@Builder
-	public UserInformationResponse(String userName, String companyId, String loanStatus) {
+	public UserInformationResponse(String userName, String companyId, String loanStatus, String provider) {
 		this.userName = userName;
 		this.companyId = companyId;
 		this.loanStatus = loanStatus;
+		this.provider = provider;
 	}
 
 	public static UserInformationResponse from(UserEntity user, Integer availableLoans) {
@@ -37,6 +41,7 @@ public class UserInformationResponse {
 			.userName(user.getUserName())
 			.companyId(user.getCompanyId())
 			.loanStatus(status)
+			.provider(user.getProvider().name())
 			.build();
 	}
 }
