@@ -31,6 +31,7 @@ interface InputProps {
    * Button text (for type 'withButton')
    */
   buttonText?: string;
+  width?: 'full' | 'auto' | 'fixed';
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -38,8 +39,15 @@ const props = withDefaults(defineProps<InputProps>(), {
   inputType: 'text',
   placeholder: '',
   label: '',
-  buttonText: '확인'
+  buttonText: '확인',
+  width: 'auto',
 });
+
+const widthClasses = {
+  full: 'w-full',
+  auto: 'w-auto',
+  fixed: 'w-96', // 또는 원하는 고정 너비
+} as const;
 
 defineEmits<{
   (e: 'update:modelValue', value: string): void;
@@ -54,7 +62,7 @@ const togglePassword = () => {
 </script>
 
 <template>
-   <div class="w-full">
+  <div :class="widthClasses[width]">
     <!-- Label -->
     <label v-if="label" class="block text-sm text-gray-500 mb-1">{{ label }}</label>
 
@@ -69,11 +77,7 @@ const togglePassword = () => {
           @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
       </div>
-      <BasicButton
-        size="S"
-        :text="buttonText"
-        @click="$emit('buttonClick')"
-      />
+      <BasicButton size="S" :text="buttonText" @click="$emit('buttonClick')" />
     </div>
 
     <!-- Type B: Underline -->
