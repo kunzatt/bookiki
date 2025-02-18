@@ -27,7 +27,8 @@ const sizeClasses = {
 </script>
 
 <template>
-  <div class="relative inline-block w-full">
+  <div class="relative inline-block">
+    <!-- w-full 제거 -->
     <div class="relative">
       <select
         :value="modelValue"
@@ -41,7 +42,6 @@ const sizeClasses = {
           'disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed',
           'pl-3 pr-10 py-2',
           'text-sm',
-          'w-full',
           sizeClasses[size],
         ]"
       >
@@ -50,11 +50,8 @@ const sizeClasses = {
         </option>
       </select>
 
-      <div
-        class="absolute top-0 right-0 h-full px-2 pointer-events-none flex items-center"
-        style="transform: translateX(-2px)"
-      >
-        <span class="material-icons text-gray-400 text-lg"> expand_more </span>
+      <div class="absolute top-0 right-0 h-full px-2 pointer-events-none flex items-center">
+        <span class="material-icons text-gray-400 text-lg">expand_more</span>
       </div>
     </div>
   </div>
