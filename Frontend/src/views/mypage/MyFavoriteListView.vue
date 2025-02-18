@@ -12,6 +12,7 @@ const favorites = ref<BookFavoriteResponse[]>([]);
 const error = ref<string | null>(null);
 const currentPage = ref(1);
 const totalPages = ref(0);
+const totalElements = ref(0);
 const pageInfo = ref({
   pageNumber: 0,
   pageSize: 8,
@@ -36,6 +37,14 @@ const updateDisplayCount = () => {
   } else {
     displayCount.value = 1;
   }
+
+  if (prevDisplayCount.value !== displayCount.value) {
+    pageInfo.value = {
+      ...pageInfo.value,
+      pageSize: displayCount.value
+    };
+    prevDisplayCount.value = displayCount.value;
+  }
 };
 
 const fetchFavorites = async () => {
@@ -48,6 +57,7 @@ const fetchFavorites = async () => {
     );
     favorites.value = response.content;
     totalPages.value = response.totalPages;
+    totalElements.value = response.totalElements;
   } catch (err) {
     console.error('좋아요 목록 조회 실패:', err);
     error.value = '좋아요 목록을 불러오는데 실패했습니다.';
@@ -103,7 +113,7 @@ onUnmounted(() => {
       <div class="max-w-[1440px] mx-auto">
         <div class="flex justify-between items-center my-6">
           <h1 class="text-xl lg:text-2xl font-medium">좋아요 한 도서</h1>
-          <span class="text-gray-600">총 {{ totalPages * pageInfo.pageSize }}권</span>
+          <span class="text-gray-600">총 {{ totalElements }}권</span>
         </div>
 
         <!-- 로딩 상태 -->

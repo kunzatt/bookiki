@@ -32,7 +32,10 @@ const handleLogin = async (e: Event) => {
       email: email.value,
       password: password.value,
     });
-    await router.push('/main');
+    
+    // redirect 쿼리 파라미터가 있으면 해당 페이지로, 없으면 메인으로 이동
+    const redirect = router.currentRoute.value.query.redirect as string;
+    await router.push(redirect || '/main');
   } catch (error) {
     console.error('Login failed:', error);
     showLoginErrorModal.value = true;

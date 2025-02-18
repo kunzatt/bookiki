@@ -48,6 +48,14 @@ const fetchUserData = async () => {
       userInfo.value.profileImage = '/default-book-cover.svg';
     }
 
+    // 메뉴 아이템 초기화
+    menuItems.value = [
+      { id: 1, title: '대출 중 도서', path: '/mypage/current-borrowed' },
+      { id: 2, title: '좋아요 목록', path: '/favorites' },
+      { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
+      { id: 4, title: '문의사항', path: '/qnas' },
+    ];
+
     // provider가 BOOKIKI일 때만 비밀번호 변경 메뉴 추가
     if (userData.provider === 'BOOKIKI') {
       menuItems.value.push({ id: 5, title: '비밀번호 변경', path: '/password/change' });
