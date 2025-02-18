@@ -118,7 +118,7 @@ public class BookInformationService {
 
 			return BookInformationEntity.builder()
 				.title(bookData.get("title").asText().replaceAll("<[^>]*>", ""))
-				.author(bookData.get("author").asText().replaceAll("<[^>]*>", "").replaceAll("\\^",", "))
+				.author(bookData.get("author").asText().replaceAll("<[^>]*>", "").replaceAll("[\\^\\x5E]", ", "))
 				.publisher(StringUtils.defaultIfEmpty(bookData.get("publisher").asText(), null))
 				.isbn(isbn)
 				.publishedAt(publishedAt)
