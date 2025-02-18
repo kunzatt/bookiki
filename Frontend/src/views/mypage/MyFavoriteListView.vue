@@ -112,7 +112,6 @@ onUnmounted(() => {
     <div class="max-w-7xl mx-auto">
       <div class="max-w-[1440px] mx-auto">
         <div class="flex justify-end my-6">
-          <h1 class="text-xl lg:text-2xl font-medium">좋아요 한 도서</h1>
           <span class="text-gray-600">총 {{ totalElements }}권</span>
         </div>
 
