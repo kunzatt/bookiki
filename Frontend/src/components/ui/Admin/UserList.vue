@@ -116,6 +116,7 @@ const fetchUsers = async () => {
           :user="user"
           @detail="handleUserDetail"
           @delete="handleUserDelete"
+          @update="fetchUsers"
         />
       </tbody>
     </table>
