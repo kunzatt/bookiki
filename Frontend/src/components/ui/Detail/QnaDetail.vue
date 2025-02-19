@@ -149,7 +149,7 @@ onMounted(async () => {
           :text="QnaTypeDescriptions[qna.qnaType]"
           :type="
             qna.qnaType === QnaType.NEW_BOOK
-              ? success
+              ? 'success'
               : qna.qnaType === QnaType.NORMAL
                 ? 'info'
                 : 'warning'
