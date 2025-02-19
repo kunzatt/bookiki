@@ -23,6 +23,7 @@ const email = ref(props.modelValue);
 const verificationCode = ref('');
 const showVerificationInput = ref(false);
 const isVerified = ref(false);
+const isLoading = ref(false);
 
 // 이메일 유효성 검사
 const isValidEmail = computed(() => {
@@ -58,33 +59,26 @@ const showToast = (message: string, type: 'success' | 'info' = 'info') => {
 
 // 이메일 중복 확인 및 인증코드 발송
 const handleEmailCheck = async () => {
-  console.log('1. 이메일 체크 시작:', email.value);
-
   if (!isValidEmail.value) {
     showToast(AUTH_MESSAGES.ERROR.INVALID_EMAIL);
-    emit('failed'); // 실패 이벤트 발생
+    emit('failed');
     return;
   }
 
-  try {
-    console.log('2. 이메일 중복 체크 시작');
-    await checkEmailDuplicate(email.value);
-    console.log('3. 이메일 중복 체크 완료');
+  if (isLoading.value) return; // 이미 처리 중이면 중복 요청 방지
+  isLoading.value = true;
 
-    console.log('4. 인증 코드 발송 시작');
+  try {
+    await checkEmailDuplicate(email.value);
     const request: SendEmailRequest = { email: email.value };
     await sendVerificationCode(request);
-    console.log('5. 인증 코드 발송 완료');
-
-    console.log('6. 인증 입력창 표시 설정');
     showVerificationInput.value = true;
-    console.log('7. showVerificationInput 값:', showVerificationInput.value);
-
     showToast(AUTH_MESSAGES.SUCCESS.EMAIL_SENT, 'success');
   } catch (error) {
-    console.error('에러 발생:', error);
     showToast(AUTH_MESSAGES.ERROR.EMAIL_DUPLICATE);
-    emit('failed'); // 실패 이벤트 발생
+    emit('failed');
+  } finally {
+    isLoading.value = false;
   }
 };
 // const handleEmailCheck = async () => {
@@ -108,7 +102,6 @@ const handleEmailCheck = async () => {
 const handleVerifyCode = async () => {
   if (!verificationCode.value) {
     showToast(AUTH_MESSAGES.ERROR.FORM_INVALID);
-    emit('failed'); // 실패 이벤트 발생
     return;
   }
 
@@ -118,9 +111,12 @@ const handleVerifyCode = async () => {
     isVerified.value = true;
     emit('verified');
     showToast(AUTH_MESSAGES.SUCCESS.EMAIL_VERIFIED, 'success');
-  } catch (error) {
-    showToast(AUTH_MESSAGES.ERROR.INVALID_CODE);
-    emit('failed'); // 실패 이벤트 발생
+  } catch (error: any) {
+    // error 메시지 추가
+    const errorMessage = error.response?.data?.message || AUTH_MESSAGES.ERROR.INVALID_CODE;
+    showToast(errorMessage);
+    verificationCode.value = ''; // 잘못된 인증번호 입력값 초기화
+    emit('failed');
   }
 };
 </script>
@@ -136,6 +132,7 @@ const handleVerifyCode = async () => {
       label="이메일"
       button-text="메일 인증"
       :disabled="isVerified || props.disabled"
+      :button-disabled="isLoading"
       @button-click="handleEmailCheck"
     />
 
