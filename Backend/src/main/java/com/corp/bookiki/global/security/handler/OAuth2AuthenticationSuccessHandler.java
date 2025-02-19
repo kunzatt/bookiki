@@ -60,19 +60,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 userDetails.getEmail(),
                 userDetails.getUser().getProvider()
             );
-
-            // 임시 토큰을 쿠키에 설정
-            Cookie tempTokenCookie = new Cookie("temporary_token", temporaryToken);
-            tempTokenCookie.setHttpOnly(true);
-            tempTokenCookie.setSecure(true);
-            tempTokenCookie.setPath("/");
-            tempTokenCookie.setMaxAge(30 * 60); // 30분
-            response.addCookie(tempTokenCookie);
-
             getRedirectStrategy().sendRedirect(
                 request,
                 response,
-                frontendUrl + "/oauth2/signup"
+                frontendUrl + "/oauth2/signup?token=" + temporaryToken
             );
         } else {
             // 기존 회원인 경우
@@ -80,28 +71,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                 userDetails.getEmail(),
                 userDetails.getAuthorities()
             );
-
-            // 액세스 토큰을 쿠키에 설정
-            Cookie accessTokenCookie = new Cookie("access_token", accessToken);
-            accessTokenCookie.setHttpOnly(true);
-            accessTokenCookie.setSecure(true);
-            accessTokenCookie.setPath("/");
-            accessTokenCookie.setMaxAge(30 * 60); // 30분
-            response.addCookie(accessTokenCookie);
-
-            // 리프레시 토큰 생성 및 설정
-            String refreshToken = jwtService.generateRefreshToken(userDetails.getEmail());
-            Cookie refreshTokenCookie = new Cookie("refresh_token", refreshToken);
-            refreshTokenCookie.setHttpOnly(true);
-            refreshTokenCookie.setSecure(true);
-            refreshTokenCookie.setPath("/");
-            refreshTokenCookie.setMaxAge(14 * 24 * 60 * 60); // 14일
-            response.addCookie(refreshTokenCookie);
-
             getRedirectStrategy().sendRedirect(
                 request,
                 response,
-                frontendUrl + "/oauth2/callback"
+                frontendUrl + "/oauth2/callback?token=" + accessToken
             );
         }
     }
