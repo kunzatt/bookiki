@@ -119,14 +119,21 @@ const convertQnaForDisplay = (qna: QnaListResponseWithAnswered) => ({
 
 const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value));
 
-const loadQnas = async () => {
-  loading.value = true;
+const loadQnas = async (isLoadMore: boolean = false) => {
+  if (isLoadMore) {
+    isLoadingMore.value = true;
+  } else {
+    loading.value = true;
+  }
+
   try {
     const response = await selectQnas({
       keyword: filterValues.value.keyword,
       qnaType: filterValues.value.qnaType,
       pageable: {
-        page: isMobile.value ? 0 : currentPage.value - 1,
+        page: isMobile.value
+          ? Math.floor(qnas.value.length / pageSize.value)
+          : currentPage.value - 1,
         size: pageSize.value,
         sort: ['createdAt,DESC'],
       },
@@ -140,19 +147,19 @@ const loadQnas = async () => {
       filteredContent = filteredContent.filter((qna) => qna.answered === isAnswered);
     }
 
-    if (isMobile.value && currentPage.value > 1) {
+    if (isMobile.value && isLoadMore) {
       qnas.value = [...qnas.value, ...filteredContent];
     } else {
       qnas.value = filteredContent;
     }
 
-    // 전체 아이템 수와 페이지 수 업데이트
     totalItems.value = response.totalElements;
-    hasMore.value = qnas.value.length < totalItems.value;
+    hasMore.value = qnas.value.length < response.totalElements;
   } catch (error) {
     console.error('문의사항 목록 조회 실패:', error);
   } finally {
     loading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
@@ -221,7 +228,7 @@ onUnmounted(() => {
   }
 });
 
-// Intersection Observer 설정
+// Intersection Observer 설정 수정
 const setupIntersectionObserver = () => {
   if (observer) {
     observer.disconnect();
@@ -235,13 +242,18 @@ const setupIntersectionObserver = () => {
 
   observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting && !isLoadingMore.value && hasMore.value) {
-        loadMoreQnas();
+      if (
+        entry.isIntersecting &&
+        !isLoadingMore.value &&
+        !loading.value &&
+        hasMore.value &&
+        isMobile.value
+      ) {
+        loadQnas(true);
       }
     });
   }, options);
 
-  // nextTick을 사용하여 DOM 업데이트 후 observe
   nextTick(() => {
     if (observerTarget.value) {
       observer.observe(observerTarget.value);
@@ -249,36 +261,6 @@ const setupIntersectionObserver = () => {
   });
 
   return observer;
-};
-
-// 모바일 무한 스크롤
-const loadMoreQnas = async () => {
-  if (isLoadingMore.value || !hasMore.value) return;
-
-  isLoadingMore.value = true;
-  try {
-    const nextPage = Math.floor(qnas.value.length / pageSize.value);
-    const response = await selectQnas({
-      keyword: filterValues.value.keyword,
-      qnaType: filterValues.value.qnaType,
-      pageable: {
-        page: nextPage,
-        size: pageSize.value,
-        sort: ['createdAt,DESC'],
-      },
-    });
-
-    if (response.content.length > 0) {
-      qnas.value = [...qnas.value, ...response.content];
-      hasMore.value = qnas.value.length < response.totalElements;
-    } else {
-      hasMore.value = false;
-    }
-  } catch (error) {
-    console.error('추가 문의사항 로드 실패:', error);
-  } finally {
-    isLoadingMore.value = false;
-  }
 };
 
 defineEmits(['delete']);
