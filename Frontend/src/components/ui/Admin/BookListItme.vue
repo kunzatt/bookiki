@@ -18,7 +18,7 @@ const emit = defineEmits<{
 const getStatusBadgeProps = (status: string): { text: string; type: BadgeStatus } => {
   switch (status) {
     case 'AVAILABLE':
-      return { text: '대출 가능', type: 'primary' };
+      return { text: '대출 가능', type: 'success' };
     case 'BORROWED':
       return { text: '대출중', type: 'warning' };
     case 'UNAVAILABLE':

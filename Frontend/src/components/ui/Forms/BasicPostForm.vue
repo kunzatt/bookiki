@@ -60,7 +60,7 @@ const handleSubmit = async (e: Event) => {
   const formData = {
     title: title.value,
     content: content.value,
-    qnaType: props.type === 'qna' ? selectedQnaType.value : undefined
+    qnaType: props.type === 'qna' ? selectedQnaType.value : undefined,
   };
 
   emit('submit', formData);
@@ -84,7 +84,7 @@ const togglePreview = () => {
           v-for="[type, description] in Object.entries(QnaTypeDescriptions)"
           :key="type"
           :text="description"
-          :type="selectedQnaType === type ? 'primary' : 'gray'"
+          :type="selectedQnaType === type ? 'success' : 'gray'"
           :isEnabled="selectedQnaType === type"
           class="cursor-pointer"
           @click="selectedQnaType = type as QnaType"
