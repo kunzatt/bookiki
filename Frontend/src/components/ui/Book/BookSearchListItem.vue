@@ -1,4 +1,3 @@
-<!-- BookList.vue -->
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import type { BookItemListResponse } from '@/types/api/bookItem';
@@ -6,6 +5,7 @@ import type { BookItemListResponse } from '@/types/api/bookItem';
 interface Props {
   books: BookItemListResponse[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
   currentPage: number;
 }
@@ -20,7 +20,7 @@ const handleImageError = (event: Event) => {
 </script>
 
 <template>
-  <!-- 로딩 상태 -->
+  <!-- 초기 로딩 상태 -->
   <div v-if="isLoading && currentPage === 1" class="flex justify-center items-center h-[300px]">
     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
   </div>
