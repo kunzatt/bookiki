@@ -5,6 +5,8 @@ spring:
       on-profile: default
   application:
     name: Bookiki
+  jackson:
+    time-zone: Asia/Seoul
   task:
     scheduling:
       pool:

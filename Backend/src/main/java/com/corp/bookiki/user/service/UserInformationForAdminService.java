@@ -1,5 +1,14 @@
 package com.corp.bookiki.user.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.corp.bookiki.bookhistory.dto.BookHistoryResponse;
 import com.corp.bookiki.bookhistory.service.BookHistoryService;
 import com.corp.bookiki.global.error.code.ErrorCode;
@@ -8,14 +17,8 @@ import com.corp.bookiki.user.dto.UserInformationForAdminRequest;
 import com.corp.bookiki.user.dto.UserInformationForAdminResponse;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -81,16 +84,19 @@ public class UserInformationForAdminService {
 			throw new UserException(ErrorCode.USER_NOT_FOUND);
 		}
 
-		user.updateActiveAt(request.getActiveAt());
+		LocalDateTime fixedTime = request.getActiveAt().atTime(9, 0);
+
+		user.updateActiveAt(fixedTime);
+
 		List<BookHistoryResponse> currentBooks =
-				bookHistoryService.getCurrentBorrowedBooks(user.getId(), null);
+			bookHistoryService.getCurrentBorrowedBooks(user.getId(), null);
 		List<BookHistoryResponse> overdueBooks =
-				bookHistoryService.getCurrentBorrowedBooks(user.getId(), true);
+			bookHistoryService.getCurrentBorrowedBooks(user.getId(), true);
 
 		return UserInformationForAdminResponse.from(
-				user,
-				currentBooks.size(),
-				!overdueBooks.isEmpty()
+			user,
+			currentBooks.size(),
+			!overdueBooks.isEmpty()
 		);
 	}
 

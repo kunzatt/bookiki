@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.PasswordUpdateException;
+import com.corp.bookiki.user.entity.Provider;
 import com.corp.bookiki.user.entity.UserEntity;
 import com.corp.bookiki.user.repository.UserRepository;
 
@@ -46,7 +47,7 @@ public class PasswordService {
 		UserEntity user = userRepository.findByEmail(email)
 			.orElseThrow(() -> new PasswordUpdateException(ErrorCode.USER_NOT_FOUND));
 
-		if (!user.getProvider().equals("BOOKIKI")) {
+		if (!user.getProvider().equals(Provider.BOOKIKI)) {
 			throw new PasswordUpdateException(ErrorCode.UNVALID_PROVIDER);
 		}
 
