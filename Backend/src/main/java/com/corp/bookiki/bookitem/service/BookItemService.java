@@ -63,7 +63,7 @@ public class BookItemService {
 
 		// keyword가 없으면 전체 목록 조회
 		if (keyword == null || keyword.trim().isEmpty()) {
-			books = bookItemRepository.findAll(pageRequest);
+			books = bookItemRepository.findByDeletedFalse(pageRequest);
 		} else {
 			books = bookItemRepository.searchBooks(type.name(), keyword, pageRequest);
 		}

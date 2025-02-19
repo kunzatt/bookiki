@@ -172,7 +172,8 @@ public class ChatbotService {
                     "book_wrong_place",
                     "book_damage_report",
                     "book_condition_report",
-                    "auto_return_guide"
+                    "auto_return_guide",
+                    "Default Fallback Intent"
             ).contains(intent);
         } catch (Exception e) {
             log.error("관리자 문의 버튼 표시 여부 확인 중 오류 발생: {}", e.getMessage());
