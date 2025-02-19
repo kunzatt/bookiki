@@ -58,12 +58,8 @@ const isSearchOnly = computed(() => {
             :placeholder="filter.placeholder || '검색어를 입력하세요'"
             buttonText="검색"
             @button-click="$emit('apply')"
-            @update:modelValue="
-              (value) => {
-                updateFilter(filter.key, value);
-                $emit('apply');
-              }
-            "
+            @keyup.enter="$emit('apply')"
+            @update:modelValue="(value) => updateFilter(filter.key, value)"
           />
         </div>
 
