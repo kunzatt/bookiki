@@ -309,8 +309,9 @@ onUnmounted(() => {
           <div class="flex items-center justify-between gap-4 mb-[56px]">
             <BasicStatusBadge
               :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-              :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
+              :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
               size="S"
+              :isEnabled="false"
             />
             <BasicButton
               text="책 위치 찾기"
