@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import {
   getUserNotifications,
   updateNotificationReadStatus,
@@ -19,8 +19,33 @@ const currentPage = ref(0);
 const pageSize = 10;
 const totalPages = ref(0);
 const totalElements = ref(0);
+const isMobile = ref(window.innerWidth < 768);
+const observerTarget = ref<HTMLElement | null>(null);
+const hasMore = ref(true);
+const isLoadingMore = ref(false);
 
-// 페이지네이션을 위한 computed 속성들
+// 반응형 처리를 위한 리사이즈 감지
+const handleResize = () => {
+  const wasMobile = isMobile.value;
+  isMobile.value = window.innerWidth < 768;
+
+  // 모바일/데스크톱 전환 시 처리
+  if (wasMobile !== isMobile.value) {
+    if (isMobile.value) {
+      // 데스크톱 -> 모바일 전환
+      // 현재 페이지의 데이터는 유지하고 무한 스크롤 설정
+      hasMore.value = currentPage.value + 1 < totalPages.value;
+      setupInfiniteScroll();
+    } else {
+      // 모바일 -> 데스크톱 전환
+      // 페이지네이션 방식으로 전환하면서 첫 페이지 데이터만 표시
+      currentPage.value = 0;
+      loadNotifications();
+    }
+  }
+};
+
+// 데스크톱 페이지네이션을 위한 computed 속성들
 const canGoPrevious = computed(() => currentPage.value > 0);
 const canGoNext = computed(() => currentPage.value < totalPages.value - 1);
 const pageNumbers = computed(() => {
@@ -40,10 +65,7 @@ const pageNumbers = computed(() => {
 });
 
 const loadNotifications = async (page: number = currentPage.value) => {
-  if (!authStore.isAuthenticated) {
-    console.log('인증 안됨:', authStore.user);
-    return;
-  }
+  if (!authStore.isAuthenticated) return;
 
   loading.value = true;
   try {
@@ -56,16 +78,37 @@ const loadNotifications = async (page: number = currentPage.value) => {
     const response = await getUserNotifications(requestConfig);
 
     if (response) {
-      notifications.value = response.content;
+      if (isMobile.value) {
+        // 모바일: 첫 로드거나 디바이스 전환 시에는 데이터 교체, 아니면 추가
+        if (page === 0) {
+          notifications.value = response.content;
+        } else {
+          notifications.value = [...notifications.value, ...response.content];
+        }
+      } else {
+        // 데스크톱: 항상 현재 페이지 데이터로 교체
+        notifications.value = response.content;
+      }
+
       totalPages.value = response.totalPages;
       totalElements.value = response.totalElements;
       currentPage.value = page;
+      hasMore.value = page + 1 < response.totalPages;
     }
   } catch (error) {
     console.error('알림 로드 실패:', error);
   } finally {
     loading.value = false;
+    isLoadingMore.value = false;
   }
+};
+
+const loadMoreNotifications = async () => {
+  if (!authStore.isAuthenticated || isLoadingMore.value || !hasMore.value) return;
+
+  isLoadingMore.value = true;
+  const nextPage = currentPage.value + 1;
+  await loadNotifications(nextPage);
 };
 
 const handlePageChange = (page: number) => {
@@ -75,7 +118,6 @@ const handlePageChange = (page: number) => {
 };
 
 const handleNotificationClick = async (notification: NotificationResponse) => {
-  // 읽음 처리
   if (notification.notificationStatus === NotificationStatus.UNREAD) {
     try {
       await updateNotificationReadStatus(notification.id);
@@ -85,17 +127,9 @@ const handleNotificationClick = async (notification: NotificationResponse) => {
     }
   }
 
-  // 명시적으로 조건 체크
-  if (
-    notification.notificationType === 'OVERDUE_NOTICE' ||
-    notification.notificationType === NotificationType.OVERDUE_NOTICE
-  ) {
-    router.push('/mypage/current-borrowed');
-    return;
-  }
-
   switch (notification.notificationType) {
     case NotificationType.RETURN_DEADLINE:
+    case NotificationType.OVERDUE_NOTICE:
       router.push('/mypage/current-borrowed');
       break;
 
@@ -139,7 +173,6 @@ const formatDate = (dateArray: number[]): string => {
   );
 
   if (isNaN(date.getTime())) {
-    console.error('Invalid date array:', dateArray);
     return '날짜 없음';
   }
 
@@ -166,9 +199,43 @@ const formatDate = (dateArray: number[]): string => {
   }).format(date);
 };
 
+// Intersection Observer 설정
+let observer: IntersectionObserver | null = null;
+
+const setupInfiniteScroll = () => {
+  if (observer) {
+    observer.disconnect();
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && !loading.value && hasMore.value && isMobile.value) {
+        loadMoreNotifications();
+      }
+    },
+    { threshold: 0.1 },
+  );
+
+  if (observerTarget.value) {
+    observer.observe(observerTarget.value);
+  }
+
+  return observer;
+};
+
 onMounted(() => {
   if (authStore.isAuthenticated) {
     loadNotifications();
+  }
+
+  window.addEventListener('resize', handleResize);
+  setupInfiniteScroll();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (observer) {
+    observer.disconnect();
   }
 });
 </script>
@@ -208,7 +275,7 @@ onMounted(() => {
                       ></span>
                     </div>
                     <button
-                      @click="handleDeleteNotification(notification.id)"
+                      @click.stop="handleDeleteNotification(notification.id)"
                       class="text-gray-400 hover:text-[#698469] transition-colors"
                     >
                       <span class="sr-only">삭제</span>
@@ -230,8 +297,16 @@ onMounted(() => {
             </TransitionGroup>
 
             <!-- 로딩 상태 -->
-            <div v-if="loading" class="p-8 flex justify-center">
+            <div v-if="loading && !isLoadingMore" class="p-8 flex justify-center">
               <div
+                class="w-6 h-6 border-2 border-[#698469] rounded-full animate-spin border-t-transparent"
+              ></div>
+            </div>
+
+            <!-- 무한 스크롤을 위한 옵저버 타겟 (모바일) -->
+            <div v-if="isMobile && hasMore" ref="observerTarget" class="p-4 flex justify-center">
+              <div
+                v-if="isLoadingMore"
                 class="w-6 h-6 border-2 border-[#698469] rounded-full animate-spin border-t-transparent"
               ></div>
             </div>
@@ -245,21 +320,18 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- 페이지네이션 -->
-          <div v-if="totalPages > 1" class="flex justify-center mt-4">
+          <!-- 페이지네이션 (데스크톱) -->
+          <div v-if="!isMobile && totalPages > 1" class="flex justify-center mt-4">
             <div class="flex items-center justify-center gap-1">
-              <!-- 이전 페이지 버튼 -->
               <button
                 class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
                 :class="{ 'text-gray-300': !canGoPrevious }"
                 :disabled="!canGoPrevious"
                 @click="handlePageChange(currentPage - 1)"
-                aria-label="Previous page"
               >
                 <span class="material-icons text-sm">chevron_left</span>
               </button>
 
-              <!-- 페이지 번호 -->
               <button
                 v-for="page in pageNumbers"
                 :key="page"
@@ -269,19 +341,15 @@ onMounted(() => {
                   'hover:bg-gray-100': page !== currentPage,
                 }"
                 @click="handlePageChange(page)"
-                :aria-label="`Go to page ${page + 1}`"
-                :aria-current="page === currentPage ? 'page' : undefined"
               >
                 {{ page + 1 }}
               </button>
 
-              <!-- 다음 페이지 버튼 -->
               <button
                 class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100"
                 :class="{ 'text-gray-300': !canGoNext }"
                 :disabled="!canGoNext"
                 @click="handlePageChange(currentPage + 1)"
-                aria-label="Next page"
               >
                 <span class="material-icons text-sm">chevron_right</span>
               </button>
