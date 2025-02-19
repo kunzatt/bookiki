@@ -120,5 +120,6 @@ export interface VerifyCodeRequest {
 export interface UserInformationResponse {
   userName: string;
   companyId: string;
+  email: string;
   loanStatus: string;
 }

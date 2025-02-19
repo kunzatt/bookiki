@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import NavigationMenuItem from './NavigationMenuItem.vue';
 import BasicButton from '../Button/BasicButton.vue';
-
+import LogoutModal from '@/components/modal/LogoutModal.vue';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 // 마이페이지 dto 생성 후 수정 필요
 
@@ -30,7 +33,11 @@ import BasicButton from '../Button/BasicButton.vue';
 //   }
 // }
 
-const props = defineProps<MyPageProps>();
+const props = defineProps();
+
+const router = useRouter();
+const authStore = useAuthStore();
+const showLogoutModal = ref(false);
 
 // router 변경 필요
 const menuItems = [
@@ -46,6 +53,20 @@ const handleProfileChange = () => {
   // 프로필 사진 변경 로직
   console.log('프로필 사진 변경');
 };
+
+const handleClick = (to: string) => {
+  if (to === '/logout') {
+    showLogoutModal.value = true;
+  } else {
+    router.push(to);
+  }
+};
+
+const handleLogoutConfirm = async () => {
+  showLogoutModal.value = false;
+  await authStore.logout();
+  router.push('/');
+};
 </script>
 
 <template>
@@ -54,14 +75,14 @@ const handleProfileChange = () => {
     <div class="flex items-start space-x-4 mb-6">
       <div class="w-16 h-16 rounded-full overflow-hidden">
         <img 
-          :src="user.profileImage || '/default-profile.jpg'" 
-          :alt="user.user_name"
+          :src="props.user.profileImage || '/default-profile.jpg'" 
+          :alt="props.user.user_name"
           class="w-full h-full object-cover"
         />
       </div>
       <div class="flex-1">
-        <h2 class="text-xl font-medium text-gray-900">{{ user.user_name }}</h2>
-        <p class="text-sm text-gray-500">{{ user.id }}</p>
+        <h2 class="text-xl font-medium text-gray-900">{{ props.user.user_name }}</h2>
+        <p class="text-sm text-gray-500">{{ props.user.id }}</p>
         <div class="mt-2">
           <BasicButton 
             size="M" 
@@ -88,8 +109,14 @@ const handleProfileChange = () => {
         :title="item.title"
         :to="item.to"
         :isHighlighted="item.isHighlighted"
+        @click="handleClick(item.to)"
         class="border-b border-gray-200"
       />
     </nav>
+    <LogoutModal
+      :is-open="showLogoutModal"
+      @confirm="handleLogoutConfirm"
+      @cancel="showLogoutModal = false"
+    />
   </div>
 </template>

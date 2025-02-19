@@ -67,19 +67,6 @@ const getRenderedContent = (content: string) => {
   return marked(content);
 };
 
-const getStatusType = (qnaType: QnaType): string => {
-  switch (qnaType) {
-    case QnaType.NORMAL:
-      return 'primary';
-    case QnaType.NEW_BOOK:
-      return 'info';
-    case QnaType.CHANGE_INFO:
-      return 'warning';
-    default:
-      return 'gray';
-  }
-};
-
 // 답변 수정 관련
 const editingCommentId = ref<number | null>(null);
 const editingCommentContent = ref('');
@@ -160,8 +147,14 @@ onMounted(async () => {
       <div class="mb-2">
         <BasicStatusBadge
           :text="QnaTypeDescriptions[qna.qnaType]"
-          :type="getStatusType(qna.qnaType)"
-          :isEnabled="true"
+          :type="
+            qna.qnaType === QnaType.NEW_BOOK
+              ? success
+              : qna.qnaType === QnaType.NORMAL
+                ? 'info'
+                : 'warning'
+          "
+          :isEnabled="false"
           class="mb-2"
         />
         <h1 class="text-2xl font-bold text-gray-900">{{ qna.title }}</h1>
@@ -230,7 +223,7 @@ onMounted(async () => {
           placeholder="답변을 입력하세요..."
         />
         <div class="flex justify-end">
-          <BasicButton size="M" text="답변 등록" @click="handleCommentSubmit" />
+          <BasicButton size="S" text="등록" @click="handleCommentSubmit" />
         </div>
       </div>
     </div>

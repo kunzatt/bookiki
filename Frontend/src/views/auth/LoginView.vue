@@ -17,7 +17,8 @@ const showResetModal = ref(false);
 const showConfirmModal = ref(false);
 const resetError = ref('');
 const showLoginErrorModal = ref(false);
-const resetButtonDisabled = ref(false);  // 추가: 버튼 비활성화 상태 관리
+const resetButtonDisabled = ref(false); // 추가: 버튼 비활성화 상태 관리
+const loginErrorMessage = ref('아이디와 비밀번호를 확인해주세요.');
 
 const handleLogin = async (e: Event) => {
   e.preventDefault(); // 기본 form submit 동작 방지
@@ -25,6 +26,7 @@ const handleLogin = async (e: Event) => {
   // 이메일이나 비밀번호가 비어있는 경우
   if (!email.value || !password.value) {
     showLoginErrorModal.value = true;
+    loginErrorMessage.value = '아이디와 비밀번호를 확인해주세요.';
     return;
   }
 
@@ -33,12 +35,17 @@ const handleLogin = async (e: Event) => {
       email: email.value,
       password: password.value,
     });
-    
+
     // redirect 쿼리 파라미터가 있으면 해당 페이지로, 없으면 메인으로 이동
     const redirect = router.currentRoute.value.query.redirect as string;
     await router.push(redirect || '/main');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login failed:', error);
+    if (error.response?.data?.code === 'UNVALID_PROVIDER') {
+      loginErrorMessage.value = '소셜 로그인으로 가입된 계정입니다. 소셜 로그인으로 진행해주세요.';
+    } else {
+      loginErrorMessage.value = '아이디와 비밀번호를 확인해주세요.';
+    }
     showLoginErrorModal.value = true;
   }
 };
@@ -52,15 +59,14 @@ const handleSignUp = () => {
 };
 
 const handleResetPassword = async () => {
-  if (resetButtonDisabled.value) return;  // 버튼이 비활성화되어 있으면 실행하지 않음
-  resetButtonDisabled.value = true;  // 버튼 비활성화
-  
+  if (resetButtonDisabled.value) return;
+  resetButtonDisabled.value = true;
+
   try {
     resetError.value = '';
     if (!resetEmail.value || !resetName.value) {
-      // 이메일과 이름 모두 필수
       resetError.value = '이메일과 이름을 모두 입력해주세요.';
-      resetButtonDisabled.value = false;  // 유효성 검사 실패시 버튼 다시 활성화
+      resetButtonDisabled.value = false;
       return;
     }
     await sendPasswordResetEmail({
@@ -69,10 +75,22 @@ const handleResetPassword = async () => {
     });
     showResetModal.value = false;
     showConfirmModal.value = true;
-  } catch (error) {
+  } catch (error: any) {
+    // any 타입으로 지정하여 error.response 접근 가능
     console.error('Password reset failed:', error);
-    resetError.value = '이메일 전송에 실패했습니다. 다시 시도해주세요.';
-    resetButtonDisabled.value = false;  // 에러 발생시 버튼 다시 활성화
+
+    // 에러 코드에 따른 다른 메시지 표시
+    if (error.response?.data?.code === 'UNVALID_PROVIDER') {
+      resetError.value = '소셜 로그인으로 가입된 계정입니다. 소셜 로그인으로 진행해주세요.';
+    } else if (error.response?.data?.code === 'USERNAME_EMAIL_MISMATCH') {
+      resetError.value = '입력하신 이메일과 이름이 일치하지 않습니다. 다시 확인하여 시도해주세요.';
+    } else if (error.response?.data?.code === 'FAIL_EMAIL_SEND') {
+      resetError.value = '이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.';
+    } else {
+      resetError.value = '이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.';
+    }
+
+    resetButtonDisabled.value = false;
   }
 };
 
@@ -82,7 +100,7 @@ const closeModals = () => {
   resetEmail.value = '';
   resetName.value = ''; // 추가: 이름 초기화
   resetError.value = '';
-  resetButtonDisabled.value = false;  // 모달 닫을 때 버튼 상태 초기화
+  resetButtonDisabled.value = false; // 모달 닫을 때 버튼 상태 초기화
 };
 
 const closeLoginErrorModal = () => {
@@ -262,7 +280,7 @@ const closeLoginErrorModal = () => {
   >
     <div class="bg-white rounded-lg p-6 w-full max-w-md">
       <form @submit.prevent="closeLoginErrorModal">
-        <p class="text-gray-600 mb-4">아이디와 비밀번호를 확인해주세요.</p>
+        <p class="text-gray-600 mb-4">{{ loginErrorMessage }}</p>
         <div class="flex justify-end">
           <button
             type="submit"

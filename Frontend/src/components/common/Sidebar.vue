@@ -8,10 +8,12 @@ import { useRouter } from 'vue-router';
 import type { MenuItem, User } from '../../types/common/sideBar';
 import { menuItems } from '../../types/common/sideBar';
 import { useAuthStore } from '@/stores/auth';
+import { useModalStore } from '@/stores/modal';
 import BookikiLogo from '@/assets/BookikiLogo.PNG';
 
 // Store 사용
 const authStore = useAuthStore();
+const modalStore = useModalStore();
 
 // 각 메뉴의 토글 상태를 관리하는 반응형 객체
 const menuStates = ref<{ [key: string]: boolean }>({});
@@ -47,12 +49,7 @@ const handleMenuClick = async (item: MenuItem) => {
       router.push('/main');
     }
   } else if (item.action === 'logout') {
-    try {
-      await authStore.logout();
-      router.push('/login'); // 로그아웃 성공 후 로그인 페이지로 이동
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
+    modalStore.openModal('logout');
   } else if (item.path) {
     router.push(item.path);
   }
@@ -60,12 +57,7 @@ const handleMenuClick = async (item: MenuItem) => {
 
 const handleSubItemClick = async (subItem: MenuItem) => {
   if (subItem.action === 'logout') {
-    try {
-      await authStore.logout();
-      router.push('/login'); // 로그아웃 성공 후 로그인 페이지로 이동
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
+    modalStore.openModal('logout');
   } else if (subItem.path) {
     router.push(subItem.path);
   }

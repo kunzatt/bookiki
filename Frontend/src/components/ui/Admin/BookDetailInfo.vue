@@ -13,7 +13,14 @@ defineProps<{
   category: Category;
   bookStatus: BookStatus;
   purchaseAt: string;
+  currentBorrower: BorrowerInfo | null;
 }>();
+
+interface BorrowerInfo {
+  userId: number;
+  userName: string;
+  borrowedAt: string | string[];
+}
 </script>
 
 <template>
@@ -51,10 +58,12 @@ defineProps<{
         <p class="text-gray-600">구매일</p>
         <p>{{ formatDate(purchaseAt) }}</p>
       </div>
-    </div>
-    <div class="mt-4">
-      <p class="text-gray-600">도서 설명</p>
-      <p class="mt-2">{{ description }}</p>
+      <div>
+        <p class="text-gray-600">대여 회원</p>
+        <p>
+          {{ currentBorrower ? `${currentBorrower.userName}(id: ${currentBorrower.userId})` : '-' }}
+        </p>
+      </div>
     </div>
   </div>
 </template>

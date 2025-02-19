@@ -8,6 +8,9 @@ import type { Pageable } from '@/types/common/pagination';
 import DefaultBookCover from '@/assets/images/DEFAULT_BOOK_COVER.png';
 import { useRouter } from 'vue-router';
 import { AxiosError } from 'axios';
+import { useVirtualShelfStore } from '@/stores/virtualShelf';
+
+const virtualShelfStore = useVirtualShelfStore();
 
 const books = ref<BookItemDisplayResponse[]>([]);
 const searchKeyword = ref('');
@@ -24,21 +27,42 @@ const pageInfo = ref<Pageable>({
 const fetchBooks = async () => {
   try {
     loading.value = true;
+
+    // 캐시가 유효하고, 페이지 정보와 검색어가 동일한 경우 캐시된 데이터 사용
+    if (virtualShelfStore.isBooksCacheValid && 
+        virtualShelfStore.booksCache?.pageInfo.pageNumber === pageInfo.value.pageNumber &&
+        virtualShelfStore.booksCache?.pageInfo.pageSize === pageInfo.value.pageSize &&
+        virtualShelfStore.booksCache?.keyword === (searchKeyword.value || '')) {
+      books.value = virtualShelfStore.booksCache.data.content;
+      totalPages.value = virtualShelfStore.booksCache.data.totalPages;
+      loading.value = false;
+      return;
+    }
+
     const response = await selectBooksByKeyword(
       pageInfo.value.pageNumber,
       pageInfo.value.pageSize,
       'id',
       'desc',
-      searchKeyword.value || undefined, // 빈 문자열일 경우 undefined로 처리
+      searchKeyword.value || undefined,
     );
 
     books.value = response.content;
     totalPages.value = response.totalPages;
+
+    // 새로운 데이터를 캐시에 저장
+    virtualShelfStore.setBooksCache(
+      { content: response.content, totalPages: response.totalPages },
+      { ...pageInfo.value },
+      searchKeyword.value || ''
+    );
   } catch (error) {
     // 404 에러는 검색 결과가 없는 경우이므로 조용히 처리
     if (error instanceof AxiosError && error.response?.status === 404) {
       books.value = [];
       totalPages.value = 0;
+      // 캐시 초기화
+      virtualShelfStore.clearCache();
     } else {
       console.error('도서 목록 조회 실패:', error);
     }
@@ -50,6 +74,8 @@ const fetchBooks = async () => {
 const handleSearch = async () => {
   currentPage.value = 1;
   pageInfo.value.pageNumber = 0;
+  // 검색어가 변경되면 캐시 초기화
+  virtualShelfStore.clearCache();
   await fetchBooks();
 };
 
@@ -79,12 +105,17 @@ watch(pageInfo, async () => {
   await fetchBooks();
 });
 
-// searchKeyword 변경 감시
-watch(searchKeyword, () => {
+const handleSearchClick = () => {
   currentPage.value = 1;
   pageInfo.value.pageNumber = 0;
   fetchBooks();
-});
+};
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    handleSearchClick();
+  }
+};
 
 onMounted(async () => {
   await fetchBooks();
@@ -102,6 +133,8 @@ onMounted(async () => {
             type="withButton"
             placeholder="도서명을 입력하세요"
             buttonText="검색"
+            @button-click="handleSearchClick"
+            @keyup="handleKeyPress"
           />
         </div>
         <!-- 책장 -->
