@@ -1,24 +1,28 @@
-<!-- components/book/QRCodePanel.vue -->
+<!-- src/components/ui/Admin/BookDetailQRcode.vue -->
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, watch } from 'vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
-import type { QrCodeResponse } from '@/types/api/qrCode';
 import QRCode from 'qrcode';
 
-interface Props {
+interface QrCodeInfo {
+  id: number;
   qrValue: string;
+  createAt: string;
+}
+
+interface Props {
+  qrCode: QrCodeInfo | null;
   bookItemId: number;
-  isVisible: boolean;
 }
 
 const props = defineProps<Props>();
 const qrImageUrl = ref<string>('');
 
 const generateQRCode = async () => {
-  if (!props.qrValue) return;
+  if (!props.qrCode?.qrValue) return;
 
   try {
-    qrImageUrl.value = await QRCode.toDataURL(props.qrValue, {
+    qrImageUrl.value = await QRCode.toDataURL(props.qrCode.qrValue, {
       width: 200,
       margin: 2,
       errorCorrectionLevel: 'H',
@@ -28,9 +32,8 @@ const generateQRCode = async () => {
   }
 };
 
-watch(() => props.qrValue, generateQRCode, { immediate: true });
+watch(() => props.qrCode?.qrValue, generateQRCode, { immediate: true });
 
-// QR 코드 이미지 다운로드
 const downloadQRCode = () => {
   if (!qrImageUrl.value) return;
 
@@ -41,37 +44,29 @@ const downloadQRCode = () => {
   link.click();
   document.body.removeChild(link);
 };
-
-// 디버깅용 watch 추가
-watch(
-  () => props.qrCode,
-  (newValue) => {
-    console.log('QR Code props changed:', newValue);
-  },
-);
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow p-6 w-full">
+  <div class="bg-white rounded-lg shadow p-6 mt-4">
     <h3 class="text-lg font-semibold mb-4">QR 코드 정보</h3>
     <div v-if="props.qrCode" class="flex flex-col items-center">
       <!-- QR 코드 이미지 -->
-      <div class="mb-4 w-full flex justify-center">
+      <div class="mb-4">
         <img
           v-if="qrImageUrl"
           :src="qrImageUrl"
           :alt="`QR Code for book ${bookItemId}`"
-          class="w-[200px] h-[200px]"
+          class="w-[160px] h-[160px]"
         />
       </div>
 
       <!-- QR 코드 정보 -->
-      <div class="text-sm text-gray-600 mb-4 w-full text-center">
+      <div class="text-sm text-gray-600 mb-4">
         <p>QR ID: {{ props.qrCode.id }}</p>
       </div>
 
       <!-- 다운로드 버튼 -->
-      <BasicButton text="QR 코드 저장" @click="downloadQRCode" />
+      <BasicButton text="QR 저장" @click="downloadQRCode" />
     </div>
     <div v-else class="text-center text-gray-500">등록된 QR 코드가 없습니다.</div>
   </div>
