@@ -24,7 +24,7 @@ const sizeClasses = {
 const getStatusClass = (type: string, isEnabled: boolean, size: ComponentSize) => {
   const styles = {
     // Primary - 기존 메인 컬러 유지 (Chatbot과 동일)
-    primary: isEnabled
+    success: isEnabled
       ? 'bg-[#698469] text-white'
       : 'bg-[#F8F9F8] text-[#698469] border border-[#698469]',
 
