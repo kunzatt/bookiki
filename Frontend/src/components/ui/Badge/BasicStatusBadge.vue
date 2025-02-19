@@ -5,20 +5,20 @@ interface BadgeProps {
   text: string;
   type?: BadgeStatus;
   isEnabled?: boolean;
-  size?: ComponentSize; // size prop 추가
+  size?: ComponentSize;
 }
 
 const props = withDefaults(defineProps<BadgeProps>(), {
   type: 'primary',
   isEnabled: true,
-  size: 'M', // 기본값은 M
+  size: 'M',
 });
 
-// 사이즈별 Tailwind 클래스 매핑
+// 사이즈별 Tailwind 클래스 매핑 - 모바일과 데스크톱 구분
 const sizeClasses = {
-  L: 'w-32 h-10 text-base',
-  M: 'w-24 h-8 text-sm',
-  S: 'w-20 h-6 text-xs',
+  L: 'w-24 md:w-32 h-8 md:h-10 text-sm md:text-base',
+  M: 'w-20 md:w-24 h-6 md:h-8 text-xs md:text-sm',
+  S: 'w-16 md:w-20 h-5 md:h-6 text-xs',
 } as const;
 
 const getStatusClass = (type: string, isEnabled: boolean, size: ComponentSize) => {
