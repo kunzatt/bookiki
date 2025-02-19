@@ -208,7 +208,7 @@ onUnmounted(() => {
       <div v-if="bookInfo">
         <div class="flex flex-col md:flex-row gap-8 md:gap-20">
           <!-- Book Image Section -->
-          <div class="w-full md:w-[400px]">
+          <div class="w-[200px] md:w-[400px] mx-auto">
             <div>
               <div class="relative">
                 <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
@@ -255,12 +255,11 @@ onUnmounted(() => {
               />
 
               <div class="flex items-center gap-4 mb-4">
-                <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
               </div>
 
-              <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
+              <div class="flex flex-col gap-2 text-lg text-gray-600 mb-12">
                 <span>{{ bookInfo.author }}</span>
-                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
                 <span>{{ bookInfo.publisher }}</span>
               </div>
 
