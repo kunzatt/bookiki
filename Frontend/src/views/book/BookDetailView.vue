@@ -276,7 +276,7 @@ onUnmounted(() => {
                 <!-- Book Details -->
                 <div>
                   <h2 class="text-2xl font-semibold text-gray-900 mb-4">도서 정보</h2>
-                  <div class="grid grid-cols-2 gap-y-6 max-w-2xl">
+                  <div class="grid grid-cols-2 gap-y-6 max-w-2xl md:mb-0 mb-24">
                     <div>
                       <span class="text-gray-500 text-sm">저자</span>
                       <p class="text-gray-900 mt-1">{{ bookInfo.author }}</p>
