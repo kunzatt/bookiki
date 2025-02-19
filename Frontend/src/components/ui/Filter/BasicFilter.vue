@@ -73,7 +73,7 @@ const isSearchOnly = computed(() => {
           v-model="localFilters[filter.key]"
           :options="filter.options"
           :placeholder="filter.label"
-          class="w-full md:w-[120px]"
+          class="md:w-[120px]"
           @update:modelValue="
             (value) => {
               updateFilter(filter.key, value);
