@@ -149,7 +149,7 @@ watch(() => messages.value.length, scrollToBottom);
     <!-- 챗봇 모달 -->
     <div
       v-if="modelValue"
-      class="fixed bottom-5 right-5 w-[400px] bg-white rounded-lg shadow-xl z-50 flex flex-col"
+      class="fixed bottom-5 right-5 w-[380px] bg-white rounded-lg shadow-xl z-50 flex flex-col max-h-[80vh]"
       @click.stop
     >
       <!-- 헤더 -->
@@ -164,7 +164,7 @@ watch(() => messages.value.length, scrollToBottom);
       </div>
 
       <!-- 메시지 영역 -->
-      <div ref="messagesContainer" class="h-[400px] overflow-y-auto p-4">
+      <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 min-h-[300px] max-h-[400px]">
         <div
           v-for="(message, index) in messages"
           :key="index"
@@ -226,52 +226,43 @@ watch(() => messages.value.length, scrollToBottom);
     <!-- 피드백 입력 모달 -->
     <div
       v-if="showFeedbackInputModal"
-      class="fixed inset-0 bg-black bg-opacity-30 z-[60]"
+      class="fixed inset-0 bg-black bg-opacity-30 z-[60] flex items-end justify-center"
       @click="showFeedbackInputModal = false"
     >
       <div
-        class="absolute w-[450px] bg-white rounded-lg shadow-xl"
-        :style="{
-          right: '20px',
-          bottom: '90px', // 챗봇 모달 높이 + 약간의 간격
-        }"
+        class="w-[380px] bg-white rounded-lg shadow-xl mx-4 mb-24 md:fixed md:bottom-auto md:right-5 md:top-[60%] md:mx-0 md:mb-0"
         @click.stop
       >
-        <div class="p-6 space-y-4">
-          <h3 class="text-lg font-semibold">오류 신고 및 피드백</h3>
+        <div class="p-4 space-y-3">
+          <h3 class="text-base font-semibold">오류 신고 및 피드백</h3>
 
           <!-- 카테고리 선택 -->
-          <div class="space-y-2">
+          <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">피드백 유형</label>
-            <BasicSelect
-              v-model="selectedCategory"
-              :options="feedbackCategories"
-              size="L"
-              class="w-full"
-            />
+            <BasicSelect v-model="selectedCategory" :options="feedbackCategories" size="M" />
           </div>
 
           <!-- 피드백 내용 입력 -->
-          <div class="space-y-2">
+          <div class="space-y-1">
             <label class="block text-sm font-medium text-gray-700">피드백 내용</label>
             <textarea
               v-model="feedbackContent"
-              rows="4"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#698469]"
+              rows="3"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-[#698469]"
               placeholder="오류 신고 및 피드백 내용을 입력해주세요."
             ></textarea>
           </div>
 
           <!-- 버튼 -->
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-end gap-2 pt-2">
             <button
-              class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              class="px-3 h-10 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
               @click="showFeedbackInputModal = false"
             >
               취소
             </button>
             <button
-              class="px-4 py-2 bg-[#698469] text-white rounded-lg hover:bg-[#4F634F] disabled:opacity-50"
+              class="px-3 h-10 text-sm bg-[#698469] text-white rounded-lg hover:bg-[#4F634F] disabled:opacity-50"
               :disabled="!selectedCategory || !feedbackContent.trim()"
               @click="submitFeedbackContent"
             >
@@ -290,33 +281,27 @@ watch(() => messages.value.length, scrollToBottom);
   line-height: 1;
 }
 
+/* 모바일 기본 폰트 크기 */
+:deep(*) {
+  font-size: 14px;
+}
+
+/* md 브레이크포인트(768px) 이상에서는 16px로 증가 */
+@media (min-width: 768px) {
+  :deep(*) {
+    font-size: 16px;
+  }
+}
+
 @media (max-width: 500px) {
-  .fixed.bg-black {
-    /* 오버레이는 전체 화면을 커버하도록 */
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100vw;
-    height: 100vh;
-  }
-
   .fixed:not(.bg-black) {
-    /* 챗봇 모달만 크기 조정 */
-    width: calc(100% - 40px) !important;
-    right: 20px !important;
-    left: 20px !important;
+    /* 챗봇 모달 크기 조정 */
+    width: calc(100% - 32px) !important;
+    right: 16px !important;
+    left: 16px !important;
     margin: 0 auto;
-    max-width: 450px;
-  }
-
-  .messages-container {
-    padding: 16px !important;
-  }
-
-  .input-area {
-    padding: 12px 16px !important;
+    max-width: 380px;
+    bottom: 16px !important;
   }
 }
 </style>
