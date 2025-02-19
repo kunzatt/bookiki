@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   getCurrentUserInformation,
@@ -11,6 +11,7 @@ import {
 import { getCurrentBorrowedBooks } from '@/api/bookHistory';
 import { getCurrentPolicy } from '@/api/loanPolicy';
 import type { UserInformationResponse } from '@/types/api/user';
+import { useModalStore } from '@/stores/modal';
 
 const router = useRouter();
 const isLoading = ref(true);
@@ -28,6 +29,13 @@ const menuItems = ref([
   { id: 3, title: '나의 대출 이력', path: '/mypage/history' },
   { id: 4, title: '문의사항', path: '/qnas' },
 ]);
+
+const modalStore = useModalStore();
+
+// 기본 이미지인지 확인하는 computed 속성 추가
+const isDefaultImage = computed(() => {
+  return userInfo.value?.profileImage === '/default-book-cover.svg';
+});
 
 // 사용자 데이터 가져오기
 const fetchUserData = async () => {
@@ -91,12 +99,7 @@ const fetchUserData = async () => {
 // 메뉴 아이템 클릭 핸들러
 const handleMenuClick = async (path: string) => {
   if (path === '/logout') {
-    try {
-      await logout(); // 로그아웃 처리 (이미 store에서 세션을 먼저 지움)
-      router.push('/login'); // 이제 router.push를 사용해도 됨
-    } catch (error) {
-      console.error('로그아웃 실패:', error);
-    }
+    modalStore.openModal('logout');
   } else {
     router.push(path);
   }
@@ -128,7 +131,7 @@ const handleImageClick = () => {
   input.click();
 };
 
-// 이미지 로드 실패시 기본 이미지로 대체
+// 이미지 로드 에러 처리
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src = '/default-book-cover.svg';
@@ -136,12 +139,20 @@ const handleImageError = (event: Event) => {
 
 // 프로필 사진 삭제 처리
 const handleImageDelete = async (event: Event) => {
-  event.stopPropagation();
-  try {
-    await deleteProfileImage();
-    await fetchUserData(); // 사용자 데이터를 다시 불러와서 기본 이미지로 업데이트
-  } catch (error) {
-    console.error('프로필 이미지 삭제 실패:', error);
+  event.preventDefault();
+  if (!isDefaultImage.value) {
+    modalStore.openModal('deleteProfileImage');
+  }
+};
+
+const handleModalConfirm = async () => {
+  if (modalStore.modalState.type === 'deleteProfileImage') {
+    try {
+      await deleteProfileImage();
+      window.location.reload();
+    } catch (error) {
+      console.error('프로필 사진 삭제 실패:', error);
+    }
   }
 };
 
@@ -162,27 +173,28 @@ onMounted(() => {
           <!-- Profile Section -->
           <div class="flex items-center space-x-4 mb-8 pt-6">
             <div class="relative">
-              <div class="profile-image-container" @click="handleImageClick">
+              <div class="profile-image-container">
                 <img
                   :src="userInfo.profileImage"
                   :alt="userInfo.name"
+                  data-profile-image
                   class="w-24 h-24 rounded-full object-cover bg-gray-100 profile-image"
                   @error="handleImageError"
                 />
-                <div
-                  class="delete-overlay"
-                  @click.stop="handleImageDelete"
-                  v-if="userInfo.profileImage !== '/default-book-cover.svg'"
+                <button
+                  @click.stop="handleImageClick"
+                  class="absolute -bottom-1 -left-1 p-1 rounded-full bg-white shadow-md hover:bg-gray-50"
                 >
-                  <i class="fas fa-trash delete-icon"></i>
-                </div>
+                  <span class="material-icons text-gray-600 text-lg">add_photo_alternate</span>
+                </button>
+                <button
+                  v-if="!isDefaultImage"
+                  @click.stop="handleImageDelete"
+                  class="absolute -bottom-1 -right-1 p-1 rounded-full bg-white shadow-md hover:bg-gray-50"
+                >
+                  <span class="material-icons text-gray-600 text-lg">delete</span>
+                </button>
               </div>
-              <button
-                @click="handleImageClick"
-                class="absolute bottom-0 right-0 bg-blue-500 p-2 rounded-full text-white hover:bg-blue-600 transition-colors"
-              >
-                <span class="material-icons text-lg">photo_camera</span>
-              </button>
             </div>
             <div>
               <h2 class="text-xl font-semibold">{{ userInfo.name }}</h2>
@@ -270,7 +282,6 @@ button:hover {
 .profile-image-container {
   position: relative;
   display: inline-block;
-  cursor: pointer;
 }
 
 .profile-image-container:hover .delete-overlay {
