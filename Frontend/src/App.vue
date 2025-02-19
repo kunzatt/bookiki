@@ -58,7 +58,7 @@ const handleModalConfirm = async () => {
 
   if (modalType === 'logout') {
     await authStore.logout();
-    router.push('/');
+    router.push('/login'); // 로그아웃 후 로그인 페이지로 리다이렉트
   } else if (modalType === 'deleteProfileImage') {
     try {
       await deleteProfileImage();

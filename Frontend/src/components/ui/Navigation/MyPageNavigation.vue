@@ -63,9 +63,12 @@ const handleClick = (to: string) => {
 };
 
 const handleLogoutConfirm = async () => {
-  showLogoutModal.value = false;
-  await authStore.logout();
-  router.push('/');
+  try {
+    await authStore.logout();
+    router.push('/login'); // 로그아웃 후 로그인 페이지로 리다이렉트
+  } catch (error) {
+    console.error('로그아웃 실패:', error);
+  }
 };
 </script>
 
