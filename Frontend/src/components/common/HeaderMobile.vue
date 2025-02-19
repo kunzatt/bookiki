@@ -52,7 +52,7 @@ onMounted(() => {
 
 <template>
   <header class="sticky top-0 left-0 right-0 bg-white border-b border-gray-100">
-    <div class="flex items-center justify-between h-20 px-4">
+    <div class="flex items-center justify-between h-10 px-4">
       <!-- Back Button (Only for default type) -->
       <button
         v-if="type === 'default'"
@@ -65,7 +65,7 @@ onMounted(() => {
       <div v-else class="w-8"></div>
 
       <!-- Title -->
-      <h1 class="text-2xl font-semibold text-gray-800 truncate">{{ title }}</h1>
+      <!-- <h1 class="text font text-gray-800 truncate">{{ title }}</h1> -->
 
       <!-- Right Icons -->
       <div class="flex items-center gap-20">

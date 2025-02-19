@@ -157,11 +157,12 @@ onMounted(async () => {
   <div v-else-if="qna" class="bg-white rounded-lg shadow-sm p-6">
     <!-- 제목 영역 -->
     <div class="border-b pb-4">
-      <div class="flex items-center gap-2 mb-2">
+      <div class="mb-2">
         <BasicStatusBadge
           :text="QnaTypeDescriptions[qna.qnaType]"
           :type="getStatusType(qna.qnaType)"
           :isEnabled="true"
+          class="mb-2"
         />
         <h1 class="text-2xl font-bold text-gray-900">{{ qna.title }}</h1>
       </div>

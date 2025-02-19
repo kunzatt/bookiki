@@ -22,18 +22,12 @@ const displayCount = ref(4);
 const prevDisplayCount = ref(4);
 
 const updateDisplayCount = () => {
-  const containerWidth = window.innerWidth - 48;
-  const cardWidth = 175;
-  const gap = 32;
-  const safetyMargin = 20;
-  const maxCards = Math.floor((containerWidth + gap - safetyMargin) / (cardWidth + gap));
-
   if (window.innerWidth >= 1024) {
-    displayCount.value = Math.min(4, maxCards);
+    displayCount.value = 4;
   } else if (window.innerWidth >= 768) {
-    displayCount.value = Math.min(3, maxCards);
+    displayCount.value = 3;
   } else if (window.innerWidth >= 640) {
-    displayCount.value = Math.min(2, maxCards);
+    displayCount.value = 2;
   } else {
     displayCount.value = 1;
   }
@@ -41,7 +35,7 @@ const updateDisplayCount = () => {
   if (prevDisplayCount.value !== displayCount.value) {
     pageInfo.value = {
       ...pageInfo.value,
-      pageSize: displayCount.value,
+      pageSize: displayCount.value * 2, // 한 페이지당 표시할 아이템 수 조정
     };
     prevDisplayCount.value = displayCount.value;
   }

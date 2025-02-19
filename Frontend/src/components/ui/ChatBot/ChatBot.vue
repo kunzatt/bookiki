@@ -291,9 +291,32 @@ watch(() => messages.value.length, scrollToBottom);
 }
 
 @media (max-width: 500px) {
-  .absolute {
+  .fixed.bg-black {
+    /* 오버레이는 전체 화면을 커버하도록 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .fixed:not(.bg-black) {
+    /* 챗봇 모달만 크기 조정 */
     width: calc(100% - 40px) !important;
     right: 20px !important;
+    left: 20px !important;
+    margin: 0 auto;
+    max-width: 450px;
+  }
+
+  .messages-container {
+    padding: 16px !important;
+  }
+
+  .input-area {
+    padding: 12px 16px !important;
   }
 }
 </style>

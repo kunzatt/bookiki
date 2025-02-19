@@ -1,4 +1,4 @@
-[App.vue]
+<!-- [App.vue] -->
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -107,5 +107,36 @@ body {
 
 #app {
   height: 100%;
+  /* 모바일 기본 폰트 크기 */
+  font-size: 14px;
+}
+
+/* md 브레이크포인트(768px) 이상에서는 16px로 증가 */
+@media (min-width: 768px) {
+  #app {
+    font-size: 16px;
+  }
+}
+
+/* text-{size} 클래스에 대한 반응형 크기 조정 */
+@media (max-width: 767px) {
+  .text-sm {
+    font-size: 0.75rem !important;
+  }
+  .text-base {
+    font-size: 0.875rem !important;
+  }
+  .text-lg {
+    font-size: 1rem !important;
+  }
+  .text-xl {
+    font-size: 1.125rem !important;
+  }
+  .text-2xl {
+    font-size: 1.25rem !important;
+  }
+  .text-3xl {
+    font-size: 1.5rem !important;
+  }
 }
 </style>
