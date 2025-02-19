@@ -25,8 +25,8 @@ const getStatusClass = (type: string, isEnabled: boolean, size: ComponentSize) =
   const styles = {
     // Primary - 기존 메인 컬러 유지 (Chatbot과 동일)
     primary: isEnabled
-      ? 'bg-[#698469] text-white'
-      : 'bg-[#F8F9F8] text-[#698469] border border-[#698469]',
+      ? 'bg-[#2ECC71] text-white'
+      : 'bg-[#F8F9F8] text-[#2ECC71] border border-[#2ECC71]',
 
     // Info - 차분한 파스텔 블루
     info: isEnabled
@@ -40,8 +40,8 @@ const getStatusClass = (type: string, isEnabled: boolean, size: ComponentSize) =
 
     // Error - 차분한 파스텔 레드
     error: isEnabled
-      ? 'bg-[#C1857C] text-white'
-      : 'bg-[#F9F3F2] text-[#C1857C] border border-[#C1857C]',
+      ? 'bg-[#E74C3C] text-white'
+      : 'bg-[#F9F3F2] text-[#E74C3C] border border-[#E74C3C]',
 
     // Gray - 부드러운 그레이
     gray: isEnabled

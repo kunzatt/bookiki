@@ -226,9 +226,9 @@ onUnmounted(() => {
               <BasicStatusBadge
                 v-if="$window.width >= 768"
                 :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-                :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
-                size="S"
-                class="mb-4"
+                :type="bookItem?.bookStatus === 'AVAILABLE' ? 'primary' : 'error'"
+                size="M"
+                class="mb-4 transform scale-125 origin-left"
               />
 
               <div class="flex items-center gap-4 mb-4">
@@ -281,20 +281,24 @@ onUnmounted(() => {
       </div>
 
       <!-- Mobile fixed bottom section -->
-      <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
-        <div class="px-4 py-3 mx-auto w-full min-w-[320px] max-w-[1280px]">
-          <div class="flex items-center justify-between gap-4 mb-[56px]">
-            <BasicStatusBadge
-              :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-              :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
-              size="S"
-            />
+      <div class="md:hidden fixed bottom-[56px] left-0 right-0 bg-white border-t border-gray-200">
+        <div class="flex items-center justify-center h-[64px] px-4 mx-auto w-full min-w-[320px] max-w-[1280px]">
+          <div class="flex items-center gap-2 w-full max-w-[500px]">
+            <div class="w-[130px]">
+              <BasicStatusBadge
+                :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+                :type="bookItem?.bookStatus === 'AVAILABLE' ? 'primary' : 'error'"
+                size="M"
+                :isEnabled="true"
+                class="transform scale-125 origin-left"
+              />
+            </div>
             <BasicButton
               text="도서 대출하기"
-              size="L"
+              size="M"
               @click="handleBorrowClick"
               :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
-              class="flex-1"
+              class="flex-1 h-10"
             />
           </div>
         </div>
