@@ -8,5 +8,5 @@ export enum QnaType {
 export const QnaTypeDescriptions: Record<QnaType, string> = {
   [QnaType.NORMAL]: '일반',
   [QnaType.NEW_BOOK]: '희망도서 신청',
-  [QnaType.CHANGE_INFO]: '이름/사번 변경',
+  [QnaType.CHANGE_INFO]: '회원정보 변경',
 };
