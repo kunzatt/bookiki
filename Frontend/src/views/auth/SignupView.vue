@@ -27,6 +27,8 @@ const passwordConfirm = ref('');
 const isEmailVerificationAttempted = ref(false);
 const isCompanyIdLocked = ref(false);
 const verifiedCompanyId = ref(''); // 검증된 사번을 저장
+const companyIdMessage = ref('사번 중복 확인이 필요합니다.');
+const companyIdMessageType = ref<'error' | 'success'>('error');
 
 watch(
   () => formData.value.companyId,
@@ -103,11 +105,15 @@ const checkCompanyIdDuplicate = async () => {
     await checkCompanyId(formData.value.companyId);
     isCompanyIdVerified.value = true;
     isCompanyIdLocked.value = true;
-    verifiedCompanyId.value = formData.value.companyId; // 검증된 사번 저장
+    verifiedCompanyId.value = formData.value.companyId;
+    companyIdMessage.value = '사용 가능한 사번입니다.';
+    companyIdMessageType.value = 'success';
     showToast(AUTH_MESSAGES.SUCCESS.COMPANY_ID_AVAILABLE, 'success');
-  } catch (error) {
+  } catch (error: any) {
     isCompanyIdVerified.value = false;
     isCompanyIdLocked.value = false;
+    companyIdMessage.value = '이미 사용 중인 사번입니다.';
+    companyIdMessageType.value = 'error';
     showToast(AUTH_MESSAGES.ERROR.COMPANY_ID_DUPLICATE);
   }
 };
@@ -190,11 +196,11 @@ const handleSubmit = async () => {
               v-if="formData.companyId"
               class="text-xs ml-1"
               :class="{
-                'text-red-500': !isCompanyIdVerified,
-                'text-green-500': isCompanyIdVerified,
+                'text-red-500': companyIdMessageType === 'error',
+                'text-green-500': companyIdMessageType === 'success'
               }"
             >
-              {{ isCompanyIdVerified ? '사용 가능한 사번입니다.' : '사번 중복 확인이 필요합니다.' }}
+              {{ companyIdMessage }}
             </p>
           </div>
 
@@ -332,11 +338,11 @@ const handleSubmit = async () => {
             v-if="formData.companyId"
             class="text-xs ml-1"
             :class="{
-              'text-red-500': !isCompanyIdVerified,
-              'text-green-500': isCompanyIdVerified,
+              'text-red-500': companyIdMessageType === 'error',
+              'text-green-500': companyIdMessageType === 'success'
             }"
           >
-            {{ isCompanyIdVerified ? '사용 가능한 사번입니다.' : '사번 중복 확인이 필요합니다.' }}
+            {{ companyIdMessage }}
           </p>
         </div>
 
