@@ -24,7 +24,6 @@ public class BookAdminDetailResponse {
     private String isbn;
     private LocalDateTime publishedAt;
     private String image;
-    private String description;
     private Category category;
 
     // 도서 아이템 정보 (BookItemEntity)
@@ -38,9 +37,8 @@ public class BookAdminDetailResponse {
     // 현재 대출자 정보 (대출 중일 때만)
     private BorrowerInfo currentBorrower;
 
-    @Builder
     public BookAdminDetailResponse(String title, String author, String publisher,
-                                   String isbn, LocalDateTime publishedAt, String image, String description,
+                                   String isbn, LocalDateTime publishedAt, String image,
                                    Category category, Integer id, LocalDateTime purchaseAt,
                                    BookStatus bookStatus, QrCodeInfo qrCode, BorrowerInfo currentBorrower) {
         this.title = title;
@@ -49,7 +47,6 @@ public class BookAdminDetailResponse {
         this.isbn = isbn;
         this.publishedAt = publishedAt;
         this.image = image;
-        this.description = description;
         this.category = category;
         this.id = id;
         this.purchaseAt = purchaseAt;
@@ -64,7 +61,7 @@ public class BookAdminDetailResponse {
     public static class QrCodeInfo {
         private Integer id;
         private String qrValue;
-        private String createAt;
+        private LocalDateTime createAt;
     }
 
     @Getter

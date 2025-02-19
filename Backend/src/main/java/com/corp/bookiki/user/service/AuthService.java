@@ -1,6 +1,8 @@
 package com.corp.bookiki.user.service;
 
+import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.JWTException;
+import com.corp.bookiki.global.error.exception.UserException;
 import com.corp.bookiki.jwt.properties.JwtProperties;
 import com.corp.bookiki.jwt.repository.RefreshTokenRepository;
 import com.corp.bookiki.jwt.service.JwtService;
@@ -24,6 +26,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +83,12 @@ public class AuthService {
     public LoginResponse login(String username, String password, HttpServletResponse response) {
         try {
             log.info("Login attempt for user: {}", username);
+
+            // 0. provider 확인
+            UserEntity user = userRepository.findByEmail(username).orElse(null);
+            if (user != null && !user.getProvider().equals(Provider.BOOKIKI)) {
+                throw new UserException(ErrorCode.UNVALID_PROVIDER);
+            }
 
             // 1. 인증 시도
             Authentication authentication = authenticationManager.authenticate(
