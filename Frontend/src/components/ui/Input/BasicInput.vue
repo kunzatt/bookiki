@@ -64,7 +64,7 @@ const togglePassword = () => {
 <template>
   <div :class="widthClasses[width]">
     <!-- Label -->
-    <label v-if="label" class="block text-sm text-gray-500 mb-1">{{ label }}</label>
+    <label v-if="label" class="block text-xs md:text-sm text-gray-500 mb-1">{{ label }}</label>
 
     <!-- Type A: Input with button -->
     <div v-if="type === 'withButton'" class="flex gap-2">
@@ -73,7 +73,7 @@ const togglePassword = () => {
           :type="inputType"
           :value="modelValue"
           :placeholder="placeholder"
-          class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200"
+          class="w-full px-3 md:px-4 h-10 md:h-12 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200 text-sm md:text-base"
           @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
       </div>
@@ -86,7 +86,7 @@ const togglePassword = () => {
         :type="inputType"
         :value="modelValue"
         :placeholder="placeholder"
-        class="w-full px-4 py-3 border-b border-[#698469] focus:border-b-2 bg-transparent transition-colors duration-200"
+        class="w-full px-3 md:px-4 h-10 md:h-12 border-b border-[#698469] focus:border-b-2 bg-transparent transition-colors duration-200 text-sm md:text-base"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>
@@ -97,7 +97,7 @@ const togglePassword = () => {
         :type="inputType"
         :value="modelValue"
         :placeholder="placeholder"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200"
+        class="w-full px-3 md:px-4 h-10 md:h-12 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200 text-sm md:text-base"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
     </div>
@@ -108,7 +108,7 @@ const togglePassword = () => {
         :type="showPassword ? 'text' : 'password'"
         :value="modelValue"
         :placeholder="placeholder"
-        class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200 pr-10"
+        class="w-full px-3 md:px-4 h-10 md:h-12 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200 pr-10 text-sm md:text-base"
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
       />
       <button
@@ -116,7 +116,7 @@ const togglePassword = () => {
         class="absolute right-3 top-1/2 -translate-y-1/2"
         @click="togglePassword"
       >
-        <span class="material-icons text-gray-500" style="font-size: 20px">
+        <span class="material-icons text-gray-500" style="font-size: 18px md:text-[20px]">
           {{ showPassword ? 'visibility_off' : 'visibility' }}
         </span>
       </button>
