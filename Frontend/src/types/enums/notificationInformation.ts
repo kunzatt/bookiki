@@ -3,7 +3,7 @@ export enum NotificationType {
   QR_SCAN_ERROR = 'QR 오류',
   LOST_BOOK = '도서 분실',
   BOOK_ARRANGEMENT = '도서 정리',
-  BOOK_OVERDUE = '도서 연체',
+  BOOK_OVERDUE = '도서 연체', // 관리자
   QNA_CREATED = '문의사항 등록',
   RETURN_DEADLINE = '반납 기한',
   OVERDUE_NOTICE = '연체 알림',
