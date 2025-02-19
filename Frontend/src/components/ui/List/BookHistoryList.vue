@@ -45,7 +45,7 @@ const getStatusBadgeProps = (item: BookDetail) => {
   }
   return {
     text: '정상 반납',
-    type: success as BadgeStatus,
+    type: 'success' as BadgeStatus,
   };
 };
 
@@ -193,7 +193,7 @@ onMounted(() => {
                   </span>
                 </div>
                 <!-- 상태 표시 -->
-                <BasicStatusBadge v-bind="getStatusBadgeProps(item)" size="S" :is-enabled="true" />
+                <BasicStatusBadge v-bind="getStatusBadgeProps(item)" size="S" :is-enabled="false" />
               </div>
             </div>
           </div>

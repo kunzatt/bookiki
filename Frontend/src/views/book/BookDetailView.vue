@@ -249,7 +249,7 @@ onUnmounted(() => {
               <BasicStatusBadge
                 v-if="$window.width >= 768"
                 :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-                :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
+                :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
                 size="S"
                 :isEnabled="false"
                 class="mb-4"
@@ -311,7 +311,7 @@ onUnmounted(() => {
           <div class="flex items-center gap-3 w-full max-w-[500px]">
             <BasicStatusBadge
               :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-              :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
+              :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
               size="M"
               :isEnabled="false"
               class="shrink-0"
