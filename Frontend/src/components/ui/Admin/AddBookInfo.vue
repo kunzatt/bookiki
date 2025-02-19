@@ -2,6 +2,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
+import BaseModal from '@/components/ui/Modal/BaseModal.vue';
 import type { BookInformationResponse } from '@/types/api/bookInformation';
 import type { BookItemResponse } from '@/types/api/bookItem';
 import { addBookItem } from '@/api/bookItem';
@@ -14,6 +15,7 @@ interface Props {
 const props = defineProps<Props>();
 const isLoading = ref(false);
 const error = ref<string | null>(null);
+const showSuccessModal = ref(false);
 
 // BookItem 생성 이벤트 emit
 const emit = defineEmits<{
@@ -36,6 +38,7 @@ const handleCreateBookItem = async () => {
 
     // 부모 컴포넌트에 결과 전달
     emit('bookItemCreated', bookItem);
+    showSuccessModal.value = true;
   } catch (err) {
     error.value = '도서 등록 중 오류가 발생했습니다.';
     console.error('도서 등록 오류:', err);
@@ -58,10 +61,6 @@ const handleCreateBookItem = async () => {
         <h2 class="text-xl font-bold mb-4">{{ bookInfo?.title }}</h2>
         <div class="space-y-3">
           <div class="flex gap-4">
-            <span class="w-24 text-gray-500">도서ID</span>
-            <span>{{ bookInfo?.id }}</span>
-          </div>
-          <div class="flex gap-4">
             <span class="w-24 text-gray-500">ISBN</span>
             <span>{{ bookInfo?.isbn }}</span>
           </div>
@@ -75,7 +74,7 @@ const handleCreateBookItem = async () => {
           </div>
           <div class="flex gap-4">
             <span class="w-24 text-gray-500">출판일</span>
-            <span>{{ bookInfo?.publishedAt }}</span>
+            <span>{{ bookInfo?.publishedAt?.split('T')[0].replace(/-/g, '.') }}</span>
           </div>
           <div class="flex gap-4">
             <span class="w-24 text-gray-500">카테고리</span>
@@ -96,5 +95,12 @@ const handleCreateBookItem = async () => {
         </div>
       </div>
     </div>
+    <BaseModal
+      v-model="showSuccessModal"
+      title="도서 등록 완료"
+      content="도서가 등록되었습니다."
+      icon="check_circle"
+      confirm-text="확인"
+    />
   </div>
 </template>
