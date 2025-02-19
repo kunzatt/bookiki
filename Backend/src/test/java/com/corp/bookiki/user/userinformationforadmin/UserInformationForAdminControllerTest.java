@@ -4,6 +4,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -126,7 +127,7 @@ class UserInformationForAdminControllerTest {
 		log.info("테스트용 응답 객체 생성 완료: {}", response);
 
 		UserInformationForAdminRequest request = new UserInformationForAdminRequest();
-		request.setActiveAt(now.plusHours(1));
+		request.setActiveAt(LocalDate.now());
 
 		when(userInformationForAdminService.updateUserActiveAt(eq(1), any(UserInformationForAdminRequest.class)))
 			.thenReturn(response);

@@ -3,6 +3,7 @@ package com.corp.bookiki.user.userinformationforadmin;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -145,7 +146,7 @@ class UserInformationForAdminServiceTest {
 	void updateUserActiveAt_WhenValidRequest_ThenSuccess() {
 		log.info("사용자 활성 시간 수정 테스트 시작");
 		LocalDateTime now = LocalDateTime.now();
-		LocalDateTime newActiveAt = now.plusHours(1);
+		LocalDate newActiveDate = LocalDate.now();
 
 		UserEntity user = UserEntity.builder()
 			.email("test@example.com")
@@ -165,11 +166,12 @@ class UserInformationForAdminServiceTest {
 		log.info("Mock 레포지토리 동작 설정 완료");
 
 		UserInformationForAdminRequest request = new UserInformationForAdminRequest();
-		request.setActiveAt(newActiveAt);
+		request.setActiveAt(newActiveDate);
 
 		UserInformationForAdminResponse result = userInformationForAdminService.updateUserActiveAt(1, request);
 
-		assertThat(result.getActiveAt()).isEqualTo(newActiveAt);
+		// LocalDateTime을 LocalDate로 변환하여 비교
+		assertThat(result.getActiveAt().toLocalDate()).isEqualTo(newActiveDate);
 		verify(userRepository, times(1)).findById(1);
 		log.info("사용자 활성 시간 수정 테스트 완료");
 	}
