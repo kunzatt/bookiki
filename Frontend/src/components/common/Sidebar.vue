@@ -48,10 +48,19 @@ const handleMenuClick = async (item: MenuItem) => {
     } else {
       router.push('/main');
     }
-  } else if (item.action === 'logout') {
+  } else if (item.action === 'logout' || item.to === '/logout') {
     modalStore.openModal('logout');
   } else if (item.path) {
     router.push(item.path);
+  }
+};
+
+const handleLogoutConfirm = async () => {
+  try {
+    await authStore.logout();
+    router.push('/login');
+  } catch (error) {
+    console.error('로그아웃 실패:', error);
   }
 };
 
