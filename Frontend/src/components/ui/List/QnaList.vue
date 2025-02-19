@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { selectQnas } from '@/api/qna';
 import type { QnaListResponse } from '@/types/api/qna';
@@ -117,16 +117,17 @@ const convertQnaForDisplay = (qna: QnaListResponseWithAnswered) => ({
     : QnaStatusDescriptions[QnaStatus.WAITING],
 });
 
+const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value));
+
 const loadQnas = async () => {
   loading.value = true;
   try {
-    // 필터링된 결과를 위해 더 많은 데이터를 요청
     const response = await selectQnas({
       keyword: filterValues.value.keyword,
       qnaType: filterValues.value.qnaType,
       pageable: {
         page: isMobile.value ? 0 : currentPage.value - 1,
-        size: pageSize.value * 2, // 페이지 사이즈를 2배로 요청
+        size: pageSize.value,
         sort: ['createdAt,DESC'],
       },
     });
@@ -139,18 +140,14 @@ const loadQnas = async () => {
       filteredContent = filteredContent.filter((qna) => qna.answered === isAnswered);
     }
 
-    // 필터링된 결과에서 현재 페이지에 해당하는 부분만 잘라내기
-    const start = 0;
-    const end = pageSize.value;
-
     if (isMobile.value && currentPage.value > 1) {
-      qnas.value = [...qnas.value, ...filteredContent.slice(start, end)];
+      qnas.value = [...qnas.value, ...filteredContent];
     } else {
-      qnas.value = filteredContent.slice(start, end);
+      qnas.value = filteredContent;
     }
 
-    // 전체 아이템 수 계산 수정
-    totalItems.value = filteredContent.length;
+    // 전체 아이템 수와 페이지 수 업데이트
+    totalItems.value = response.totalElements;
     hasMore.value = qnas.value.length < totalItems.value;
   } catch (error) {
     console.error('문의사항 목록 조회 실패:', error);
@@ -350,12 +347,15 @@ defineEmits(['delete']);
     </div>
     <!-- 데스크톱 페이지네이션 -->
     <div class="mt-4 flex justify-center">
-      <BasicWebPagination
-        :current-page="currentPage"
-        :total-pages="Math.ceil(totalItems / pageSize)"
-        :page-size="pageSize"
-        @update:pageInfo="handlePaginationChange"
-      />
+      <!-- 데스크톱 페이지네이션 -->
+      <div class="mt-4 flex justify-center">
+        <BasicWebPagination
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :page-size="pageSize"
+          @update:pageInfo="handlePaginationChange"
+        />
+      </div>
     </div>
   </div>
 </template>
