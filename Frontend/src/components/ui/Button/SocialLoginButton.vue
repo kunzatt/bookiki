@@ -33,7 +33,8 @@ const handleSocialLogin = (provider: string) => {
         ? 'bg-[#03C75A] hover:bg-[#02B350] text-white'
         : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300',
     ]"
-    @click="handleSocialLogin(provider)"
+    @click.prevent="handleSocialLogin(provider)"
+    type="button"
   >
     <img :src="logoImages[provider]" :alt="`${provider} 로고`" class="w-5 h-5" />
     <span class="font-medium">{{ text }}</span>
