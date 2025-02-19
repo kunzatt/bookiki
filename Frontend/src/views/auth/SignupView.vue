@@ -86,10 +86,7 @@ const handleEmailVerifyClick = () => {
     showToast('이미 인증이 진행되었습니다.');
     return;
   }
-  if (!formData.value.email) {
-    showToast(AUTH_MESSAGES.ERROR.INVALID_EMAIL);
-    return;
-  }
+
   isEmailVerificationAttempted.value = true;
 };
 

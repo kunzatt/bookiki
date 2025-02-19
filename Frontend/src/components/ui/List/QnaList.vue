@@ -302,7 +302,7 @@ defineEmits(['delete']);
             :text="QnaTypeDescriptions[qna.qnaType]"
             :type="
               qna.qnaType === QnaType.NEW_BOOK
-                ? success
+                ? 'success'
                 : qna.qnaType === QnaType.NORMAL
                   ? 'info'
                   : 'warning'
@@ -313,7 +313,7 @@ defineEmits(['delete']);
             <span class="text-sm text-gray-500 mb-1">{{ formatDate(qna.createdAt) }}</span>
             <BasicStatusBadge
               :text="QnaStatusDescriptions[qna.answered ? 'COMPLETED' : 'WAITING']"
-              :type="qna.answered ? success : 'warning'"
+              :type="qna.answered ? 'success' : 'warning'"
               :isEnabled="true"
             />
           </div>

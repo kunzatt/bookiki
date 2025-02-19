@@ -62,34 +62,46 @@ export const useAuthStore = defineStore('auth', () => {
     return userRole.value === requiredRole;
   };
 
-  const setToken = async (temporaryToken: string) => {
+  const setToken = async (token: string) => {
     try {
-      const response = await setTokenApi(temporaryToken);
-      user.value = response;
-      sessionStorage.setItem('user', JSON.stringify(response));
+      console.log('토큰 설정 시작:', token.substring(0, 10) + '...');
+
+      // 토큰을 쿠키에 설정
+      document.cookie = `access_token=${token}; path=/; secure; max-age=1800`;
+
+      const response = await setTokenApi(token);
+      console.log('서버 응답:', response);
+
+      // 응답 데이터 검증
+      if (!response || !response.id || !response.username || !response.role) {
+        throw new Error('유효하지 않은 사용자 정보');
+      }
+
+      const userData = {
+        id: response.id,
+        username: response.username,
+        role: response.role,
+      };
+
+      user.value = userData;
+      sessionStorage.setItem('user', JSON.stringify(userData));
+
+      console.log('토큰 설정 완료:', userData);
       return response;
     } catch (error) {
-      console.error('Token exchange failed:', error);
+      console.error('토큰 설정 실패:', error);
+      user.value = null;
+      sessionStorage.removeItem('user');
       throw error;
     }
   };
 
   const handleOAuth2Login = async (token: string) => {
     try {
-      const response = await setTokenApi(token);
-
-      // User 정보 설정 (response에서 받은 데이터로)
-      user.value = {
-        id: response.id,
-        username: response.username,
-        role: response.role,
-      };
-
-      // sessionStorage에 사용자 정보 저장
-      sessionStorage.setItem('user', JSON.stringify(user.value));
+      await setToken(token);
       return true;
     } catch (error) {
-      console.error('OAuth2 login failed:', error);
+      console.error('OAuth2 로그인 실패:', error);
       throw error;
     }
   };
