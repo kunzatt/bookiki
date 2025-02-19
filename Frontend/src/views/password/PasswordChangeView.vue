@@ -171,66 +171,68 @@ const goBack = () => {
 
   <!-- 모바일 레이아웃 -->
   <div class="md:hidden">
-    <div class="px-4 py-6">
-      <div class="bg-white rounded-lg shadow-sm p-6 space-y-6">
-        <div
-          v-if="success"
-          class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
-        >
-          비밀번호가 성공적으로 변경되었습니다. 마이페이지로 이동합니다.
+    <div class="w-full">
+      <div class="px-4 py-6">
+        <div class="bg-white rounded-lg shadow-sm p-6 space-y-6">
+          <div
+            v-if="success"
+            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+          >
+            비밀번호가 성공적으로 변경되었습니다. 마이페이지로 이동합니다.
+          </div>
+
+          <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            {{ error }}
+          </div>
+
+          <form @submit.prevent="handleSubmit" class="space-y-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">현재 비밀번호</label>
+              <BasicInput
+                v-model="currentPassword"
+                type="password"
+                placeholder="현재 비밀번호를 입력하세요"
+              />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">새 비밀번호</label>
+              <BasicInput
+                v-model="newPassword"
+                type="password"
+                placeholder="새 비밀번호를 입력하세요"
+              />
+              <p class="mt-1 text-sm text-gray-500">
+                비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.
+              </p>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">새 비밀번호 확인</label>
+              <BasicInput
+                v-model="confirmPassword"
+                type="password"
+                placeholder="새 비밀번호를 다시 입력하세요"
+              />
+            </div>
+
+            <div class="flex justify-end space-x-4">
+              <BasicButton
+                type="button"
+                size="M"
+                text="취소"
+                @click="goBack"
+                class="!bg-gray-200 !text-gray-700 hover:!bg-gray-300"
+              />
+              <BasicButton
+                type="submit"
+                size="M"
+                text="변경하기"
+                class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
+              />
+            </div>
+          </form>
         </div>
-
-        <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-          {{ error }}
-        </div>
-
-        <form @submit.prevent="handleSubmit" class="space-y-6">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">현재 비밀번호</label>
-            <BasicInput
-              v-model="currentPassword"
-              type="password"
-              placeholder="현재 비밀번호를 입력하세요"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">새 비밀번호</label>
-            <BasicInput
-              v-model="newPassword"
-              type="password"
-              placeholder="새 비밀번호를 입력하세요"
-            />
-            <p class="mt-1 text-sm text-gray-500">
-              비밀번호는 8~20자의 영문, 숫자, 특수문자를 포함해야 합니다.
-            </p>
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">새 비밀번호 확인</label>
-            <BasicInput
-              v-model="confirmPassword"
-              type="password"
-              placeholder="새 비밀번호를 다시 입력하세요"
-            />
-          </div>
-
-          <div class="flex justify-end space-x-4">
-            <BasicButton
-              type="button"
-              size="M"
-              text="취소"
-              @click="goBack"
-              class="!bg-gray-200 !text-gray-700 hover:!bg-gray-300"
-            />
-            <BasicButton
-              type="submit"
-              size="M"
-              text="변경하기"
-              class="!bg-[#698469] !text-white hover:!bg-[#4a5d4a]"
-            />
-          </div>
-        </form>
       </div>
     </div>
   </div>
