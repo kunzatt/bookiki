@@ -50,7 +50,8 @@ const fetchRecommendedBooks = async () => {
     // 캐시가 유효한 경우 캐시된 데이터 사용
     if (mainPageStore.isRecommendedBooksCacheValid) {
       recommendedBooks.value = mainPageStore.recommendedBooksCache!.data;
-      recommendationReason.value = mainPageStore.recommendedBooksCache!.data.recommendationReason || '';
+      recommendationReason.value =
+        mainPageStore.recommendedBooksCache!.data.recommendationReason || '';
       return;
     }
 
@@ -165,9 +166,20 @@ const debounce = (fn: Function, delay: number) => {
 const debouncedUpdateDisplayCount = debounce(updateDisplayCount, 250);
 
 onMounted(async () => {
+  // 인증 상태 확인
+  if (!authStore.isAuthenticated) {
+    authStore.initializeFromStorage();
+  }
+
   isLoading.value = true;
   try {
-    await Promise.all([fetchMonthlyBooks(), fetchRecommendedBooks()]);
+    // 인증된 사용자인 경우에만 추천 도서 데이터 가져오기
+    if (authStore.isAuthenticated) {
+      await Promise.all([fetchMonthlyBooks(), fetchRecommendedBooks()]);
+    } else {
+      // 비인증 사용자는 이달의 도서만 표시
+      await fetchMonthlyBooks();
+    }
   } finally {
     isLoading.value = false;
   }
@@ -268,7 +280,7 @@ const recommendedIndex = ref(0);
           </section>
 
           <!-- 추천 도서 섹션 -->
-          <section class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
+          <section v-if="authStore.isAuthenticated" class="mb-8 lg:mb-0 lg:h-[calc(50%-2rem)]">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-xl lg:text-2xl font-medium">추천 도서</h2>
             </div>

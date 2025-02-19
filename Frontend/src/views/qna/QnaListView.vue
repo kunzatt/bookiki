@@ -36,7 +36,7 @@ const handleDelete = async () => {
 
 <template>
   <div class="h-full">
-    <div class="max-w-7xl mx-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 md:pb-0">
       <div class="mb-4 flex justify-end">
         <BasicButton
           text="문의 작성"
