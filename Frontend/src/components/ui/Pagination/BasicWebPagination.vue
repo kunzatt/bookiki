@@ -11,8 +11,8 @@ interface PaginationProps {
 }
 
 const props = withDefaults(defineProps<PaginationProps>(), {
-  visiblePages: 7,
-  sort: () => []
+  visiblePages: 5,
+  sort: () => [],
 });
 
 const emit = defineEmits<{
@@ -21,14 +21,21 @@ const emit = defineEmits<{
 
 const pages = computed(() => {
   const pages: number[] = [];
-  let startPage = Math.max(1, props.currentPage - Math.floor(props.visiblePages / 2));
+  const halfVisible = Math.floor(props.visiblePages / 2);
+
+  let startPage = Math.max(1, props.currentPage - halfVisible);
   let endPage = Math.min(props.totalPages, startPage + props.visiblePages - 1);
-  
-  // 마지막 페이지가 총 페이지수를 초과하지 않도록 조정
+
+  // 페이지 범위 조정
   if (endPage - startPage + 1 < props.visiblePages) {
     startPage = Math.max(1, endPage - props.visiblePages + 1);
   }
-  
+
+  // 시작 페이지가 1보다 크게 조정된 경우, 마지막 페이지도 재조정
+  if (startPage > 1) {
+    endPage = Math.min(props.totalPages, startPage + props.visiblePages - 1);
+  }
+
   for (let i = startPage; i <= endPage; i++) {
     pages.push(i);
   }
@@ -40,7 +47,7 @@ const handlePageClick = (page: number) => {
     const pageInfo: Pageable = {
       pageNumber: page - 1, // 백엔드는 0-based index 사용
       pageSize: props.pageSize,
-      sort: props.sort
+      sort: props.sort,
     };
     emit('update:pageInfo', pageInfo);
   }
@@ -67,7 +74,7 @@ const handlePageClick = (page: number) => {
       class="w-8 h-8 flex items-center justify-center rounded text-sm"
       :class="{
         'bg-[#698469] text-white': page === currentPage,
-        'hover:bg-gray-100': page !== currentPage
+        'hover:bg-gray-100': page !== currentPage,
       }"
       @click="handlePageClick(page)"
       :aria-label="`Go to page ${page}`"
