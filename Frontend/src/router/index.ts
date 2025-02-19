@@ -6,19 +6,19 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      redirect: '/login',
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: () => import('@/views/auth/LoginView.vue'),
-      meta: { requiresAuth: false },
+      redirect: '/main',
     },
     {
       path: '/main',
       name: 'main',
       component: () => import('@/views/MainView.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: () => import('@/views/auth/LoginView.vue'),
+      meta: { requiresAuth: false },
     },
     {
       path: '/signup',
@@ -232,12 +232,15 @@ router.beforeEach((to, from, next) => {
     return;
   }
 
-  // 기존 인증 체크 로직
+  // 로그인 상태에서 로그인 페이지 접근 시 메인으로 리다이렉트
+  if (to.path === '/login' && authStore.isAuthenticated) {
+    next('/');
+    return;
+  }
+
+  // 인증이 필요한 페이지에 대한 처리
   if (requiresAuth && !authStore.isAuthenticated) {
     next('/login');
-  } else if (to.path === '/login' && authStore.isAuthenticated && from.path !== '/mypage') {
-    // 마이페이지에서 로그아웃한 경우는 /login으로 이동
-    next('/main');
   } else {
     next();
   }
