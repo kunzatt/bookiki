@@ -183,35 +183,6 @@ const setupIntersectionObserver = () => {
   return observer;
 };
 
-// 모바일 무한 스크롤 처리
-const loadMoreNotices = async () => {
-  if (isLoadingMore.value || !hasMore.value) return;
-
-  isLoadingMore.value = true;
-  try {
-    const nextPage = Math.floor(notices.value.length / pageSize.value);
-    const response = await selectAllNotices({
-      keyword: filterValues.value.keyword,
-      pageable: {
-        page: nextPage,
-        size: pageSize.value,
-        sort: [''],
-      },
-    });
-
-    if (response.content.length > 0) {
-      notices.value = [...notices.value, ...response.content];
-      hasMore.value = notices.value.length < response.totalElements;
-    } else {
-      hasMore.value = false;
-    }
-  } catch (error) {
-    console.error('추가 공지사항 로드 실패:', error);
-  } finally {
-    isLoadingMore.value = false;
-  }
-};
-
 defineEmits(['delete']);
 
 onMounted(() => {
