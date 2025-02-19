@@ -104,7 +104,7 @@ onMounted(() => {
         />
 
         <!-- 메인 콘텐츠 영역 -->
-        <main class="flex-1 mt-16 md:mt-20 px-4 md:px-20 pb-20 md:pb-20">
+        <main class="flex-1 mt-8 md:mt-12 px-4 md:px-20 pb-20 md:pb-20">
           <div class="mx-auto w-full min-w-[320px] md:min-w-[768px] max-w-[1280px]">
             <router-view />
           </div>
