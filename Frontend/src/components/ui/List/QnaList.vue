@@ -286,14 +286,14 @@ defineEmits(['delete']);
 
 <template>
   <!-- Mobile List View -->
-  <div class="md:hidden">
+  <div class="w-full md:hidden">
     <BasicFilter :filters="filters" v-model="filterValues" @apply="handleFilterApply" />
 
-    <div class="mt-4 space-y-4">
+    <div class="w-full mt-4 space-y-4">
       <div
         v-for="qna in qnas"
         :key="qna.id"
-        class="bg-white p-3 rounded-lg shadow-sm cursor-pointer"
+        class="w-full bg-white p-3 rounded-lg shadow-sm cursor-pointer"
         @click="handleRowClick(qna)"
       >
         <!-- 상단: 유형 뱃지와 날짜 -->
