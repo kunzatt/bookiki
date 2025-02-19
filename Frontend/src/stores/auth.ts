@@ -76,23 +76,51 @@ export const useAuthStore = defineStore('auth', () => {
 
   const handleOAuth2Login = async (token: string) => {
     try {
+      loading.value = true;
       const response = await setTokenApi(token);
 
-      // User 정보 설정 (response에서 받은 데이터로)
       user.value = {
         id: response.id,
         username: response.username,
         role: response.role,
       };
 
-      // sessionStorage에 사용자 정보 저장
       sessionStorage.setItem('user', JSON.stringify(user.value));
+
+      // 토큰 설정과 유저 정보 저장이 완료될 때까지 기다림
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // 라우터로 메인 페이지로 이동
+      router.push('/main');
+
       return true;
     } catch (error) {
       console.error('OAuth2 login failed:', error);
       throw error;
+    } finally {
+      loading.value = false;
     }
   };
+
+  // const handleOAuth2Login = async (token: string) => {
+  //   try {
+  //     const response = await setTokenApi(token);
+
+  //     // User 정보 설정 (response에서 받은 데이터로)
+  //     user.value = {
+  //       id: response.id,
+  //       username: response.username,
+  //       role: response.role,
+  //     };
+
+  //     // sessionStorage에 사용자 정보 저장
+  //     sessionStorage.setItem('user', JSON.stringify(user.value));
+  //     return true;
+  //   } catch (error) {
+  //     console.error('OAuth2 login failed:', error);
+  //     throw error;
+  //   }
+  // };
 
   // Getters
   const isAuthenticated = computed(() => !!user.value);
