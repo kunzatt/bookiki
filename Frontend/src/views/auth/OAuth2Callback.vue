@@ -1,23 +1,31 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
-const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
+  }
+  return null;
+};
+
 onMounted(async () => {
   try {
-    const token = route.query.token as string;
-    if (!token) {
-      throw new Error('토큰이 없습니다.');
+    const accessToken = getCookie('access_token');
+    if (!accessToken) {
+      throw new Error('액세스 토큰이 없습니다.');
     }
 
-    await authStore.handleOAuth2Login(token);
-    router.push('/main');
+    // 토큰은 이미 쿠키에 설정되어 있으므로,
+    // 여기서는 상태 업데이트만 수행
+    await authStore.handleOAuth2Login(accessToken);
 
-    // 메인 페이지로 리다이렉트
     router.push('/main');
   } catch (error) {
     console.error('OAuth2 콜백 처리 중 오류:', error);
