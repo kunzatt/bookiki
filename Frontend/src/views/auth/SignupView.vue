@@ -80,16 +80,6 @@ const showToast = (message: string, type: 'success' | 'info' = 'info') => {
   };
 };
 
-// 이메일 인증 버튼 클릭 시 이메일만 유효성 검사하도록 수정
-const handleEmailVerifyClick = () => {
-  if (isEmailVerificationAttempted.value) {
-    showToast('이미 인증이 진행되었습니다.');
-    return;
-  }
-
-  isEmailVerificationAttempted.value = true;
-};
-
 // 이메일 인증 완료 핸들러
 const handleEmailVerified = () => {
   isEmailVerified.value = true;
@@ -174,8 +164,7 @@ const handleSubmit = async () => {
             v-model="formData.email"
             @verified="handleEmailVerified"
             @failed="handleEmailVerificationFailed"
-            @click="handleEmailVerifyClick"
-            :disabled="isEmailVerificationAttempted"
+            :disabled="isEmailVerified"
           />
 
           <!-- 이름 -->
@@ -317,8 +306,7 @@ const handleSubmit = async () => {
           v-model="formData.email"
           @verified="handleEmailVerified"
           @failed="handleEmailVerificationFailed"
-          @click="handleEmailVerifyClick"
-          :disabled="isEmailVerificationAttempted"
+          :disabled="isEmailVerified"
         />
 
         <!-- 이름 -->
