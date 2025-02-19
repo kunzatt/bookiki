@@ -3,6 +3,9 @@
 import type { UserInformationForAdminResponse } from '@/types/api/user';
 import Button from '@/components/ui/Button/BasicButton.vue';
 import Badge from '@/components/ui/Badge/BasicStatusBadge.vue';
+import SingleDatePicker from '@/components/ui/DatePicker/SingleDatePicker.vue';
+import { ref } from 'vue';
+import { updateUserActiveAt } from '@/api/user';
 
 interface Props {
   user: UserInformationForAdminResponse;
@@ -15,7 +18,11 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: 'detail', userId: number): void;
   (e: 'delete', userId: number): void;
+  (e: 'update', userId: number): void;
 }>();
+
+// 상태 관리
+const selectedDate = ref<Date | null>(null);
 
 // 버튼 클릭 핸들러
 const handleDetailClick = () => {
@@ -24,6 +31,17 @@ const handleDetailClick = () => {
 
 const handleDeleteClick = () => {
   emit('delete', props.user.id);
+};
+
+const handleDateChange = async (date: Date) => {
+  try {
+    await updateUserActiveAt(props.user.id, {
+      activeAt: date.toISOString(),
+    });
+    emit('update', props.user.id);
+  } catch (error) {
+    console.error('Failed to update user active date:', error);
+  }
 };
 </script>
 
@@ -62,8 +80,19 @@ const handleDeleteClick = () => {
     </td>
 
     <!-- 액션 버튼 -->
-    <td class="py-4 px-4 space-x-2">
-      <Button size="S" text="변경" :is-enabled="false" @click="handleDeleteClick" />
+    <td class="py-4 px-4 space-x-2 flex items-center">
+      <SingleDatePicker
+        v-model="selectedDate"
+        @change="handleDateChange"
+      />
+      <Button 
+        size="S" 
+        text="삭제" 
+        type="error" 
+        :is-enabled="true" 
+        @click="handleDeleteClick" 
+        class="bg-red-500 hover:bg-red-600 text-white !h-[38px] !w-[72px] text-sm" 
+      />
     </td>
   </tr>
 </template>
