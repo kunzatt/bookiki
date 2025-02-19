@@ -1,5 +1,6 @@
 package com.corp.bookiki.bookitem.service;
 
+import com.corp.bookiki.bookhistory.enitity.BookHistoryEntity;
 import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookinformation.entity.BookInformationEntity;
 import com.corp.bookiki.bookinformation.entity.Category;
@@ -10,6 +11,7 @@ import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.enums.SearchType;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
 import com.corp.bookiki.global.error.code.ErrorCode;
+import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.global.error.exception.BookItemException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -195,7 +197,27 @@ public class BookItemService {
 		// 2. BookInformation 정보 접근
 		BookInformationEntity bookInfo = bookItem.getBookInformation();
 
-		// 일단 여기까지 작성해서 기본 정보들이 잘 조회되는지 테스트해볼까요?
+		// 3. 현재 대출 정보 조회 (BookStatus가 BORROWED일 때)
+		final BookAdminDetailResponse.BorrowerInfo currentBorrower =
+				BookStatus.BORROWED.equals(bookItem.getBookStatus())
+						? bookHistoryRepository.findByBookItemIdAndReturnedAtIsNull(bookItemId)
+						.map(currentHistory -> new BookAdminDetailResponse.BorrowerInfo(
+								currentHistory.getUser().getId(),
+								currentHistory.getUser().getUserName(),
+								currentHistory.getBorrowedAt()
+						))
+						.orElse(null)
+						: null;
+
+		// 4. QR 코드 정보 생성
+		final BookAdminDetailResponse.QrCodeInfo qrCodeInfo = bookItem.getQrCode() != null
+				? new BookAdminDetailResponse.QrCodeInfo(
+				bookItem.getQrCode().getId(),
+				bookItem.getQrCode().getQrValue(),
+				bookItem.getQrCode().getCreatedAt()
+		)
+				: null;
+
 		return BookAdminDetailResponse.builder()
 				.title(bookInfo.getTitle())
 				.author(bookInfo.getAuthor())
@@ -203,11 +225,12 @@ public class BookItemService {
 				.isbn(bookInfo.getIsbn())
 				.publishedAt(bookInfo.getPublishedAt())
 				.image(bookInfo.getImage())
-				.description(bookInfo.getDescription())
 				.category(Category.ofCode(bookInfo.getCategory()))
 				.id(bookItem.getId())
 				.purchaseAt(bookItem.getPurchaseAt())
 				.bookStatus(bookItem.getBookStatus())
+				.currentBorrower(currentBorrower)
+				.qrCode(qrCodeInfo)
 				.build();
 	}
 }
