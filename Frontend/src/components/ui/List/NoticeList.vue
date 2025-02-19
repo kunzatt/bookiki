@@ -262,7 +262,7 @@ onUnmounted(() => {
         class="bg-white p-4 rounded-lg shadow-sm cursor-pointer"
         @click="handleRowClick(notice)"
       >
-        <div class="flex justify-between items-start mb-2">
+        <div class="flex justify-between items-start mb-2 gap-4">
           <h3 class="text-lg font-medium">{{ notice.title }}</h3>
           <span class="text-sm text-gray-500">{{ formatDate(notice.createdAt) }}</span>
         </div>

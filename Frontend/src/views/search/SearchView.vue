@@ -76,26 +76,23 @@ onMounted(() => {
         <!-- 필터 영역 -->
         <div class="bg-white p-2 sm:p-4 rounded-lg shadow-sm my-2 sm:my-6">
           <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-            <div class="w-full sm:w-auto flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
-              <BasicSelect
-                v-model="searchType"
-                :options="searchTypes"
-                size="M"
-                class="w-full sm:w-auto mb-2 sm:mb-0"
-              />
-              <BasicInput
-                v-model="keyword"
-                type="full"
-                width="full"
-                class="w-full"
-                :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
-              />
-              <BasicButton
-                size="M"
-                text="검색"
-                class="w-full sm:w-auto mt-2 sm:mt-0"
-                @click="handleSearch"
-              />
+            <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <div>
+                <BasicSelect
+                  v-model="searchType"
+                  :options="searchTypes"
+                  size="M"
+                  class="flex justify-start sm:w-auto mb-2 sm:mb-0"
+                />
+              </div>
+              <div class="mb-4">
+                <BasicInput
+                  v-model="keyword"
+                  type="withButton"
+                  :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
+                  buttonText="검색"
+                />
+              </div>
             </div>
           </div>
         </div>
