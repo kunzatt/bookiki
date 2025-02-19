@@ -41,7 +41,7 @@ const handleLogin = async (e: Event) => {
     await router.push(redirect || '/main');
   } catch (error: any) {
     console.error('Login failed:', error);
-    if (error.response?.data?.code === 'UNVALID_PROVIDER') {
+    if (error.response?.data?.ErrorCode === 'UNVALID_PROVIDER') {
       loginErrorMessage.value = '소셜 로그인으로 가입된 계정입니다. 소셜 로그인으로 진행해주세요.';
     } else {
       loginErrorMessage.value = '아이디와 비밀번호를 확인해주세요.';
@@ -80,11 +80,11 @@ const handleResetPassword = async () => {
     console.error('Password reset failed:', error);
 
     // 에러 코드에 따른 다른 메시지 표시
-    if (error.response?.data?.code === 'UNVALID_PROVIDER') {
+    if (error.response?.data?.ErrorCode === 'UNVALID_PROVIDER') {
       resetError.value = '소셜 로그인으로 가입된 계정입니다. 소셜 로그인으로 진행해주세요.';
-    } else if (error.response?.data?.code === 'USERNAME_EMAIL_MISMATCH') {
+    } else if (error.response?.data?.ErrorCode === 'USERNAME_EMAIL_MISMATCH') {
       resetError.value = '입력하신 이메일과 이름이 일치하지 않습니다. 다시 확인하여 시도해주세요.';
-    } else if (error.response?.data?.code === 'FAIL_EMAIL_SEND') {
+    } else if (error.response?.data?.ErrorCode === 'FAIL_EMAIL_SEND') {
       resetError.value = '이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.';
     } else {
       resetError.value = '이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.';
