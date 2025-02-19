@@ -1,6 +1,5 @@
 package com.corp.bookiki.bookhistory.service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -10,7 +9,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +18,6 @@ import com.corp.bookiki.bookhistory.repository.BookHistoryRepository;
 import com.corp.bookiki.bookitem.entity.BookItemEntity;
 import com.corp.bookiki.bookitem.entity.BookStatus;
 import com.corp.bookiki.bookitem.repository.BookItemRepository;
-import com.corp.bookiki.bookitem.service.BookItemService;
 import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.BookHistoryException;
 import com.corp.bookiki.global.error.exception.BookItemException;
@@ -232,7 +229,7 @@ public class BookReturnService {
 		notificationService.addLostBookNotification(lostBookItemIds);
 	}
 
-	private void processReturn(BookItemEntity bookItemEntity) {
+	public void processReturn(BookItemEntity bookItemEntity) {
 		bookItemEntity.returnBook();
 
 		BookHistoryEntity latestHistory = bookItemEntity.getBookHistories().stream()
