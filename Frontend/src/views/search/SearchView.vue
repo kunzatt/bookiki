@@ -48,16 +48,22 @@ const handleSearch = async () => {
   }
 };
 
+const handleSearchClick = () => {
+  pageInfo.value.pageNumber = 0;
+  currentPage.value = 1;
+  handleSearch();
+};
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    handleSearchClick();
+  }
+};
+
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement;
   target.src = '/default-book-cover.svg';
 };
-
-watch([keyword, searchType], () => {
-  pageInfo.value.pageNumber = 0;
-  currentPage.value = 1;
-  handleSearch();
-});
 
 watch(pageInfo, () => {
   currentPage.value = pageInfo.value.pageNumber + 1;
@@ -91,6 +97,8 @@ onMounted(() => {
                   type="withButton"
                   :placeholder="`${searchTypes.find((t) => t.value === searchType)?.label}으로 검색`"
                   buttonText="검색"
+                  @button-click="handleSearchClick"
+                  @keyup="handleKeyPress"
                 />
               </div>
             </div>

@@ -1,6 +1,6 @@
 <!-- BookList.vue -->
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted } from 'vue';
 import BookListItem from './BookListItme.vue';
 import { fetchAdminBookList, updateBookStatus } from '@/api/bookItem';
 import type { BookAdminListResponse } from '@/types/api/bookItem';
@@ -58,8 +58,16 @@ const handleStatusUpdate = async (bookId: number, newStatus: string) => {
   }
 };
 
-// keyword prop이 변경되면 fetchBooks 호출
-watch(() => props.keyword, fetchBooks);
+// 검색 처리를 위한 메소드
+const handleSearch = async (keyword: string) => {
+  currentPage.value = 1;
+  await fetchBooks();
+};
+
+// 컴포넌트 메소드를 외부에 노출
+defineExpose({
+  handleSearch,
+});
 
 onMounted(() => {
   fetchBooks();

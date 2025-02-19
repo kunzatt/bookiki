@@ -11,6 +11,7 @@ import { fetchAdminBookList } from '@/api/bookItem';
 const router = useRouter();
 const showDesktopModal = ref(false);
 const searchKeyword = ref('');
+const bookListRef = ref();
 const books = ref([]); // 도서 목록을 저장할 ref
 const currentPage = ref(0); // 현재 페이지 번호
 const pageSize = ref(10); // 페이지 크기
@@ -22,8 +23,16 @@ const handleMenuClick = async (path: string) => {
 
 // 검색 핸들러
 const handleSearch = async () => {
-  currentPage.value = 0; // 검색 시 페이지 번호 초기화
-  await fetchBooks(); // 도서 목록 조회
+  if (bookListRef.value) {
+    bookListRef.value.handleSearch(searchKeyword.value);
+  }
+};
+
+// 엔터키 핸들러
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    handleSearch();
+  }
 };
 
 // 도서 목록 조회 함수
@@ -91,12 +100,16 @@ const handleModalClose = () => {
               placeholder="도서명, ISBN, 출판사, 저자로 검색"
               buttonText="검색"
               @button-click="handleSearch"
+              @keyup="handleKeyPress"
             />
           </div>
         </div>
 
         <!-- BookList 컴포넌트 -->
-        <BookList :keyword="searchKeyword" />
+        <BookList 
+          ref="bookListRef"
+          :keyword="searchKeyword" 
+        />
       </div>
     </div>
 

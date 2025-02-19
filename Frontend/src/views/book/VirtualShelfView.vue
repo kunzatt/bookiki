@@ -79,12 +79,17 @@ watch(pageInfo, async () => {
   await fetchBooks();
 });
 
-// searchKeyword 변경 감시
-watch(searchKeyword, () => {
+const handleSearchClick = () => {
   currentPage.value = 1;
   pageInfo.value.pageNumber = 0;
   fetchBooks();
-});
+};
+
+const handleKeyPress = (event: KeyboardEvent) => {
+  if (event.key === 'Enter') {
+    handleSearchClick();
+  }
+};
 
 onMounted(async () => {
   await fetchBooks();
@@ -102,6 +107,8 @@ onMounted(async () => {
             type="withButton"
             placeholder="도서명을 입력하세요"
             buttonText="검색"
+            @button-click="handleSearchClick"
+            @keyup="handleKeyPress"
           />
         </div>
         <!-- 책장 -->
