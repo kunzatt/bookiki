@@ -18,6 +18,9 @@ public class UserInformationResponse {
 	@Schema(description = "사번", example = "CORP001")
 	private String companyId;
 
+	@Schema(description = "이메일", example = "user@example.com")
+	private String email;
+
 	@Schema(description = "대출 가능 여부", example = "현재 3권 대출 가능")
 	private String loanStatus;
 
@@ -25,9 +28,10 @@ public class UserInformationResponse {
 	private String provider;
 
 	@Builder
-	public UserInformationResponse(String userName, String companyId, String loanStatus, String provider) {
+	public UserInformationResponse(String userName, String companyId, String email, String loanStatus, String provider) {
 		this.userName = userName;
 		this.companyId = companyId;
+		this.email = email;
 		this.loanStatus = loanStatus;
 		this.provider = provider;
 	}
@@ -40,6 +44,7 @@ public class UserInformationResponse {
 		return UserInformationResponse.builder()
 			.userName(user.getUserName())
 			.companyId(user.getCompanyId())
+			.email(user.getEmail())
 			.loanStatus(status)
 			.provider(user.getProvider().name())
 			.build();
