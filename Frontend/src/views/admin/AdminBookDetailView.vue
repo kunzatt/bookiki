@@ -117,7 +117,11 @@ onMounted(() => {
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- 이미지 섹션 -->
-            <BookImage :image="bookDetail.image" :title="bookDetail.title" />
+            <BookImage
+              :image="bookDetail.image"
+              :title="bookDetail.title"
+              class="w-64 h-80 sm:w-72 sm:h-96 md:w-80 md:h-[300px] lg:w-96 lg:h-[340px] xl:w-[440px] xl:h-[380px] object-cover"
+            />
 
             <!-- 도서 정보 섹션 -->
             <BookInfo
@@ -126,7 +130,6 @@ onMounted(() => {
               :publisher="bookDetail.publisher"
               :isbn="bookDetail.isbn"
               :publishedAt="bookDetail.publishedAt"
-              :description="bookDetail.description"
               :category="bookDetail.category"
               :bookStatus="bookDetail.bookStatus"
               :purchaseAt="bookDetail.purchaseAt"

@@ -52,9 +52,5 @@ defineProps<{
         <p>{{ formatDate(purchaseAt) }}</p>
       </div>
     </div>
-    <div class="mt-4">
-      <p class="text-gray-600">도서 설명</p>
-      <p class="mt-2">{{ description }}</p>
-    </div>
   </div>
 </template>
