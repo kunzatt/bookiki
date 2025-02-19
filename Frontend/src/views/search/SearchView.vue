@@ -1,5 +1,6 @@
+[SearchView.vue]
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onUnmounted } from 'vue';
 import type { SearchType } from '@/types/api/search';
 import type { BookItemListResponse } from '@/types/api/bookItem';
 import { selectBooks } from '@/api/bookItem';
@@ -10,12 +11,17 @@ import BasicSelect from '@/components/ui/Select/BasicSelect.vue';
 import BookSearchListItem from '@/components/ui/Book/BookSearchListItem.vue';
 
 const isLoading = ref(true);
+const isLoadingMore = ref(false);
 const keyword = ref('');
 const searchType = ref<SearchType>('TITLE');
 const books = ref<BookItemListResponse[]>([]);
 const error = ref<string | null>(null);
 const currentPage = ref(1);
 const totalPages = ref(0);
+const isMobile = ref(window.innerWidth < 768);
+const hasMore = ref(true);
+const observerTarget = ref<HTMLElement | null>(null);
+
 const pageInfo = ref({
   pageNumber: 0,
   pageSize: 8,
@@ -28,28 +34,42 @@ const searchTypes = [
   { value: 'PUBLISHER', label: '출판사' },
 ];
 
-const handleSearch = async () => {
-  try {
+const handleSearch = async (isLoadMore: boolean = false) => {
+  if (!isLoadMore) {
     isLoading.value = true;
+  } else {
+    isLoadingMore.value = true;
+  }
+
+  try {
     const response = await selectBooks(
       pageInfo.value.pageNumber,
       pageInfo.value.pageSize,
       searchType.value,
       keyword.value || undefined,
     );
-    books.value = response.content;
+
+    if (isMobile.value && isLoadMore) {
+      books.value = [...books.value, ...response.content];
+    } else {
+      books.value = response.content;
+    }
+
     totalPages.value = response.totalPages;
+    hasMore.value = pageInfo.value.pageNumber + 1 < response.totalPages;
   } catch (error) {
     console.error('도서 검색 실패:', error);
     error.value = '도서 검색에 실패했습니다.';
   } finally {
     isLoading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
 const handleSearchClick = () => {
   pageInfo.value.pageNumber = 0;
   currentPage.value = 1;
+  books.value = [];
   handleSearch();
 };
 
@@ -59,13 +79,75 @@ const handleKeyPress = (event: KeyboardEvent) => {
   }
 };
 
+const loadMore = async () => {
+  if (isLoadingMore.value || !hasMore.value) return;
+
+  pageInfo.value.pageNumber += 1;
+  await handleSearch(true);
+};
+
+// Intersection Observer 설정
+let observer: IntersectionObserver | null = null;
+
+const setupInfiniteScroll = () => {
+  if (observer) {
+    observer.disconnect();
+  }
+
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && !isLoadingMore.value && hasMore.value && isMobile.value) {
+        loadMore();
+      }
+    },
+    { threshold: 0.1 },
+  );
+
+  if (observerTarget.value) {
+    observer.observe(observerTarget.value);
+  }
+};
+
+// 반응형 처리
+const handleResize = () => {
+  const wasMobile = isMobile.value;
+  isMobile.value = window.innerWidth < 768;
+
+  if (wasMobile !== isMobile.value) {
+    if (isMobile.value) {
+      // 데스크톱 -> 모바일 전환
+      hasMore.value = pageInfo.value.pageNumber + 1 < totalPages.value;
+      setupInfiniteScroll();
+    } else {
+      // 모바일 -> 데스크톱 전환
+      pageInfo.value.pageNumber = 0;
+      currentPage.value = 1;
+      handleSearch();
+    }
+  }
+};
+
+// 데스크톱 페이지네이션 이벤트 핸들러
 watch(pageInfo, () => {
-  currentPage.value = pageInfo.value.pageNumber + 1;
-  handleSearch();
+  if (!isMobile.value) {
+    currentPage.value = pageInfo.value.pageNumber + 1;
+    handleSearch();
+  }
 });
 
 onMounted(() => {
   handleSearch();
+  window.addEventListener('resize', handleResize);
+  if (isMobile.value) {
+    setupInfiniteScroll();
+  }
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (observer) {
+    observer.disconnect();
+  }
 });
 </script>
 
@@ -103,12 +185,21 @@ onMounted(() => {
         <BookSearchListItem
           :books="books"
           :is-loading="isLoading"
+          :is-loading-more="isLoadingMore"
           :error="error"
           :current-page="currentPage"
         />
 
-        <!-- 페이지네이션 -->
-        <div class="mt-6 flex justify-center">
+        <!-- 무한 스크롤 로딩 표시 (모바일) -->
+        <div v-if="isMobile && hasMore" ref="observerTarget" class="p-4 flex justify-center">
+          <div
+            v-if="isLoadingMore"
+            class="w-6 h-6 border-2 border-gray-900 rounded-full animate-spin border-t-transparent"
+          ></div>
+        </div>
+
+        <!-- 페이지네이션 (데스크톱) -->
+        <div v-if="!isMobile" class="mt-6 flex justify-center">
           <BasicWebPagination
             v-model:pageInfo="pageInfo"
             :current-page="currentPage"
