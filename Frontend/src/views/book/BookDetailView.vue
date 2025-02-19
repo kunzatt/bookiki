@@ -306,23 +306,21 @@ onUnmounted(() => {
       <!-- Mobile fixed bottom section -->
       <div class="md:hidden fixed bottom-[56px] left-0 right-0 bg-white border-t border-gray-200">
         <div
-          class="flex items-center justify-center h-[64px] px-4 mx-auto w-full min-w-[320px] max-w-[1280px]"
+          class="flex items-center justify-center h-[72px] px-4 mx-auto w-full min-w-[320px] max-w-[1280px]"
         >
-          <div class="flex items-center gap-2 w-full max-w-[500px]">
-            <div class="w-[130px]">
-              <BasicStatusBadge
-                :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-                :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
-                size="S"
-                :isEnabled="false"
-              />
-            </div>
+          <div class="flex items-center gap-3 w-full max-w-[500px]">
+            <BasicStatusBadge
+              :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+              :type="bookItem?.bookStatus === 'AVAILABLE' ? success : 'error'"
+              size="M"
+              :isEnabled="false"
+              class="shrink-0"
+            />
             <BasicButton
               text="책 위치 찾기"
-              size="M"
+              size="L"
               @click="handleLocationClick"
               :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
-              class="flex-1 h-10"
             />
           </div>
         </div>
