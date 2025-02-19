@@ -9,6 +9,7 @@ import BookInfo from '@/components/ui/Admin/BookDetailInfo.vue';
 import BasicButton from '@/components/ui/Button/BasicButton.vue';
 import ConfirmModal from '@/components/ui/Modal/ConfirmModal.vue';
 import Toast from '@/components/ui/Alert/ToastAlert.vue';
+import BookDetailQRcode from '@/components/ui/Admin/BookDetailQRcode.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -26,10 +27,6 @@ const fetchData = async () => {
     error.value = null;
     const bookItemId = Number(route.params.id);
     bookDetail.value = await getBookAdminDetail(bookItemId);
-
-    if (bookDetail.value?.qrCode) {
-      showQRCode.value = true;
-    }
   } catch (e) {
     error.value = e instanceof Error ? e.message : '알 수 없는 오류가 발생했습니다.';
   } finally {
@@ -117,7 +114,21 @@ onMounted(() => {
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- 이미지 섹션 -->
-            <BookImage :image="bookDetail.image" :title="bookDetail.title" />
+            <div class="space-y-6">
+              <BookImage
+                :image="bookDetail.image"
+                :title="bookDetail.title"
+                class="w-64 h-80 sm:w-72 sm:h-96 md:w-80 md:h-[300px] lg:w-96 lg:h-[340px] xl:w-[440px] xl:h-[380px] object-cover"
+              />
+              <!-- QR 코드 섹션 -->
+              <div class="w-full">
+                <BookDetailQRcode
+                  :qrCode="bookDetail.qrCode"
+                  :bookItemId="Number(route.params.id)"
+                  class="w-64 sm:w-72 md:w-80 lg:w-96 xl:w-[440px] mx-auto"
+                />
+              </div>
+            </div>
 
             <!-- 도서 정보 섹션 -->
             <BookInfo
@@ -126,14 +137,12 @@ onMounted(() => {
               :publisher="bookDetail.publisher"
               :isbn="bookDetail.isbn"
               :publishedAt="bookDetail.publishedAt"
-              :description="bookDetail.description"
               :category="bookDetail.category"
               :bookStatus="bookDetail.bookStatus"
               :purchaseAt="bookDetail.purchaseAt"
+              :currentBorrower="bookDetail.currentBorrower"
             />
           </div>
-          <!-- QR 코드 섹션 -->
-          <QrCode :qr-code="bookDetail.qrCode" :book-item-id="Number(route.params.id)" />
         </div>
       </div>
 

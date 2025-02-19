@@ -1,4 +1,3 @@
-//BasicFilter.vue
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import BaseDatePicker from '../DatePicker/BaseDatePicker.vue';
@@ -44,20 +43,44 @@ const hasActiveFilters = computed(() => {
 const isSearchOnly = computed(() => {
   return props.filters.length === 1 && props.filters[0].type === 'search';
 });
+
+// 필터 타입별로 그룹화
+const groupedFilters = computed(() => {
+  const groups = {
+    search: props.filters.filter((f) => f.type === 'search'),
+    select: props.filters.filter((f) => f.type === 'select'),
+    others: props.filters.filter((f) => !['search', 'select'].includes(f.type)),
+  };
+  return groups;
+});
 </script>
 
 <template>
   <div class="bg-white p-4 rounded-lg shadow-sm">
     <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
-      <template v-for="filter in filters" :key="filter.key">
-        <div v-if="filter.type === 'search'" class="w-full md:w-[300px]">
-          <!-- 기존 w-[400px]에서 수정 -->
+      <!-- Search filters -->
+      <template v-for="filter in groupedFilters.search" :key="filter.key">
+        <div class="w-full md:w-[300px]">
           <BasicInput
             type="withButton"
             v-model="localFilters[filter.key]"
             :placeholder="filter.placeholder || '검색어를 입력하세요'"
             buttonText="검색"
             @button-click="$emit('apply')"
+            @keyup.enter="$emit('apply')"
+            @update:modelValue="(value) => updateFilter(filter.key, value)"
+          />
+        </div>
+      </template>
+
+      <!-- Select filters -->
+      <div class="flex flex-row gap-4">
+        <template v-for="filter in groupedFilters.select" :key="filter.key">
+          <BasicSelect
+            v-model="localFilters[filter.key]"
+            :options="filter.options"
+            :placeholder="filter.label"
+            class="w-32"
             @update:modelValue="
               (value) => {
                 updateFilter(filter.key, value);
@@ -65,25 +88,13 @@ const isSearchOnly = computed(() => {
               }
             "
           />
-        </div>
+        </template>
+      </div>
 
-        <!-- Select 필터 -->
-        <BasicSelect
-          v-else-if="filter.type === 'select'"
-          v-model="localFilters[filter.key]"
-          :options="filter.options"
-          :placeholder="filter.label"
-          class="md:w-[120px]"
-          @update:modelValue="
-            (value) => {
-              updateFilter(filter.key, value);
-              $emit('apply');
-            }
-          "
-        />
-
-        <!-- Date 필터 -->
-        <div v-else-if="filter.type === 'date'" class="flex flex-col">
+      <!-- Other filter types -->
+      <template v-for="filter in groupedFilters.others" :key="filter.key">
+        <!-- Date filters -->
+        <div v-if="filter.type === 'date'" class="flex flex-col">
           <label class="text-sm text-gray-600 mb-1">{{ filter.label }}</label>
           <BaseDatePicker
             v-model="localFilters[filter.key]"
@@ -91,7 +102,7 @@ const isSearchOnly = computed(() => {
           />
         </div>
 
-        <!-- Radio 필터 -->
+        <!-- Radio filters -->
         <div v-else-if="filter.type === 'radio'" class="flex items-center gap-4">
           <span class="text-sm text-gray-600">{{ filter.label }}</span>
           <div class="flex gap-4">
@@ -113,7 +124,7 @@ const isSearchOnly = computed(() => {
           </div>
         </div>
 
-        <!-- Checkbox 필터 -->
+        <!-- Checkbox filters -->
         <div v-else-if="filter.type === 'checkbox'" class="flex items-center gap-4">
           <span class="text-sm text-gray-600">{{ filter.label }}</span>
           <div class="flex gap-4">

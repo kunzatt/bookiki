@@ -9,6 +9,7 @@ import {
 import { useAuthStore } from '@/stores/auth';
 import type { NotificationResponse } from '@/types/api/notification';
 import { NotificationStatus } from '@/types/enums/notificationStatus';
+import { NotificationType } from '@/types/enums/notificationInformation';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -74,6 +75,7 @@ const handlePageChange = (page: number) => {
 };
 
 const handleNotificationClick = async (notification: NotificationResponse) => {
+  // 읽음 처리
   if (notification.notificationStatus === NotificationStatus.UNREAD) {
     try {
       await updateNotificationReadStatus(notification.id);
@@ -81,6 +83,34 @@ const handleNotificationClick = async (notification: NotificationResponse) => {
     } catch (error) {
       console.error('알림 읽음 처리 실패:', error);
     }
+  }
+
+  // 명시적으로 조건 체크
+  if (
+    notification.notificationType === 'OVERDUE_NOTICE' ||
+    notification.notificationType === NotificationType.OVERDUE_NOTICE
+  ) {
+    router.push('/mypage/current-borrowed');
+    return;
+  }
+
+  switch (notification.notificationType) {
+    case NotificationType.RETURN_DEADLINE:
+      router.push('/mypage/current-borrowed');
+      break;
+
+    case NotificationType.QNA_ANSWERED:
+    case NotificationType.QNA_CREATED:
+      if (notification.notificationId) {
+        router.push(`/qnas/${notification.notificationId}`);
+      }
+      break;
+
+    case NotificationType.FAVORITE_BOOK_AVAILABLE:
+      if (notification.notificationId) {
+        router.push(`/books/${notification.notificationId}`);
+      }
+      break;
   }
 };
 

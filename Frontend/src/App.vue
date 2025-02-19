@@ -3,15 +3,20 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useModalStore } from '@/stores/modal';
 import HeaderMobile from '@/components/common/HeaderMobile.vue';
 import HeaderDesktop from '@/components/common/HeaderDesktop.vue';
 import Sidebar from '@/components/common/Sidebar.vue';
 import BottomNav from '@/components/common/BottomNav.vue';
 import Footer from './components/common/Footer.vue';
+import ConfirmModal from './components/modal/ConfirmModal.vue';
+import type { ModalType } from '@/stores/modal';
+import { deleteProfileImage } from '@/api/user';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+const modalStore = useModalStore();
 
 // 인증 페이지 목록
 const authPages = ['/login', '/signup', '/forgot-password'];
@@ -46,6 +51,23 @@ const pageTitles: { [key: string]: string } = {
 const pageTitle = computed(() => {
   return pageTitles[route.path] || ' ';
 });
+
+const handleModalConfirm = async () => {
+  const modalType = modalStore.modalState.type;
+  modalStore.closeModal();
+
+  if (modalType === 'logout') {
+    await authStore.logout();
+    router.push('/');
+  } else if (modalType === 'deleteProfileImage') {
+    try {
+      await deleteProfileImage();
+      window.location.reload();
+    } catch (error) {
+      console.error('프로필 사진 삭제 실패:', error);
+    }
+  }
+};
 
 onMounted(() => {
   // sessionStorage에서 유저 정보 복구
@@ -95,6 +117,14 @@ onMounted(() => {
       </div>
     </div>
     <Footer class="hidden md:block" />
+    <!-- 전역 확인 모달 -->
+    <ConfirmModal
+      v-if="modalStore.modalState.type"
+      :is-open="modalStore.modalState.isOpen"
+      v-bind="modalStore.getModalConfig(modalStore.modalState.type)"
+      @confirm="handleModalConfirm"
+      @cancel="modalStore.closeModal"
+    />
   </div>
 </template>
 

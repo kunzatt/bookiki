@@ -32,6 +32,7 @@ interface InputProps {
    */
   buttonText?: string;
   width?: 'full' | 'auto' | 'fixed';
+  disabled?: boolean;
 }
 
 const props = withDefaults(defineProps<InputProps>(), {
@@ -41,6 +42,7 @@ const props = withDefaults(defineProps<InputProps>(), {
   label: '',
   buttonText: '확인',
   width: 'auto',
+  disabled: false,
 });
 
 const widthClasses = {
@@ -73,6 +75,7 @@ const togglePassword = () => {
           :type="inputType"
           :value="modelValue"
           :placeholder="placeholder"
+          :disabled="disabled"
           class="w-full px-3 md:px-4 h-10 md:h-12 rounded-lg border border-gray-300 focus:border-[#698469] transition-colors duration-200 text-sm md:text-base"
           @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         />
