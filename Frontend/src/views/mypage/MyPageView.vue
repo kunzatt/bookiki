@@ -18,6 +18,7 @@ const isLoading = ref(true);
 const userInfo = ref({
   name: '',
   companyId: '',
+  email: '',
   profileImage: '/default-book-cover.svg',
   availableLoans: 0,
 });
@@ -78,6 +79,7 @@ const fetchUserData = async () => {
     userInfo.value = {
       ...userInfo.value,
       name: userData.userName,
+      email: userData.email,
       companyId: userData.companyId,
       availableLoans,
     };
@@ -186,6 +188,7 @@ onMounted(() => {
             </div>
             <div>
               <h2 class="text-xl font-semibold">{{ userInfo.name }}</h2>
+              <p class="text-gray-600">{{ userInfo.email }}</p>
               <p class="text-gray-600">{{ userInfo.companyId }}</p>
               <span
                 v-if="userInfo.availableLoans > 0"
