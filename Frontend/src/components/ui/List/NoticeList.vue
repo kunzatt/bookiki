@@ -51,19 +51,26 @@ const loadNotices = async () => {
     const response = await selectAllNotices({
       keyword: filterValues.value.keyword,
       pageable: {
-        page: 0,
+        page: isMobile.value ? Math.floor(notices.value.length / pageSize.value) : 0,
         size: pageSize.value,
         sort: [''],
       },
     });
 
-    notices.value = response.content;
+    if (isMobile.value) {
+      notices.value =
+        notices.value.length === 0 ? response.content : [...notices.value, ...response.content];
+    } else {
+      notices.value = response.content;
+    }
+
     totalItems.value = response.totalElements;
     hasMore.value = notices.value.length < response.totalElements;
   } catch (error) {
     console.error('공지사항 목록 조회 실패:', error);
   } finally {
     loading.value = false;
+    isLoadingMore.value = false;
   }
 };
 
@@ -71,6 +78,7 @@ const loadNotices = async () => {
 const handleFilterApply = () => {
   notices.value = [];
   hasMore.value = true;
+  currentPage.value = 1;
   loadNotices();
 };
 
@@ -153,13 +161,19 @@ const setupIntersectionObserver = () => {
 
   observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
-      if (entry.isIntersecting && !isLoadingMore.value && hasMore.value) {
-        loadMoreNotices();
+      if (
+        entry.isIntersecting &&
+        !isLoadingMore.value &&
+        !loading.value &&
+        hasMore.value &&
+        isMobile.value
+      ) {
+        isLoadingMore.value = true;
+        loadNotices();
       }
     });
   }, options);
 
-  // nextTick을 사용하여 DOM 업데이트 후 observe
   nextTick(() => {
     if (observerTarget.value) {
       observer.observe(observerTarget.value);
@@ -167,67 +181,6 @@ const setupIntersectionObserver = () => {
   });
 
   return observer;
-};
-
-// 모바일용 전체 데이터 로드
-const loadAllNoticesForMobile = async () => {
-  loading.value = true;
-  try {
-    let page = 0;
-    let hasMore = true;
-    allNotices.value = [];
-
-    while (hasMore) {
-      const response = await selectAllNotices({
-        keyword: filterValues.value.keyword,
-        pageable: {
-          page: page,
-          size: pageSize.value,
-          sort: [''],
-        },
-      });
-
-      allNotices.value = [...allNotices.value, ...response.content];
-      hasMore = allNotices.value.length < response.totalElements;
-      page++;
-    }
-
-    notices.value = allNotices.value.slice(0, pageSize.value);
-    totalItems.value = allNotices.value.length;
-  } catch (error) {
-    console.error('공지사항 전체 로드 실패:', error);
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 모바일 무한 스크롤 처리
-const loadMoreNotices = async () => {
-  if (isLoadingMore.value || !hasMore.value) return;
-
-  isLoadingMore.value = true;
-  try {
-    const nextPage = Math.floor(notices.value.length / pageSize.value);
-    const response = await selectAllNotices({
-      keyword: filterValues.value.keyword,
-      pageable: {
-        page: nextPage,
-        size: pageSize.value,
-        sort: [''],
-      },
-    });
-
-    if (response.content.length > 0) {
-      notices.value = [...notices.value, ...response.content];
-      hasMore.value = notices.value.length < response.totalElements;
-    } else {
-      hasMore.value = false;
-    }
-  } catch (error) {
-    console.error('추가 공지사항 로드 실패:', error);
-  } finally {
-    isLoadingMore.value = false;
-  }
 };
 
 defineEmits(['delete']);
