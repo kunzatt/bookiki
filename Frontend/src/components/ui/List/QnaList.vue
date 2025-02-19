@@ -307,7 +307,7 @@ defineEmits(['delete']);
                   ? 'info'
                   : 'warning'
             "
-            :isEnabled="true"
+            :isEnabled="false"
           />
           <div class="flex flex-col items-end">
             <span class="text-sm text-gray-500 mb-1">{{ formatDate(qna.createdAt) }}</span>
