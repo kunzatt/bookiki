@@ -27,6 +27,7 @@ export const createQna = async (request: QnaRequest): Promise<number> => {
 export const selectQnas = async (params: {
   keyword?: string;
   qnaType?: string;
+  answered?: boolean | null;  // 추가
   pageable?: {
     page?: number;
     size?: number;
@@ -41,6 +42,10 @@ export const selectQnas = async (params: {
     }
     if (params.qnaType) {
       searchParams.append('qnaType', params.qnaType);
+    }
+    // answered 파라미터 추가
+    if (params.answered !== null && params.answered !== undefined) {
+      searchParams.append('answered', String(params.answered));
     }
 
     if (params.pageable) {
@@ -58,13 +63,11 @@ export const selectQnas = async (params: {
 
     const response = await axios.get(url);
 
-    // 각 QNA의 상세 정보를 병렬로 가져옴
     const detailPromises = response.data.content.map((qna: QnaListResponse) =>
       selectQnaById(qna.id),
     );
     const details = await Promise.all(detailPromises);
 
-    // QnaListResponseWithAnswered로 변환
     const enhancedContent = response.data.content.map((qna: QnaListResponse, index: number) =>
       convertToQnaWithAnswered(details[index]),
     );
