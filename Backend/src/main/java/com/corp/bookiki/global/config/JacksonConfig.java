@@ -21,6 +21,7 @@ public class JacksonConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
 
+        // 시간대 설정 추가
         objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
 
         // 기존 JavaTimeModule 등록
