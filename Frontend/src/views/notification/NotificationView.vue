@@ -177,7 +177,6 @@ const formatDate = (dateArray: number[]): string => {
   }
 
   const now = new Date();
-  now.setHours(now.getHours() + 9);
   const diff = now.getTime() - date.getTime();
   const minute = 60 * 1000;
   const hour = minute * 60;
