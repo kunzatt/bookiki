@@ -28,7 +28,12 @@ const qna = ref<QnaDetailResponse | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const showDeleteModal = ref(false);
+const showDeletedQnaModal = ref(false);
 const newComment = ref('');
+
+const handleDeletedQnaConfirm = () => {
+  router.back(); // 이전 페이지(알림 페이지)로 이동
+};
 
 const handleEdit = () => {
   router.push(`/qnas/${props.qnaId}/edit`);
@@ -43,7 +48,7 @@ const handleDelete = async () => {
     await deleteQna(props.qnaId);
     await router.push('/qnas');
   } catch (err) {
-    error.value = '문의사항 삭제 중 오류가 발생했습니다.';
+    showDeletedQnaModal.value = true;
   }
 };
 
@@ -59,7 +64,7 @@ const handleCommentSubmit = async () => {
     qna.value = await selectQnaById(props.qnaId);
     newComment.value = '';
   } catch (err) {
-    error.value = '답변 등록 중 오류가 발생했습니다.';
+    showDeletedQnaModal.value = true;
   }
 };
 
@@ -96,7 +101,7 @@ const saveEditComment = async (commentId: number) => {
     // 편집 모드 종료
     cancelEditComment();
   } catch (err) {
-    error.value = '답변 수정 중 오류가 발생했습니다.';
+    showDeletedQnaModal.value = true;
   }
 };
 
@@ -114,7 +119,7 @@ const handleDeleteComment = async () => {
     // 데이터 새로고침
     qna.value = await selectQnaById(props.qnaId);
   } catch (err) {
-    error.value = '답변 삭제 중 오류가 발생했습니다.';
+    showDeletedQnaModal.value = true;
   } finally {
     // 모달 닫기 및 상태 초기화
     showDeleteCommentModal.value = false;
@@ -126,8 +131,11 @@ onMounted(async () => {
   try {
     isAdmin.value = authStore.userRole === 'ADMIN';
     qna.value = await selectQnaById(props.qnaId);
+    if (!qna.value) {
+      showDeletedQnaModal.value = true;
+    }
   } catch (err) {
-    error.value = '문의사항을 불러오는 중 오류가 발생했습니다.';
+    showDeletedQnaModal.value = true;
   } finally {
     loading.value = false;
   }
@@ -137,9 +145,6 @@ onMounted(async () => {
 <template>
   <div v-if="loading" class="flex justify-center items-center h-64">
     <div class="text-gray-500">로딩 중...</div>
-  </div>
-  <div v-else-if="error" class="text-red-500 p-4">
-    {{ error }}
   </div>
   <div v-else-if="qna" class="bg-white rounded-lg shadow-sm p-6">
     <!-- 제목 영역 -->
@@ -238,22 +243,32 @@ onMounted(async () => {
     </div>
   </div>
 
+  <!-- 삭제 확인 모달 -->
   <ConfirmModal
     v-model="showDeleteModal"
     title="문의사항 삭제"
-    content="정말 삭제하시겠습니까?"
+    content="정말로 이 문의사항을 삭제하시겠습니까?"
     confirm-text="삭제"
     cancel-text="취소"
-    icon="delete"
     @confirm="handleDelete"
   />
+
+  <!-- 삭제된 문의사항 알림 모달 -->
+  <ConfirmModal
+    v-model="showDeletedQnaModal"
+    title="삭제된 문의사항"
+    content="해당 문의사항이 삭제되었습니다."
+    confirm-text="확인"
+    @confirm="handleDeletedQnaConfirm"
+  />
+
+  <!-- 답변 삭제 확인 모달 -->
   <ConfirmModal
     v-model="showDeleteCommentModal"
     title="답변 삭제"
-    content="정말 이 답변을 삭제하시겠습니까?"
+    content="정말로 이 답변을 삭제하시겠습니까?"
     confirm-text="삭제"
     cancel-text="취소"
-    icon="delete"
     @confirm="handleDeleteComment"
   />
 </template>
