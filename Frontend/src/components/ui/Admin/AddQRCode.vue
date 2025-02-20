@@ -41,38 +41,27 @@ const downloadQRCode = () => {
   link.click();
   document.body.removeChild(link);
 };
-
-// 디버깅용 watch 추가
-watch(
-  () => props.qrCode,
-  (newValue) => {
-    console.log('QR Code props changed:', newValue);
-  },
-);
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow p-6 w-full">
-    <h3 class="text-lg font-semibold mb-4">QR 코드 정보</h3>
-    <div v-if="props.qrCode" class="flex flex-col items-center">
-      <!-- QR 코드 이미지 -->
-      <div class="mb-4 w-full flex justify-center">
-        <img
-          v-if="qrImageUrl"
-          :src="qrImageUrl"
-          :alt="`QR Code for book ${bookItemId}`"
-          class="w-[200px] h-[200px]"
-        />
-      </div>
-
-      <!-- QR 코드 정보 -->
-      <div class="text-sm text-gray-600 mb-4 w-full text-center">
-        <p>QR ID: {{ props.qrCode.id }}</p>
-      </div>
-
-      <!-- 다운로드 버튼 -->
-      <BasicButton text="QR 코드 저장" @click="downloadQRCode" />
+  <div
+    v-if="isVisible"
+    class="w-full p-6 bg-white rounded-lg shadow-sm mt-4 flex flex-col items-center"
+  >
+    <!-- QR 코드 이미지 -->
+    <div class="mb-4">
+      <img
+        v-if="qrImageUrl"
+        :src="qrImageUrl"
+        :alt="`QR Code for book ${bookItemId}`"
+        class="w-[200px] h-[200px]"
+      />
     </div>
-    <div v-else class="text-center text-gray-500">등록된 QR 코드가 없습니다.</div>
+
+    <!-- 도서 ID -->
+    <p class="text-gray-500 mb-4">도서ID: {{ bookItemId }}</p>
+
+    <!-- 다운로드 버튼 -->
+    <BasicButton text="QR 코드 저장" @click="downloadQRCode" />
   </div>
 </template>
