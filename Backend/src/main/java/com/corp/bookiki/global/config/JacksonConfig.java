@@ -1,6 +1,7 @@
 package com.corp.bookiki.global.config;
 
 import java.io.IOException;
+import java.util.TimeZone;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,8 @@ public class JacksonConfig {
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
+
+        objectMapper.setTimeZone(TimeZone.getTimeZone("Asia/Seoul"));
 
         // 기존 JavaTimeModule 등록
         objectMapper.registerModule(new JavaTimeModule());
