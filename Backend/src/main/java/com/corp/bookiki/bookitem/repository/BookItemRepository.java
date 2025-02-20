@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -87,16 +88,15 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 	@Query("SELECT bi FROM BookItemEntity bi JOIN FETCH bi.bookInformation WHERE bi.id = :id")
 	Optional<BookItemEntity> findByIdWithBookInformation(@Param("id") Integer id);
 
+	@EntityGraph(attributePaths = {"bookInformation", "qrCode"})
 	@Query(value = """
-   SELECT DISTINCT item FROM BookItemEntity item 
-   JOIN item.bookInformation info 
-   LEFT JOIN item.qrCode
+   SELECT item FROM BookItemEntity item 
    WHERE item.deleted = false 
    AND (:keyword IS NULL OR 
-       LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-       LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-       LOWER(info.publisher) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-       info.isbn LIKE CONCAT('%', :keyword, '%'))
+       LOWER(item.bookInformation.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+       LOWER(item.bookInformation.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+       LOWER(item.bookInformation.publisher) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+       item.bookInformation.isbn LIKE CONCAT('%', :keyword, '%'))
    """)
 	Page<BookItemEntity> findAllBooksForAdmin(
 		@Param("keyword") String keyword,
