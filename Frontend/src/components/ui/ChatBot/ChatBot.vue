@@ -301,7 +301,8 @@ watch(() => messages.value.length, scrollToBottom);
     left: 16px !important;
     margin: 0 auto;
     max-width: 380px;
-    bottom: 16px !important;
+    bottom: env(safe-area-inset-bottom, 16px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }
 </style>
