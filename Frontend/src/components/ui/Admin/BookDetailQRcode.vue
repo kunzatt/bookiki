@@ -47,11 +47,11 @@ const downloadQRCode = () => {
 </script>
 
 <template>
-  <div class="bg-white rounded-lg shadow p-6 mt-4">
+  <div class="bg-white rounded-lg shadow p-6">
     <h3 class="text-lg font-semibold mb-4">QR 코드 정보</h3>
     <div v-if="props.qrCode" class="flex flex-col items-center">
       <!-- QR 코드 이미지 -->
-      <div class="mb-4">
+      <div class="mb-4 flex justify-center">
         <img
           v-if="qrImageUrl"
           :src="qrImageUrl"

@@ -6,7 +6,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="w-full h-64 bg-white rounded-lg shadow">
-    <img :src="image" :alt="title" class="w-full h-full object-contain rounded-lg" />
+  <div class="bg-white rounded-lg shadow">
+    <img :src="image" :alt="title" class="w-full h-full object-contain rounded-lg p-4" />
   </div>
 </template>
