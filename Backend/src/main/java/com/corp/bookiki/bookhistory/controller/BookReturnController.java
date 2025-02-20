@@ -77,7 +77,12 @@ public class BookReturnController {
 	public ResponseEntity<Void> processScanResult(
 		@RequestBody BookReturnRequest request
 	) {
-		bookReturnService.processScanResults(request);
+		request.getOcrResults().forEach(item ->
+			log.debug("OCR item: " + item)
+		);
+		request.getShelfBookItemsMap().forEach((key, value) ->
+			log.debug("Shelf key: " + key + ", value: " + value)
+		);
 
 		return ResponseEntity.ok().build();
 	}

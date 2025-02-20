@@ -115,6 +115,7 @@ public class SecurityConfig {
 								"/api/oauth2/error",
 								"/api/oauth2/**",
 								"/api/login/**",
+								"/api/books/return/scan",
 								"/api/api-docs/**",
 								"/api/api-docs",
 								"/api/swagger-ui/**",
