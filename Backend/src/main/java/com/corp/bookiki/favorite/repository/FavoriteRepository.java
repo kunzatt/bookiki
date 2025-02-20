@@ -28,6 +28,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteEntity, Intege
 
 	int countByUserId(Integer userId);
 
+	@Query("SELECT f.user.id FROM FavoriteEntity f WHERE f.bookItem.id = :bookItemId")
 	List<Integer> findUserIdByBookItemId(Integer bookItemId);
 
 }
