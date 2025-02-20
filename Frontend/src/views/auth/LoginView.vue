@@ -233,7 +233,7 @@ const closeLoginErrorModal = () => {
 
       <p v-if="resetError" class="text-red-500 text-sm mt-2 mb-4">{{ resetError }}</p>
 
-      <div class="flex justify-end gap-2">
+      <div class="flex justify-end gap-2 mt-4">
         <BasicButton
           size="M"
           text="취소"

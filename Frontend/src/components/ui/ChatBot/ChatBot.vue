@@ -205,7 +205,7 @@ watch(() => messages.value.length, scrollToBottom);
       </div>
 
       <!-- 입력 영역 -->
-      <div class="border-t border-gray-200 p-4 flex gap-2 items-center">
+      <div class="border-t border-gray-200 p-4 flex w-full gap-2 items-center">
         <input
           v-model="inputMessage"
           class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#698469]"
@@ -301,7 +301,8 @@ watch(() => messages.value.length, scrollToBottom);
     left: 16px !important;
     margin: 0 auto;
     max-width: 380px;
-    bottom: 16px !important;
+    bottom: env(safe-area-inset-bottom, 16px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 }
 </style>
