@@ -24,6 +24,8 @@ const verificationCode = ref('');
 const showVerificationInput = ref(false);
 const isVerified = ref(false);
 const isLoading = ref(false);
+const EMAIL_VERIFICATION_TIMEOUT = 10000; // 10초
+const VERIFICATION_CODE_TIMEOUT = 300000;  // 5분
 
 // 이메일 유효성 검사
 const isValidEmail = computed(() => {
@@ -65,17 +67,37 @@ const handleEmailCheck = async () => {
     return;
   }
 
-  if (isLoading.value) return; // 이미 처리 중이면 중복 요청 방지
+  if (isLoading.value) return;
   isLoading.value = true;
 
   try {
-    await checkEmailDuplicate(email.value);
+    // 이메일 중복 체크 with timeout
+    const checkEmailPromise = checkEmailDuplicate(email.value);
+    const emailCheckTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('이메일 중복 확인 시간이 초과되었습니다.')), EMAIL_VERIFICATION_TIMEOUT);
+    });
+
+    await Promise.race([checkEmailPromise, emailCheckTimeout]);
+    
+    // 인증 코드 전송 with timeout
     const request: SendEmailRequest = { email: email.value };
-    await sendVerificationCode(request);
+    const sendCodePromise = sendVerificationCode(request);
+    const sendCodeTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('인증 코드 전송 시간이 초과되었습니다.')), EMAIL_VERIFICATION_TIMEOUT);
+    });
+
+    await Promise.race([sendCodePromise, sendCodeTimeout]);
+    
     showVerificationInput.value = true;
     showToast(AUTH_MESSAGES.SUCCESS.EMAIL_SENT, 'success');
-  } catch (error) {
-    showToast(AUTH_MESSAGES.ERROR.EMAIL_DUPLICATE);
+  } catch (error: any) {
+    if (error.message?.includes('시간이 초과')) {
+      showToast(error.message);
+    } else if (error.response?.status === 409) {
+      showToast(AUTH_MESSAGES.ERROR.EMAIL_DUPLICATE);
+    } else {
+      showToast('메일 전송에 실패했습니다. 잠시 후 다시 시도해주세요.');
+    }
     emit('failed');
   } finally {
     isLoading.value = false;
@@ -107,15 +129,26 @@ const handleVerifyCode = async () => {
 
   try {
     const request: VerifyCodeRequest = { code: verificationCode.value };
-    await verifyCode(email.value, request);
+    
+    // 인증 코드 확인 with timeout
+    const verifyPromise = verifyCode(email.value, request);
+    const verifyTimeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('인증 코드 확인 시간이 초과되었습니다.')), VERIFICATION_CODE_TIMEOUT);
+    });
+
+    await Promise.race([verifyPromise, verifyTimeout]);
+    
     isVerified.value = true;
     emit('verified');
     showToast(AUTH_MESSAGES.SUCCESS.EMAIL_VERIFIED, 'success');
   } catch (error: any) {
-    // error 메시지 추가
-    const errorMessage = error.response?.data?.message || AUTH_MESSAGES.ERROR.INVALID_CODE;
-    showToast(errorMessage);
-    verificationCode.value = ''; // 잘못된 인증번호 입력값 초기화
+    if (error.message?.includes('시간이 초과')) {
+      showToast(error.message);
+    } else {
+      const errorMessage = error.response?.data?.message || AUTH_MESSAGES.ERROR.INVALID_CODE;
+      showToast(errorMessage);
+    }
+    verificationCode.value = '';
     emit('failed');
   }
 };
