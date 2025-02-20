@@ -17,7 +17,7 @@ public interface FavoriteRepository extends JpaRepository<FavoriteEntity, Intege
 	@Query("SELECT f FROM FavoriteEntity f " +
 		"JOIN FETCH f.bookItem bi " +
 		"JOIN FETCH bi.bookInformation " +
-		"WHERE f.user.id = :userId")
+		"WHERE f.user.id = :userId AND bi.deleted = false")
 	Page<FavoriteEntity> findByUserIdWithBookInformation(int userId, Pageable pageable);
 
 	boolean existsByUserIdAndBookItemId(Integer userId, Integer bookItemId);

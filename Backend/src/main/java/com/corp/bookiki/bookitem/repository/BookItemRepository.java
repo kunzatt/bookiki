@@ -72,15 +72,17 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 
 	@Query("SELECT bi FROM BookItemEntity bi " +
 		"WHERE bi.bookInformation.id = " +
-		"(SELECT b.bookInformation.id FROM BookItemEntity b WHERE b.id = :bookItemId)")
+		"(SELECT b.bookInformation.id FROM BookItemEntity b WHERE b.id = :bookItemId)" +
+		"AND bi.deleted = false")
 	List<BookItemEntity> findByBookInformationIdFromBookItemId(@Param("bookItemId") Integer bookItemId);
 
 	@Query("SELECT bi.id FROM BookItemEntity bi " +
 		"WHERE bi.bookInformation.id = " +
-		"(SELECT b.bookInformation.id FROM BookItemEntity b WHERE b.id = :bookItemId)")
+		"(SELECT b.bookInformation.id FROM BookItemEntity b WHERE b.id = :bookItemId)" +
+		"AND bi.deleted = false")
 	List<Integer> findIdsByBookInformationIdFromBookItemId(@Param("bookItemId") Integer bookItemId);
 
-	List<Integer> findIdsByBookStatus(BookStatus bookStatus);
+	List<Integer> findIdsByBookStatusAndDeletedFalse(BookStatus bookStatus);
 
 	@Query("SELECT bi FROM BookItemEntity bi JOIN FETCH bi.bookInformation WHERE bi.id = :id")
 	Optional<BookItemEntity> findByIdWithBookInformation(@Param("id") Integer id);
