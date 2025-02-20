@@ -216,7 +216,7 @@ public class BookReturnService {
 			.flatMap(entry -> entry.getValue().stream())
 			.collect(Collectors.toList());
 
-		List<Integer> availableBookItemIds = bookItemRepository.findIdsByBookStatus(BookStatus.AVAILABLE);
+		List<Integer> availableBookItemIds = bookItemRepository.findIdsByBookStatusAndDeletedFalse(BookStatus.AVAILABLE);
 
 		// 성능을 위해 Set으로 변환
 		Set<Integer> availableIdsSet = new HashSet<>(availableBookItemIds);
