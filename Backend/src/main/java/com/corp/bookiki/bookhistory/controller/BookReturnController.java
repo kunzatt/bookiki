@@ -84,6 +84,8 @@ public class BookReturnController {
 			log.debug("Shelf key: " + key + ", value: " + value)
 		);
 
+		bookReturnService.processScanResults(request);
+
 		return ResponseEntity.ok().build();
 	}
 }
