@@ -35,6 +35,10 @@ const handleDeletedQnaConfirm = () => {
   router.back(); // 이전 페이지(알림 페이지)로 이동
 };
 
+const handleDeletedQnaClose = () => {
+  router.back(); // 취소 버튼 클릭시에도 이전 페이지로 이동
+};
+
 const handleEdit = () => {
   router.push(`/qnas/${props.qnaId}/edit`);
 };
@@ -259,7 +263,9 @@ onMounted(async () => {
     title="삭제된 문의사항"
     content="해당 문의사항이 삭제되었습니다."
     confirm-text="확인"
+    cancel-text="확인"
     @confirm="handleDeletedQnaConfirm"
+    @update:model-value="handleDeletedQnaClose"
   />
 
   <!-- 답변 삭제 확인 모달 -->
