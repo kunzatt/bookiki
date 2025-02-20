@@ -114,18 +114,18 @@ onMounted(() => {
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- 이미지 섹션 -->
-            <div class="space-y-6">
-              <BookImage
-                :image="bookDetail.image"
-                :title="bookDetail.title"
-                class="w-64 h-80 sm:w-72 sm:h-96 md:w-80 md:h-[300px] lg:w-96 lg:h-[340px] xl:w-[440px] xl:h-[380px] object-cover"
-              />
-              <!-- QR 코드 섹션 -->
-              <div class="w-full">
+            <div class="space-y-6 w-full">
+              <div class="w-64 sm:w-72 md:w-80 lg:w-96 xl:w-[440px] mx-auto">
+                <BookImage
+                  :image="bookDetail.image"
+                  :title="bookDetail.title"
+                  class="h-80 sm:h-96 md:h-[300px] lg:h-[340px] xl:h-[380px]"
+                />
+                <!-- QR 코드 섹션 -->
                 <BookDetailQRcode
                   :qrCode="bookDetail.qrCode"
                   :bookItemId="Number(route.params.id)"
-                  class="w-64 sm:w-72 md:w-80 lg:w-96 xl:w-[440px] mx-auto"
+                  class="mt-6"
                 />
               </div>
             </div>

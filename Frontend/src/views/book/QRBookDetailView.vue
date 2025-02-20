@@ -185,7 +185,7 @@ onUnmounted(() => {
       <div v-if="bookInfo">
         <div class="flex flex-col md:flex-row gap-8 md:gap-20">
           <!-- Book Image Section -->
-          <div class="w-full md:w-[400px]">
+          <div class="w-[200px] md:w-[400px] mx-auto">
             <div>
               <div class="relative">
                 <div class="aspect-[3/4] overflow-hidden rounded-lg shadow-lg">
@@ -221,23 +221,23 @@ onUnmounted(() => {
           </div>
 
           <!-- Book Info Section -->
-          <div class="flex-1 md:py-4">
+          <div class="flex-1 lg:py-4">
             <div class="lg:w-[600px]">
               <BasicStatusBadge
                 v-if="$window.width >= 768"
                 :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
                 :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
-                size="M"
-                class="mb-4 transform scale-125 origin-left"
+                size="S"
+                :isEnabled="false"
+                class="mb-4"
               />
 
               <div class="flex items-center gap-4 mb-4">
-                <h1 class="text-4xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
+                <h1 class="text-2xl font-bold text-gray-900">{{ bookInfo.title }}</h1>
               </div>
 
-              <div class="flex items-center gap-4 text-lg text-gray-600 mb-12">
+              <div class="flex flex-col gap-2 text-lg text-gray-600 mb-12">
                 <span>{{ bookInfo.author }}</span>
-                <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
                 <span>{{ bookInfo.publisher }}</span>
               </div>
 
@@ -253,7 +253,7 @@ onUnmounted(() => {
                 <!-- Book Details -->
                 <div>
                   <h2 class="text-2xl font-semibold text-gray-900 mb-4">도서 정보</h2>
-                  <div class="grid grid-cols-2 gap-y-6 max-w-2xl">
+                  <div class="grid grid-cols-2 gap-y-6 max-w-2xl md:mb-0 mb-24">
                     <div>
                       <span class="text-gray-500 text-sm">저자</span>
                       <p class="text-gray-900 mt-1">{{ bookInfo.author }}</p>
@@ -283,24 +283,22 @@ onUnmounted(() => {
       <!-- Mobile fixed bottom section -->
       <div class="md:hidden fixed bottom-[56px] left-0 right-0 bg-white border-t border-gray-200">
         <div
-          class="flex items-center justify-center h-[64px] px-4 mx-auto w-full min-w-[320px] max-w-[1280px]"
+          class="flex items-center justify-center h-[72px] px-4 mx-auto w-full min-w-[320px] max-w-[1280px]"
         >
-          <div class="flex items-center gap-2 w-full max-w-[500px]">
-            <div class="w-[130px]">
-              <BasicStatusBadge
-                :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
-                :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
-                size="M"
-                :isEnabled="true"
-                class="transform scale-125 origin-left"
-              />
-            </div>
+          <div class="flex items-center gap-3 w-full max-w-[500px]">
+            <BasicStatusBadge
+              :text="bookItem?.bookStatus === 'AVAILABLE' ? '대출 가능' : '대출 불가'"
+              :type="bookItem?.bookStatus === 'AVAILABLE' ? 'success' : 'error'"
+              size="M"
+              :isEnabled="false"
+              class="shrink-0"
+            />
+
             <BasicButton
               text="도서 대출하기"
-              size="M"
+              size="L"
               @click="handleBorrowClick"
               :isEnabled="bookItem?.bookStatus === 'AVAILABLE'"
-              class="flex-1 h-10"
             />
           </div>
         </div>
