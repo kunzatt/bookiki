@@ -88,19 +88,19 @@ public interface BookItemRepository extends JpaRepository<BookItemEntity, Intege
 	Optional<BookItemEntity> findByIdWithBookInformation(@Param("id") Integer id);
 
 	@Query(value = """
-    SELECT item FROM BookItemEntity item 
-    JOIN FETCH item.bookInformation info 
-    LEFT JOIN FETCH item.qrCode
-    WHERE item.deleted = false 
-    AND (:keyword IS NULL OR 
-        LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-        LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-        LOWER(info.publisher) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-        info.isbn LIKE CONCAT('%', :keyword, '%'))
-    """)
+   SELECT DISTINCT item FROM BookItemEntity item 
+   JOIN item.bookInformation info 
+   LEFT JOIN item.qrCode
+   WHERE item.deleted = false 
+   AND (:keyword IS NULL OR 
+       LOWER(info.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+       LOWER(info.author) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+       LOWER(info.publisher) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+       info.isbn LIKE CONCAT('%', :keyword, '%'))
+   """)
 	Page<BookItemEntity> findAllBooksForAdmin(
-			@Param("keyword") String keyword,
-			Pageable pageable
+		@Param("keyword") String keyword,
+		Pageable pageable
 	);
 
 	// AI 추천을 위한 키워드 기반 검색
