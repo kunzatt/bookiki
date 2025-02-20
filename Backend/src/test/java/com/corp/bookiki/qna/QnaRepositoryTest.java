@@ -63,22 +63,45 @@ class QnaRepositoryTest {
     @DisplayName("페이징을 적용한 문의사항 검색 테스트")
     void findBySearchCriteria() {
         // given
-        UserEntity user = UserEntity.builder()
-            .email("test@example.com")
-            .password("password")
-            .userName("testAdmin")
-            .companyId("CORP002")
-            .role(Role.ADMIN)
-            .provider(Provider.BOOKIKI)
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
+        UserEntity user = createTestUser();
+        userRepository.save(user);
 
-        user = userRepository.save(user); // 실제로 사용자를 저장하고 ID를 받아옴
+        // 테스트용 문의사항 생성
+        List<QnaEntity> qnas = createTestQnas(user, 10);
+        qnaRepository.saveAll(qnas);
 
-        // 테스트용 문의사항 10개 생성
+        // when
+        Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
+        Page<QnaEntity> result = qnaRepository.findBySearchCriteria(
+                user.getId(),
+                "GENERAL",
+                "Title",
+                null,  // answered null로 테스트
+                pageable
+        );
+
+        // then
+        assertThat(result.getContent()).hasSize(5);
+        assertThat(result.getTotalElements()).isEqualTo(10);
+        assertThat(result.getTotalPages()).isEqualTo(2);
+    }
+
+    private UserEntity createTestUser() {
+        return UserEntity.builder()
+                .email("test@example.com")
+                .password("password")
+                .userName("testUser")
+                .companyId("CORP002")
+                .role(Role.ADMIN)
+                .provider(Provider.BOOKIKI)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+    }
+
+    private List<QnaEntity> createTestQnas(UserEntity user, int count) {
         List<QnaEntity> qnas = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
+        for (int i = 1; i <= count; i++) {
             QnaEntity qna = QnaEntity.builder()
                     .title("Title " + i)
                     .content("Content " + i)
@@ -88,20 +111,6 @@ class QnaRepositoryTest {
             ReflectionTestUtils.setField(qna, "deleted", false);
             qnas.add(qna);
         }
-        qnaRepository.saveAll(qnas);
-
-        // when
-        Pageable pageable = PageRequest.of(0, 5, Sort.by("createdAt").descending());
-        Page<QnaEntity> result = qnaRepository.findBySearchCriteria(
-                user.getId(),
-                "GENERAL",
-                "Title",
-                pageable
-        );
-
-        // then
-        assertThat(result.getContent()).hasSize(5);
-        assertThat(result.getTotalElements()).isEqualTo(10);
-        assertThat(result.getTotalPages()).isEqualTo(2);
+        return qnas;
     }
 }

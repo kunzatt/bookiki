@@ -4,6 +4,7 @@ import com.corp.bookiki.global.error.code.ErrorCode;
 import com.corp.bookiki.global.error.exception.QnaException;
 import com.corp.bookiki.notification.service.NotificationService;
 import com.corp.bookiki.qna.dto.QnaRequest;
+import com.corp.bookiki.qna.entity.QnaCommentEntity;
 import com.corp.bookiki.qna.entity.QnaEntity;
 import com.corp.bookiki.qna.repository.QnaCommentRepository;
 import com.corp.bookiki.qna.repository.QnaRepository;
@@ -112,24 +113,22 @@ class QnaServiceTest {
     @DisplayName("관리자의 전체 문의사항 조회 테스트")
     void selectQnas_Admin() {
         // given
-        // new AuthUser(TEST_ADMIN_ID, "admin@test.com", Role.ADMIN);
-        AuthUser authUser = AuthUser
-            .builder()
-            .id(TEST_ADMIN_ID)
-            .email("admin@corp.com")
-            .role(Role.ADMIN)
-            .build();
+        AuthUser authUser = AuthUser.builder()
+                .id(TEST_ADMIN_ID)
+                .email("admin@corp.com")
+                .role(Role.ADMIN)
+                .build();
         Pageable pageable = PageRequest.of(0, 10);
 
-        UserEntity user = userRepository.findById(TEST_ADMIN_ID).orElse(null);
         List<QnaEntity> mockQnas = Arrays.asList(
                 createMockQna(1, "Question 1"),
                 createMockQna(2, "Question 2")
         );
         Page<QnaEntity> mockPage = new PageImpl<>(mockQnas, pageable, mockQnas.size());
 
-        when(qnaRepository.findBySearchCriteria(null, null, null, pageable))
-                .thenReturn(mockPage);
+        when(qnaRepository.findBySearchCriteria(
+                null, null, null, null, pageable
+        )).thenReturn(mockPage);
 
         // when
         Page<QnaEntity> result = qnaService.selectQnas(null, null, null, authUser, pageable);
@@ -137,20 +136,19 @@ class QnaServiceTest {
         // then
         assertThat(result.getContent()).hasSize(2);
         assertThat(result.getTotalElements()).isEqualTo(2);
-        verify(qnaRepository).findBySearchCriteria(null, null, null, pageable);
     }
 
     private QnaEntity createMockQna(Integer id, String title) {
         UserEntity user = UserEntity.builder()
-            .email("test@test.com")
-            .password("Password")
-            .userName("TestUser")
-            .companyId("CompanyID")
-            .role(Role.USER)
-            .createdAt(LocalDateTime.now())
-            .updatedAt(LocalDateTime.now())
-            .build();
-        ReflectionTestUtils.setField(user, "id", 1);
+                .email("test@test.com")
+                .password("Password")
+                .userName("TestUser")
+                .companyId("CompanyID")
+                .role(Role.USER)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        ReflectionTestUtils.setField(user, "id", TEST_USER_ID);
 
         QnaEntity qna = QnaEntity.builder()
                 .title(title)
@@ -159,17 +157,10 @@ class QnaServiceTest {
                 .user(user)
                 .build();
         ReflectionTestUtils.setField(qna, "id", id);
-        return qna;
-    }
+        ReflectionTestUtils.setField(qna, "createdAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(qna, "updatedAt", LocalDateTime.now());
+        ReflectionTestUtils.setField(qna, "deleted", false);
 
-    private UserEntity createUser(Integer id) {
-        UserEntity user = UserEntity.builder()
-            .email("test@example.com")
-            .userName("테스트 유저")
-            .role(Role.USER)
-            .createdAt(LocalDateTime.now())
-            .build();
-        ReflectionTestUtils.setField(user, "id", id);
-        return user;
+        return qna;
     }
 }

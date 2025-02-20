@@ -60,40 +60,18 @@ public class QnaService {
     @Transactional(readOnly = true)
     public Page<QnaEntity> selectQnas(String keyword, String qnaType, Boolean answered, AuthUser authUser, Pageable pageable) {
         try {
-            // 관리자가 아닌 경우에만 authorId 설정
             Integer authorId = null;
             if (authUser.getRole() != Role.ADMIN) {
                 authorId = authUser.getId();
             }
 
-            // 동적 쿼리로 기본 검색 수행
-            Page<QnaEntity> qnaPage = qnaRepository.findBySearchCriteria(
+            return qnaRepository.findBySearchCriteria(
                     authorId,
                     qnaType,
                     keyword,
+                    answered,
                     pageable
             );
-
-            // answered 필터링이 필요한 경우
-            if (answered != null) {
-                List<QnaEntity> pageContent = qnaPage.getContent();
-                List<QnaEntity> filteredContent = new ArrayList<>();
-
-                for (QnaEntity qna : pageContent) {
-                    if (answered == checkHasComment(qna)) {
-                        filteredContent.add(qna);
-                    }
-                }
-
-                // 필터링된 결과로 새로운 Page 객체 생성
-                return new PageImpl<>(
-                        filteredContent,
-                        pageable,
-                        filteredContent.size()
-                );
-            }
-
-            return qnaPage;
         } catch (Exception ex) {
             log.error("문의사항 목록 조회 실패: {}", ex.getMessage());
             throw new QnaException(ErrorCode.INTERNAL_SERVER_ERROR);
