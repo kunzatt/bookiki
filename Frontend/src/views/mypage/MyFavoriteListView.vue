@@ -25,11 +25,11 @@ const updateDisplayCount = () => {
   if (window.innerWidth >= 1024) {
     displayCount.value = 4;
   } else if (window.innerWidth >= 768) {
-    displayCount.value = 3;
+    displayCount.value = 4;
   } else if (window.innerWidth >= 640) {
-    displayCount.value = 2;
+    displayCount.value = 4;
   } else {
-    displayCount.value = 1;
+    displayCount.value = 4;
   }
 
   if (prevDisplayCount.value !== displayCount.value) {
@@ -198,7 +198,7 @@ onUnmounted(() => {
 
 @media screen and (min-width: 768px) {
   .grid {
-    @apply grid-cols-3;
+    @apply grid-cols-4;
   }
 }
 
