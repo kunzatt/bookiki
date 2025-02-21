@@ -49,8 +49,8 @@ const filters = ref<FilterConfig[]>([
     label: '답변 상태',
     options: [
       { value: '', label: '전체' },
-      { value: QnaStatus.COMPLETED, label: QnaStatusDescriptions[QnaStatus.COMPLETED] },
-      { value: QnaStatus.WAITING, label: QnaStatusDescriptions[QnaStatus.WAITING] },
+      { value: 'true', label: QnaStatusDescriptions[QnaStatus.COMPLETED] },
+      { value: 'false', label: QnaStatusDescriptions[QnaStatus.WAITING] }
     ],
   },
 ]);
@@ -58,7 +58,7 @@ const filters = ref<FilterConfig[]>([
 const filterValues = ref({
   keyword: '',
   qnaType: '',
-  answered: '',
+  answered: ''
 });
 
 const columns: TableColumn[] = [
@@ -120,16 +120,13 @@ const convertQnaForDisplay = (qna: QnaListResponseWithAnswered) => ({
 const totalPages = computed(() => Math.ceil(totalItems.value / pageSize.value));
 
 const loadQnas = async (isLoadMore: boolean = false) => {
-  if (isLoadMore) {
-    isLoadingMore.value = true;
-  } else {
-    loading.value = true;
-  }
-
   try {
     const response = await selectQnas({
       keyword: filterValues.value.keyword,
       qnaType: filterValues.value.qnaType,
+      answered: filterValues.value.answered === '' 
+        ? null 
+        : filterValues.value.answered === 'true',  // 문자열을 boolean으로 변환
       pageable: {
         page: isMobile.value
           ? Math.floor(qnas.value.length / pageSize.value)
@@ -139,27 +136,11 @@ const loadQnas = async (isLoadMore: boolean = false) => {
       },
     });
 
-    let filteredContent = response.content;
-
-    // answered 필터 적용
-    if (filterValues.value.answered !== '') {
-      const isAnswered = filterValues.value.answered === QnaStatus.COMPLETED;
-      filteredContent = filteredContent.filter((qna) => qna.answered === isAnswered);
-    }
-
-    if (isMobile.value && isLoadMore) {
-      qnas.value = [...qnas.value, ...filteredContent];
-    } else {
-      qnas.value = filteredContent;
-    }
-
+    qnas.value = response.content;
     totalItems.value = response.totalElements;
     hasMore.value = qnas.value.length < response.totalElements;
   } catch (error) {
     console.error('문의사항 목록 조회 실패:', error);
-  } finally {
-    loading.value = false;
-    isLoadingMore.value = false;
   }
 };
 
