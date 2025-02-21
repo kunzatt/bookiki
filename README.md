@@ -6,8 +6,8 @@
 
 1. [프로젝트 소개](#-프로젝트-소개)
 2. [팀원 소개](#-팀원-소개)
-3. [기술 스택](#-기술-스택)
-4. [시스템 아키텍처](#-시스템-아키텍처)
+3. [시스템 아키텍처](#-시스템-아키텍처)
+4. [기술 스택](#-기술-스택)
 5. [주요 기능](#-주요-기능)
 
 ## 🎯 프로젝트 소개
@@ -17,9 +17,11 @@
 부키키(Bookiki) 는 상주 사서 없이 운영되는 스마트 도서관 시스템입니다. QR코드와 IoT 기술을 결합하여 도서 관리를 자동화하고, 사용자 경험을 혁신적으로 개선합니다.
 
 ### 영상
-링크 여기 넣어
+[![YouTube Video](https://img.youtube.com/vi/8PxL1Hsw2vM/0.jpg)](https://www.youtube.com/watch?v=8PxL1Hsw2vM)
 
-### 특징
+
+
+### 주요 기능
 
 | 기능             | 설명                                            |
 | ---------------- | ----------------------------------------------- |
@@ -34,15 +36,18 @@
 
 | 이름   | 역할           | 담당               |
 | ------ |--------------| ------------------ |
+| 배남석 | Developer (팀장) | Embedded / AI      |
 | 강수진 | Developer    | Backend / Frontend |
 | 김용명 | Developer    | Backend / Frontend |
 | 이동욱 | Developer    | Backend / Frontend |
 | 차윤영 | Developer    | Backend / Frontend |
-| 배남석 | Developer (팀장) | Embedded / AI      |
 
 ## 🔍 시스템 아키텍처
 
 <img src="https://github.com/user-attachments/assets/a7dc4e7a-aeff-46e4-a078-96c9c2dce565" width="800" height="600" />
+
+### ERD
+<img src="https://github.com/user-attachments/assets/3bf1069a-7f1d-4ecf-958d-7e61d3f9fb22" width="800" height="600" />
 
 ## 🛠 기술 스택
 
